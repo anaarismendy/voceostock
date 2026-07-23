@@ -1,0 +1,13 @@
+{
+  "status": "confirmado",
+  "conteo": {
+    "id": "ad591fcd-ce9a-4a5c-9a4c-353d5ea38260",
+    "articulo_id": 7290,
+    "articulo_nombre": "ACEITE DE OLIVA",
+    "cantidad": 33.5,
+    "unidad": "Liter",
+    "confianza": 0.95,
+    "fuente": "voz-tablet",
+    "evidencia_url": null
+  }
+}

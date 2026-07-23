@@ -1,0 +1,16 @@
+{
+  "status": "requiere_confirmacion",
+  "token_pendiente": "c311a960-8908-4b9b-8c04-40e13b018736",
+  "motivo": "ambiguedad",
+  "pregunta": "¿Cuál artículo es?",
+  "candidatos": [
+    {
+      "articulo_id": 1,
+      "articulo_nombre": "CAZUELA 16 ONZ"
+    },
+    {
+      "articulo_id": 2,
+      "articulo_nombre": "CALDERO RECORT TAPA 50X60 CM"
+    }
+  ]
+}
