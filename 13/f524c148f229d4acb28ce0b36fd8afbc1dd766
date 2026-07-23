@@ -1,0 +1,39 @@
+backend/alembic/versions/0001_modelo_inicial.py
+  s_db654ea9d24c98::t_7b86c5d46a1861 1-27
+backend/app/models/__init__.py
+  s_db654ea9d24c98::t_a60726b059dc64 1-164
+backend/alembic.ini
+  s_db654ea9d24c98::t_ebd65bd935224d 1-34
+backend/alembic/script.py.mako
+  s_db654ea9d24c98::t_8bc378f9355011 1-23
+backend/alembic/env.py
+  s_db654ea9d24c98::t_bfe897aadbc3bf 1-24
+backend/pyproject.toml
+  s_fd71a03c4f5e6b::t_fb97be93d8d03a 11-13
+backend/uv.lock
+  s_fd71a03c4f5e6b::t_d2236817c048d6 13-26,259-333,452-460,470-527,901,903-904,922,924-925
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "13f524c148f229d4acb28ce0b36fd8afbc1dd766",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    },
+    "s_fd71a03c4f5e6b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8fa8467d-118c-40eb-a260-081fa2cff5e1",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
