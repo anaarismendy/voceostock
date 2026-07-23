@@ -18,8 +18,8 @@ export default defineConfig({
   server: {
     host: true,
     proxy: {
-      '/api': process.env.VITE_API_PROXY ?? 'http://localhost:8000',
-      '/health': process.env.VITE_API_PROXY ?? 'http://localhost:8000',
+      '/api': process.env.VITE_API_PROXY ?? 'http://localhost:8010',
+      '/health': process.env.VITE_API_PROXY ?? 'http://localhost:8010',
     },
   },
 })
