@@ -1,0 +1,29 @@
+frontend/src/lib/conteos.ts
+  s_db654ea9d24c98::t_bb642b644b3900 1-19
+backend/app/api/conteos.py
+  s_db654ea9d24c98::t_754e108e0b7114 1-86
+backend/app/main.py
+  s_db654ea9d24c98::t_96c7d73f3e5da6 3-4,6-11
+frontend/src/lib/conteos.test.ts
+  s_db654ea9d24c98::t_a3a16a1a70fb80 1-11
+frontend/src/App.tsx
+  s_db654ea9d24c98::t_83fdab65d4712f 2
+  s_db654ea9d24c98::t_d89c9a9117cd22 1,3-5,7-21,23-49
+  s_db654ea9d24c98::t_4c4c70a295036b 22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "0a557b0f1a01e0dd363e90f88a36a0fee36ab8c3",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
