@@ -1,0 +1,30 @@
+# --- entorno / secretos ---
+.env
+.env.local
+storage/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# --- Node ---
+node_modules/
+dist/
+dist-ssr/
+.vite/
+coverage/
+
+# --- datos ---
+# data/*.xlsx NO se ignora: es insumo del repo privado.
+data/fixtures/embeddings*
+
+# --- IDE / SO ---
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
