@@ -1,0 +1,35 @@
+data/fixtures/bodegas.csv
+  s_db654ea9d24c98::t_4a50158e02a886 1-49
+backend/tests/test_contrato_ejemplos.py
+  s_db654ea9d24c98::t_6d044f37fca878 1-37
+data/fixtures/catalogo.csv
+  s_db654ea9d24c98::t_4a50158e02a886 1-1422
+data/make_fixtures.py
+  s_db654ea9d24c98::t_cdb190cb169561 1-40
+docs/contrato/ejemplos/confirmado.json
+  s_db654ea9d24c98::t_14e4f372511aa5 1-13
+docs/contrato/ejemplos/no_catalogado.json
+  s_db654ea9d24c98::t_f4d04c720f7730 1-6
+docs/contrato/ejemplos/requiere_confirmacion_ambiguedad.json
+  s_db654ea9d24c98::t_dcbf03d18f45cd 1-16
+docs/contrato/ejemplos/requiere_confirmacion_anomalia.json
+  s_db654ea9d24c98::t_9c14f811f4b1e7 1-7
+docs/contrato/ejemplos/resolver_request.json
+  s_db654ea9d24c98::t_9c0a5228570902 1-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "ce5c2e446366d8b3fe775fd26fd2d6f25005b8ab",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
