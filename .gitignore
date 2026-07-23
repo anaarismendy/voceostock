@@ -31,3 +31,6 @@ Thumbs.db
 
 # artefactos runtime de vite
 *.timestamp-*.mjs
+
+# fixture binario reproducible (lo genera tests/make_mini_excel.py)
+backend/tests/fixtures/mini_stock.xlsx

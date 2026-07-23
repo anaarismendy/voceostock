@@ -6,7 +6,6 @@ Revises:
 """
 
 from alembic import op
-
 from app.models import Base
 
 revision = "0001"
