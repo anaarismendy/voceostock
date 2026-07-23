@@ -1,0 +1,24 @@
+data/ingest.py
+  s_db654ea9d24c98::t_0dbf79d2f11d5e 101
+  s_db654ea9d24c98::t_812947f1961eac 174,177
+  s_db654ea9d24c98::t_b31959f42f9a66 220-225,228
+  s_db654ea9d24c98::t_4e046554879922 172-173
+  s_db654ea9d24c98::t_41e10cbfdc0f50 1-100,102-171,175-176,178-219,226-227,229-294,299-311
+  s_db654ea9d24c98::t_f6304f3b509240 295-298
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "ba47e8e943e47c40af8424c61d4ac2ddd7079a01",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
