@@ -1,0 +1,25 @@
+backend/tests/test_ingest.py
+  s_db654ea9d24c98::t_4e854ab0ed7f35 1-132
+.gitignore
+  s_db654ea9d24c98::t_770b021020012d 34-36
+backend/tests/make_mini_excel.py
+  s_db654ea9d24c98::t_3687cf929c1346 1-58
+.github/workflows/ci.yml
+  s_db654ea9d24c98::t_744f64e9a7e9ba 8-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "b8ed0584a3b62c2876561b04cc31f74d879eb882",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
