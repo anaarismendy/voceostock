@@ -1,0 +1,21 @@
+backend/app/schemas/conteos.py
+  s_db654ea9d24c98::t_22c77ebd03151e 1-67
+docs/contrato/contrato.md
+  s_db654ea9d24c98::t_4d60865118cac5 1-75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "6b11b4e42d28c8a36073d2911a94b9c5442576a5",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
