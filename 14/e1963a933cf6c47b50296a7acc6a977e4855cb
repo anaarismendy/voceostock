@@ -1,0 +1,19 @@
+.gitignore
+  s_fd71a03c4f5e6b::t_5ed79d1c639038 31-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "14e1963a933cf6c47b50296a7acc6a977e4855cb",
+  "prompts": {},
+  "sessions": {
+    "s_fd71a03c4f5e6b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8fa8467d-118c-40eb-a260-081fa2cff5e1",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
