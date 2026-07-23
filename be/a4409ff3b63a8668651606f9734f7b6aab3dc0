@@ -1,0 +1,70 @@
+frontend/src/index.css
+  s_db654ea9d24c98::t_36085844d605cb 1-3
+frontend/tsconfig.json
+  s_db654ea9d24c98::t_3a0674941344bf 1-15
+frontend/eslint.config.js
+  s_db654ea9d24c98::t_95b1566dfe821d 1-8
+.env.example
+  s_db654ea9d24c98::t_84c6ad4789cbed 1-4
+backend/pyproject.toml
+  s_db654ea9d24c98::t_d7032e4df27d90 1-28
+frontend/src/App.tsx
+  s_db654ea9d24c98::t_22f8199ae005ec 1-3
+docker-compose.yml
+  s_db654ea9d24c98::t_54bbca88bc16bc 1-42
+.gitignore
+  s_db654ea9d24c98::t_5bb5adb0557d2a 1,3-30
+  s_db654ea9d24c98::t_3ccab5b21ec123 2
+frontend/package.json
+  s_db654ea9d24c98::t_4bb747b5410805 1-32
+frontend/vite.config.ts
+  s_db654ea9d24c98::t_2ba1ffd04891fe 1-25
+backend/app/main.py
+  s_db654ea9d24c98::t_d686a57f9973bc 1-3
+frontend/postcss.config.js
+  s_db654ea9d24c98::t_50066a08fa9d50 1-6
+Makefile
+  s_db654ea9d24c98::t_0c441c0a54117b 1-21
+frontend/src/main.tsx
+  s_db654ea9d24c98::t_aa3e6722738ede 1-10
+data/ingest.py
+  s_db654ea9d24c98::t_39c4974224d6b9 1
+frontend/tailwind.config.js
+  s_db654ea9d24c98::t_7d33e6b7d68702 1-6
+frontend/index.html
+  s_db654ea9d24c98::t_2cd93b27563b56 1-12
+backend/Dockerfile
+  s_db654ea9d24c98::t_51250c2875023f 1-7
+FASE_0_claude_code.md
+  s_fd71a03c4f5e6b::t_c19b85963b7179 1-197
+backend/.python-version
+  s_fd71a03c4f5e6b::t_9cc71c18fc017c 1
+backend/uv.lock
+  s_fd71a03c4f5e6b::t_46f265630d48cf 1-940
+frontend/package-lock.json
+  s_db654ea9d24c98::t_f41f83eb447c74 1-8566
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "bea4409ff3b63a8668651606f9734f7b6aab3dc0",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    },
+    "s_fd71a03c4f5e6b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8fa8467d-118c-40eb-a260-081fa2cff5e1",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
