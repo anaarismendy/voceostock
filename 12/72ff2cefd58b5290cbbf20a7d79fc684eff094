@@ -1,0 +1,22 @@
+docker-compose.yml
+  s_db654ea9d24c98::t_c721bc7f3dba85 9-10
+  s_db654ea9d24c98::t_a66f7841aa59f0 17
+frontend/vite.config.ts
+  s_db654ea9d24c98::t_4c272e4639f8e3 21-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "1272ff2cefd58b5290cbbf20a7d79fc684eff094",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
