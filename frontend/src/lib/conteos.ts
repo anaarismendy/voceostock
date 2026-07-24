@@ -11,6 +11,7 @@ export interface ConteoRequest {
 }
 
 export interface NuevoConteoParams {
+  sesionId: string
   bodegaId: number
   operarioId: string
   fuente?: Fuente
@@ -19,6 +20,7 @@ export interface NuevoConteoParams {
 }
 
 export function nuevoConteoRequest({
+  sesionId,
   bodegaId,
   operarioId,
   fuente = 'manual',
@@ -26,7 +28,9 @@ export function nuevoConteoRequest({
   audioBase64,
 }: NuevoConteoParams): ConteoRequest {
   return {
-    sesion_id: crypto.randomUUID(),
+    // I2: la sesión REAL creada al elegir bodega — el backend rechaza (404)
+    // sesiones inventadas, así que aquí nunca se genera un UUID local.
+    sesion_id: sesionId,
     bodega_id: bodegaId,
     operario_id: operarioId,
     fuente,
@@ -63,6 +67,9 @@ export type ConteoResponse =
       candidatos: Candidato[] | null
     }
   | { status: 'no_catalogado'; texto_capturado: string; cantidad: number | null; unidad: string | null }
+  // Cuarto estado, exclusivo de /resolver: el operario respondió "no" y el
+  // conteo se descarta sin persistir (docs/contrato/contrato.md).
+  | { status: 'descartado' }
 
 export function mensajeConfirmacion(conteo: Conteo): string {
   return `${conteo.cantidad} ${conteo.unidad} de ${conteo.articulo_nombre}`

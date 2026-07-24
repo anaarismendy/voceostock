@@ -8,6 +8,7 @@ export default function SeleccionBodega() {
   const { seleccionarBodega } = useOperario()
   const [bodegas, setBodegas] = useState<Bodega[] | null>(null)
   const [error, setError] = useState(false)
+  const [errorSesion, setErrorSesion] = useState(false)
   const [busqueda, setBusqueda] = useState('')
   const [pagina, setPagina] = useState(0)
 
@@ -53,6 +54,7 @@ export default function SeleccionBodega() {
 
       <div className="mt-4 flex-1 space-y-3 overflow-y-auto pb-6">
         {error && <p className="text-lg text-red-400">No se pudo cargar la lista de bodegas.</p>}
+        {errorSesion && <p className="text-lg text-red-400">No se pudo abrir la sesión de conteo. Toca la bodega de nuevo.</p>}
         {!error && bodegas === null && <p className="text-lg text-slate-300">Cargando bodegas…</p>}
         {!error && bodegas !== null && filtradas.length === 0 && (
           <p className="text-lg text-slate-300">Sin resultados para "{busqueda}".</p>
@@ -61,7 +63,11 @@ export default function SeleccionBodega() {
           <button
             key={bodega.id}
             type="button"
-            onClick={() => seleccionarBodega(bodega)}
+            onClick={() => {
+              setErrorSesion(false)
+              // I2: al elegir bodega se abre la sesión REAL en BD.
+              seleccionarBodega(bodega).catch(() => setErrorSesion(true))
+            }}
             className="block min-h-16 w-full rounded-2xl bg-slate-800 px-5 py-4 text-left text-xl font-medium capitalize active:bg-slate-700"
           >
             {bodega.nombre}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { getArticulos, type ArticuloResumen } from '../lib/articulos'
 
 interface Props {
+  bodegaId?: number
   onEnviar: (texto: string) => void
 }
 
@@ -14,17 +15,17 @@ const TECLAS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'] as
  * `fuente: manual` — el contrato congelado no tiene un campo estructurado
  * de articulo_id/cantidad, así que el teclado arma texto igual que dictarlo.
  */
-export default function TecladoManual({ onEnviar }: Props) {
+export default function TecladoManual({ bodegaId, onEnviar }: Props) {
   const [articulos, setArticulos] = useState<ArticuloResumen[] | null>(null)
   const [busqueda, setBusqueda] = useState('')
   const [seleccionado, setSeleccionado] = useState<ArticuloResumen | null>(null)
   const [cantidad, setCantidad] = useState('')
 
   useEffect(() => {
-    getArticulos()
+    getArticulos(bodegaId)
       .then(setArticulos)
       .catch(() => setArticulos([]))
-  }, [])
+  }, [bodegaId])
 
   const sugerencias = useMemo(() => {
     if (!articulos || seleccionado) return []

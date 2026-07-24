@@ -6,14 +6,20 @@ const TECLAS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'borrar'] 
 export default function LoginPin() {
   const { iniciarSesion } = useOperario()
   const [pin, setPin] = useState('')
+  const [error, setError] = useState(false)
 
   function agregarDigito(d: string) {
     if (pin.length >= 4) return
     const siguiente = pin + d
     setPin(siguiente)
-    // No hay endpoint de autenticación todavía (B1 solo define la tabla
-    // `operarios`, sin API de login) — cualquier PIN de 4 dígitos entra.
-    if (siguiente.length === 4) iniciarSesion(siguiente)
+    setError(false)
+    // I2: login real contra POST /api/v1/operarios/login (find-or-create).
+    if (siguiente.length === 4) {
+      iniciarSesion(siguiente).catch(() => {
+        setError(true)
+        setPin('')
+      })
+    }
   }
 
   function borrar() {
@@ -26,6 +32,8 @@ export default function LoginPin() {
         <h1 className="text-center text-3xl font-bold">VoceoStock</h1>
         <p className="mt-2 text-center text-lg text-slate-300">Ingresa tu PIN</p>
       </div>
+
+      {error && <p className="text-lg text-red-400">No se pudo iniciar sesión. Intenta de nuevo.</p>}
 
       <div className="flex gap-4" aria-label={`PIN, ${pin.length} de 4 dígitos ingresados`}>
         {[0, 1, 2, 3].map((i) => (
