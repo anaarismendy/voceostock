@@ -1,9 +1,22 @@
 import { useEffect, useState } from 'react'
 import { nuevoConteoRequest } from './lib/conteos'
+import LoginPin from './screens/LoginPin'
+import SeleccionBodega from './screens/SeleccionBodega'
+import { useOperario } from './state/OperarioContext'
 
-// Herramienta de desarrollo, no UI final: comprueba /health y permite
-// postear texto crudo a /api/v1/conteos para ver la respuesta del contrato.
 export default function App() {
+  const { operario, bodega } = useOperario()
+
+  if (!operario) return <LoginPin />
+  if (!bodega) return <SeleccionBodega />
+  return <HerramientaDevPostLogin />
+}
+
+// Herramienta de desarrollo, no UI final (la reemplaza C3): comprueba /health
+// y permite postear texto crudo a /api/v1/conteos para ver la respuesta del
+// contrato, ya con operario y bodega elegidos.
+function HerramientaDevPostLogin() {
+  const { operario, bodega, cerrarSesion } = useOperario()
   const [health, setHealth] = useState('conectando…')
   const [texto, setTexto] = useState('')
   const [respuesta, setRespuesta] = useState('')
@@ -19,14 +32,22 @@ export default function App() {
     const r = await fetch('/api/v1/conteos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(nuevoConteoRequest(texto)),
+      body: JSON.stringify(nuevoConteoRequest(texto, bodega!.id)),
     })
     setRespuesta(JSON.stringify(await r.json(), null, 2))
   }
 
   return (
     <main className="mx-auto max-w-2xl p-8 font-sans">
-      <h1 className="text-2xl font-bold">{health}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{health}</h1>
+        <button className="text-sm text-slate-500 underline" onClick={cerrarSesion}>
+          Cerrar sesión
+        </button>
+      </div>
+      <p className="mt-1 text-slate-600">
+        Operario {operario!.id.slice(0, 8)} · Bodega {bodega!.nombre}
+      </p>
       <section className="mt-6">
         <textarea
           className="w-full rounded border p-2"

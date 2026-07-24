@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
 import { cargarCatalogo, buscarPorNombre } from './catalogo.ts'
+import { cargarBodegas } from './bodegas.ts'
 import {
   ejemploAmbiguedad,
   ejemploAnomalia,
@@ -97,6 +98,11 @@ export function mockApiPlugin(): Plugin {
             }
 
             enviarJson(res, 200, resultado)
+            return
+          }
+
+          if (req.method === 'GET' && url.pathname === '/api/v1/bodegas') {
+            enviarJson(res, 200, cargarBodegas())
             return
           }
 
