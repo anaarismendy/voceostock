@@ -1,7 +1,9 @@
 import { ArrowLeft, LogOut, Mic, Square } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import ConfirmacionPendiente from '../components/ConfirmacionPendiente'
+import ModoGuiado from '../components/ModoGuiado'
 import TecladoManual from '../components/TecladoManual'
+import type { ArticuloResumen } from '../lib/articulos'
 import {
   mensajeConfirmacion,
   nuevoConteoRequest,
@@ -13,9 +15,13 @@ import {
   type Fuente,
   type MotivoConfirmacion,
 } from '../lib/conteos'
+import { CHECKLIST_DEMO } from '../lib/listaGuiada'
+import { resumenProgreso, siguientePendiente, textoCantidadArticulo } from '../lib/progreso'
 import { conReintento } from '../lib/reintento'
 import { useVoz } from '../lib/useVoz'
 import { useOperario } from '../state/OperarioContext'
+
+type Modo = 'libre' | 'guiado'
 
 type EstadoPantalla =
   | { tipo: 'lista' }
@@ -37,6 +43,17 @@ export default function PantallaConteo() {
   const [enviandoRespuesta, setEnviandoRespuesta] = useState(false)
   const [pendientes, setPendientes] = useState(0)
   const [intentoActual, setIntentoActual] = useState<number | null>(null)
+  // C8: modo guiado/libre + progreso. `contados` = artículos del checklist ya
+  // confirmados (progreso); `saltados` = omitidos en el recorrido guiado.
+  const [modo, setModo] = useState<Modo>('libre')
+  const [contados, setContados] = useState<Set<number>>(new Set())
+  const [saltados, setSaltados] = useState<Set<number>>(new Set())
+
+  const progreso = useMemo(() => resumenProgreso(CHECKLIST_DEMO, contados), [contados])
+  const objetivoGuiado = useMemo(
+    () => siguientePendiente(CHECKLIST_DEMO, new Set([...contados, ...saltados])),
+    [contados, saltados],
+  )
 
   const enviarCaptura = useCallback(
     async (payload: { texto?: string; audioBase64?: string }, fuente: Fuente) => {
@@ -89,6 +106,9 @@ export default function PantallaConteo() {
 
   function aplicarRespuesta(respuesta: ConteoResponse) {
     if (respuesta.status === 'confirmado') {
+      // Progreso: marca el artículo como contado (sirve al modo guiado y a la barra).
+      const id = respuesta.conteo.articulo_id
+      setContados((prev) => (prev.has(id) ? prev : new Set(prev).add(id)))
       setPantalla({ tipo: 'confirmando', conteo: respuesta.conteo })
       hablar(mensajeConfirmacion(respuesta.conteo))
       return
@@ -130,6 +150,21 @@ export default function PantallaConteo() {
     setPantalla({ tipo: 'lista' })
   }
 
+  // --- Modo guiado (C8) ---
+  function registrarGuiado(cantidadTexto: string, articulo: ArticuloResumen) {
+    // Fuente 'manual': el artículo lo fija la guía, así el match es exacto y no
+    // dispara los casos de demo por palabra clave (noventa/cazuela/xyz).
+    enviarCaptura({ texto: textoCantidadArticulo(cantidadTexto, articulo) }, 'manual')
+  }
+
+  function saltarGuiado(articulo: ArticuloResumen) {
+    setSaltados((prev) => new Set(prev).add(articulo.articulo_id))
+  }
+
+  function reiniciarGuiado() {
+    setSaltados(new Set())
+  }
+
   return (
     <main className="flex min-h-screen flex-col bg-slate-900 p-6 text-white">
       <header className="flex items-start justify-between gap-3 rounded-2xl bg-slate-800 px-4 py-3 shadow-md">
@@ -162,19 +197,71 @@ export default function PantallaConteo() {
         </div>
       </header>
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-8">
+      {/* C8: barra de progreso (siempre) + selector de modo (solo en 'lista'). */}
+      <section className="mt-4 rounded-2xl bg-slate-800 px-4 py-3">
+        <div className="flex items-center justify-between text-lg font-medium">
+          <span>Progreso de la guía</span>
+          <span className="tabular-nums text-slate-300">
+            {progreso.hechos} / {progreso.total}
+          </span>
+        </div>
+        <div
+          className="mt-2 h-3 w-full overflow-hidden rounded-full bg-slate-700"
+          role="progressbar"
+          aria-valuenow={progreso.porcentaje}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-all"
+            style={{ width: `${progreso.porcentaje}%` }}
+          />
+        </div>
+
         {pantalla.tipo === 'lista' && (
+          <div className="mt-3 grid grid-cols-2 gap-2" role="tablist" aria-label="Modo de conteo">
+            {(['libre', 'guiado'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="tab"
+                aria-selected={modo === m}
+                onClick={() => setModo(m)}
+                className={`h-14 rounded-xl text-lg font-semibold capitalize transition-colors ${
+                  modo === m ? 'bg-white text-slate-900' : 'bg-slate-700 text-slate-200 active:bg-slate-600'
+                }`}
+              >
+                {m === 'libre' ? 'Modo libre' : 'Modo guiado'}
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <div className="flex flex-1 flex-col items-center justify-center gap-8">
+        {pantalla.tipo === 'lista' && modo === 'libre' && (
           <>
             <BotonMicrofono estadoVoz={estadoVoz} onTocar={alTocarMicrofono} />
             <TecladoManual onEnviar={(texto) => enviarCaptura({ texto }, 'manual')} />
           </>
         )}
 
-        {estadoVoz === 'escuchando' && pantalla.tipo === 'lista' && (
+        {pantalla.tipo === 'lista' && modo === 'guiado' && (
+          <ModoGuiado
+            objetivo={objetivoGuiado}
+            progreso={progreso}
+            enviando={pendientes > 0}
+            onRegistrar={registrarGuiado}
+            onSaltar={saltarGuiado}
+            onReiniciar={reiniciarGuiado}
+          />
+        )}
+
+        {estadoVoz === 'escuchando' && pantalla.tipo === 'lista' && modo === 'libre' && (
           <p className="text-2xl text-slate-300">Escuchando…</p>
         )}
 
-        {estadoVoz === 'grabando' && pantalla.tipo === 'lista' && (
+        {estadoVoz === 'grabando' && pantalla.tipo === 'lista' && modo === 'libre' && (
           <p className="text-2xl text-red-300">🔴 Grabando… toca de nuevo para enviar</p>
         )}
 
@@ -226,7 +313,7 @@ export default function PantallaConteo() {
           </div>
         )}
 
-        {usarAudio && estadoVoz !== 'grabando' && pantalla.tipo === 'lista' && (
+        {usarAudio && estadoVoz !== 'grabando' && pantalla.tipo === 'lista' && modo === 'libre' && (
           <p className="max-w-sm text-center text-lg text-amber-300">
             {estadoVoz === 'no_soportado'
               ? 'Este navegador no transcribe voz en vivo: el micrófono ahora graba audio.'

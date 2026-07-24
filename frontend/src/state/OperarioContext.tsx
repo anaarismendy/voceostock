@@ -1,11 +1,11 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
-import { nuevoOperario, type Operario } from '../lib/operario'
+import { nuevoOperario, type Operario, type Rol } from '../lib/operario'
 import type { Bodega } from '../lib/bodegas'
 
 interface SesionOperario {
   operario: Operario | null
   bodega: Bodega | null
-  iniciarSesion: (pin: string) => void
+  iniciarSesion: (pin: string, rol: Rol) => void
   seleccionarBodega: (bodega: Bodega) => void
   volverASeleccionarBodega: () => void
   cerrarSesion: () => void
@@ -21,7 +21,7 @@ export function OperarioProvider({ children }: { children: ReactNode }) {
     () => ({
       operario,
       bodega,
-      iniciarSesion: (pin) => setOperario(nuevoOperario(pin)),
+      iniciarSesion: (pin, rol) => setOperario(nuevoOperario(pin, rol)),
       seleccionarBodega: (b) => setBodega(b),
       volverASeleccionarBodega: () => setBodega(null),
       cerrarSesion: () => {

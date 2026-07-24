@@ -10,7 +10,18 @@ import {
   ejemploNoCatalogado,
 } from './examples.ts'
 import { extraerCantidad } from './texto.ts'
-import { crearTokenAmbiguedad, crearTokenAnomalia, resolverToken } from './store.ts'
+import {
+  crearTokenAmbiguedad,
+  crearTokenAnomalia,
+  listarConteos,
+  registrarConteo,
+  reiniciarConteos,
+  resolverToken,
+  sembrarConteos,
+} from './store.ts'
+import { calcularCierre } from './cierre.ts'
+import { resumenDashboard } from './dashboard.ts'
+import { conteosSemilla } from './seed.ts'
 
 function leerCuerpoJson(req: IncomingMessage): Promise<Record<string, unknown>> {
   return new Promise((resolvePromise, reject) => {
@@ -43,6 +54,10 @@ export function mockApiPlugin(): Plugin {
   return {
     name: 'voceostock-mock-api',
     configureServer(server) {
+      // Semilla de demo al arrancar el dev server (C11): dashboard y cierre no
+      // arrancan vacíos. Reiniciar el server = demo limpia.
+      sembrarConteos(conteosSemilla(cargarCatalogo(), Date.now()))
+
       server.middlewares.use(async (req, res, next) => {
         if (req.url === '/health') {
           enviarJson(res, 200, { status: 'ok' })
@@ -97,11 +112,13 @@ export function mockApiPlugin(): Plugin {
             const encontrado = buscarMejorMatch(catalogo, texto)
             if (encontrado) {
               const cantidad = extraerCantidad(texto, 1)
+              const articulo_id = Number(encontrado.nr_articulo)
+              registrarConteo({ articulo_id, articulo_nombre: encontrado.articulo, cantidad, unidad: encontrado.unidad })
               enviarJson(res, 200, {
                 status: 'confirmado',
                 conteo: {
                   id: randomUUID(),
-                  articulo_id: Number(encontrado.nr_articulo),
+                  articulo_id,
                   articulo_nombre: encontrado.articulo,
                   cantidad,
                   unidad: encontrado.unidad,
@@ -128,12 +145,48 @@ export function mockApiPlugin(): Plugin {
               return
             }
 
+            if (resultado.status === 'confirmado') {
+              const { articulo_id, articulo_nombre, cantidad, unidad } = resultado.conteo
+              registrarConteo({ articulo_id, articulo_nombre, cantidad, unidad })
+            }
             enviarJson(res, 200, resultado)
             return
           }
 
           if (req.method === 'GET' && url.pathname === '/api/v1/bodegas') {
             enviarJson(res, 200, cargarBodegas())
+            return
+          }
+
+          // Reporte de cierre del líder (C9). Único endpoint que expone el SD.
+          // `ids` = artículos esperados (el checklist guiado), para que los no
+          // contados salgan como faltantes.
+          if (req.method === 'GET' && url.pathname === '/api/v1/cierre') {
+            const idsParam = url.searchParams.get('ids')
+            const esperados = idsParam
+              ? idsParam.split(',').map(Number).filter((n) => !Number.isNaN(n))
+              : []
+            enviarJson(res, 200, calcularCierre(catalogo, listarConteos(), esperados))
+            return
+          }
+
+          // Dashboard en vivo (C10): actividad de captura, sin SD.
+          if (req.method === 'GET' && url.pathname === '/api/v1/dashboard') {
+            enviarJson(res, 200, resumenDashboard(listarConteos()))
+            return
+          }
+
+          // Control de demo (C11): re-correr la demo sin reiniciar el server.
+          if (req.method === 'POST' && url.pathname === '/api/v1/demo/reset') {
+            reiniciarConteos()
+            enviarJson(res, 200, { ok: true, total: 0 })
+            return
+          }
+          if (req.method === 'POST' && url.pathname === '/api/v1/demo/seed') {
+            reiniciarConteos()
+            const semilla = conteosSemilla(catalogo, Date.now())
+            sembrarConteos(semilla)
+            enviarJson(res, 200, { ok: true, total: semilla.length })
             return
           }
 

@@ -24,6 +24,36 @@ type Pendiente = PendienteAmbiguedad | PendienteAnomalia
 // exactamente lo que se quiere de un mock (nada que migrar a BD real).
 const pendientes = new Map<string, Pendiente>()
 
+// Conteos confirmados de la sesión, para el reporte de cierre (C9). También
+// en memoria: reiniciar el dev server "vacía la bodega".
+export interface ConteoRegistrado {
+  articulo_id: number
+  articulo_nombre: string
+  cantidad: number
+  unidad: string
+  creado_en?: number // epoch ms; lo pone registrarConteo (para el dashboard C10)
+}
+
+const conteosRegistrados: ConteoRegistrado[] = []
+
+export function registrarConteo(conteo: ConteoRegistrado): void {
+  conteosRegistrados.push({ ...conteo, creado_en: conteo.creado_en ?? Date.now() })
+}
+
+export function listarConteos(): ConteoRegistrado[] {
+  return conteosRegistrados
+}
+
+/** Siembra conteos ya hechos (respeta su creado_en). Para la demo (C11). */
+export function sembrarConteos(conteos: ConteoRegistrado[]): void {
+  for (const c of conteos) conteosRegistrados.push(c)
+}
+
+/** Vacía la sesión: re-correr la demo desde cero. */
+export function reiniciarConteos(): void {
+  conteosRegistrados.length = 0
+}
+
 function crearToken(pendiente: Pendiente): string {
   const token = randomUUID()
   pendientes.set(token, pendiente)

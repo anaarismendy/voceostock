@@ -16,3 +16,8 @@ test('nuevoOperario arma un operario con id distinto por sesión', () => {
   expect(a.pin).toBe('1234')
   expect(a.id).not.toBe(b.id)
 })
+
+test('nuevoOperario usa rol operario por defecto y respeta el rol dado', () => {
+  expect(nuevoOperario('1234').rol).toBe('operario')
+  expect(nuevoOperario('1234', 'lider').rol).toBe('lider')
+})
