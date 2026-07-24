@@ -1,0 +1,37 @@
+data/replay/nlu/audio-a90a517251f2cc2f.json
+  s_db654ea9d24c98::t_0613eac02f5dae 1-10
+data/replay/audio/siete-kilos-de-arroz-basmati.webm
+  s_db654ea9d24c98::t_c808ace48f4955 1
+data/replay/nlu/audio-6071400eee1a305c.json
+  s_db654ea9d24c98::t_0613eac02f5dae 1-10
+data/replay/audio/treinta-y-tres-litros-de-aceite-de-oliva.webm
+  s_db654ea9d24c98::t_c808ace48f4955 1
+data/replay/audio/una-cazuela.webm
+  s_db654ea9d24c98::t_c808ace48f4955 1
+data/replay/audio/noventa-cajas-de-cazuelas.webm
+  s_db654ea9d24c98::t_c808ace48f4955 1
+backend/scripts/record_audio_fixtures.py
+  s_db654ea9d24c98::t_ea453e3b6f0034 1-75
+data/replay/nlu/audio-863018c30fdcc6d0.json
+  s_db654ea9d24c98::t_0613eac02f5dae 1-10
+data/replay/nlu/audio-ab91eebd0d5ec3f1.json
+  s_db654ea9d24c98::t_0613eac02f5dae 1-10
+data/replay/nlu/siete-kilos-de-arroz-basmati.json
+  s_db654ea9d24c98::t_c808ace48f4955 1-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "2609f4a19908072067592c4d57269da9dec8d30f",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
