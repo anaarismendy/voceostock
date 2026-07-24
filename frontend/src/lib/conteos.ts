@@ -11,25 +11,27 @@ export interface ConteoRequest {
 }
 
 export interface NuevoConteoParams {
-  texto: string
   bodegaId: number
   operarioId: string
   fuente?: Fuente
+  texto?: string
+  audioBase64?: string
 }
 
 export function nuevoConteoRequest({
-  texto,
   bodegaId,
   operarioId,
   fuente = 'manual',
+  texto,
+  audioBase64,
 }: NuevoConteoParams): ConteoRequest {
   return {
     sesion_id: crypto.randomUUID(),
     bodega_id: bodegaId,
     operario_id: operarioId,
     fuente,
-    payload_texto: texto,
-    payload_audio_b64: null,
+    payload_texto: texto ?? null,
+    payload_audio_b64: audioBase64 ?? null,
   }
 }
 

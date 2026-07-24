@@ -34,15 +34,15 @@ export default function PantallaConteo() {
   const [pantalla, setPantalla] = useState<EstadoPantalla>({ tipo: 'lista' })
   const [enviandoRespuesta, setEnviandoRespuesta] = useState(false)
 
-  const enviarTexto = useCallback(
-    async (texto: string, fuente: Fuente) => {
+  const enviarCaptura = useCallback(
+    async (payload: { texto?: string; audioBase64?: string }, fuente: Fuente) => {
       setPantalla({ tipo: 'procesando' })
       try {
         const request = nuevoConteoRequest({
-          texto,
           bodegaId: bodega!.id,
           operarioId: operario!.id,
           fuente,
+          ...payload,
         })
         const respuesta = await postConteo(request)
         aplicarRespuesta(respuesta)
@@ -53,9 +53,28 @@ export default function PantallaConteo() {
     [bodega, operario],
   )
 
-  const manejarTranscripcion = useCallback((texto: string) => enviarTexto(texto, 'voz-tablet'), [enviarTexto])
+  const manejarTranscripcion = useCallback((texto: string) => enviarCaptura({ texto }, 'voz-tablet'), [enviarCaptura])
+  const manejarAudioListo = useCallback(
+    (audioBase64: string) => enviarCaptura({ audioBase64 }, 'voz-tablet'),
+    [enviarCaptura],
+  )
 
-  const { estado: estadoVoz, escuchar, hablar } = useVoz(manejarTranscripcion)
+  const { estado: estadoVoz, usarAudio, escuchar, hablar, grabarAudio, detenerGrabacion } = useVoz(
+    manejarTranscripcion,
+    manejarAudioListo,
+  )
+
+  function alTocarMicrofono() {
+    if (!usarAudio) {
+      escuchar()
+      return
+    }
+    if (estadoVoz === 'grabando') {
+      detenerGrabacion()
+    } else {
+      grabarAudio()
+    }
+  }
 
   function aplicarRespuesta(respuesta: ConteoResponse) {
     if (respuesta.status === 'confirmado') {
@@ -107,13 +126,17 @@ export default function PantallaConteo() {
       <div className="flex flex-1 flex-col items-center justify-center gap-8">
         {pantalla.tipo === 'lista' && (
           <>
-            <BotonMicrofono estadoVoz={estadoVoz} onTocar={escuchar} />
-            <TecladoManual onEnviar={(texto) => enviarTexto(texto, 'manual')} />
+            <BotonMicrofono estadoVoz={estadoVoz} onTocar={alTocarMicrofono} />
+            <TecladoManual onEnviar={(texto) => enviarCaptura({ texto }, 'manual')} />
           </>
         )}
 
         {estadoVoz === 'escuchando' && pantalla.tipo === 'lista' && (
           <p className="text-2xl text-slate-300">Escuchando…</p>
+        )}
+
+        {estadoVoz === 'grabando' && pantalla.tipo === 'lista' && (
+          <p className="text-2xl text-red-300">🔴 Grabando… toca de nuevo para enviar</p>
         )}
 
         {pantalla.tipo === 'procesando' && (
@@ -160,9 +183,11 @@ export default function PantallaConteo() {
           </div>
         )}
 
-        {estadoVoz === 'no_soportado' && pantalla.tipo === 'lista' && (
+        {usarAudio && estadoVoz !== 'grabando' && pantalla.tipo === 'lista' && (
           <p className="max-w-sm text-center text-lg text-amber-300">
-            Este navegador no soporta reconocimiento de voz. Usa el teclado de abajo.
+            {estadoVoz === 'no_soportado'
+              ? 'Este navegador no transcribe voz en vivo: el micrófono ahora graba audio.'
+              : 'El reconocimiento de voz está fallando: el micrófono ahora graba audio.'}
           </p>
         )}
       </div>
@@ -178,17 +203,22 @@ function BotonMicrofono({
   onTocar: () => void
 }) {
   const escuchando = estadoVoz === 'escuchando'
+  const grabando = estadoVoz === 'grabando'
   return (
     <button
       type="button"
       onClick={onTocar}
       disabled={escuchando}
-      aria-label="Hablar para registrar un conteo"
+      aria-label={grabando ? 'Detener grabación y enviar' : 'Hablar para registrar un conteo'}
       className={`flex h-40 w-40 items-center justify-center rounded-full text-6xl shadow-lg transition-colors ${
-        escuchando ? 'bg-red-600' : 'bg-emerald-600 active:bg-emerald-500'
+        grabando
+          ? 'animate-pulse bg-red-600'
+          : escuchando
+            ? 'bg-red-600'
+            : 'bg-emerald-600 active:bg-emerald-500'
       }`}
     >
-      🎤
+      {grabando ? '⏹️' : '🎤'}
     </button>
   )
 }

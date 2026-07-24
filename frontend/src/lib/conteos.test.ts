@@ -16,6 +16,12 @@ test('nuevoConteoRequest respeta la fuente explícita', () => {
   expect(r.fuente).toBe('voz-tablet')
 })
 
+test('nuevoConteoRequest arma el payload de audio (ruta B, C6)', () => {
+  const r = nuevoConteoRequest({ audioBase64: 'QUJD', bodegaId: 1, operarioId: 'op-1', fuente: 'voz-tablet' })
+  expect(r.payload_texto).toBeNull()
+  expect(r.payload_audio_b64).toBe('QUJD')
+})
+
 test('mensajeConfirmacion lee cantidad, unidad y artículo', () => {
   const texto = mensajeConfirmacion({
     id: 'x',
