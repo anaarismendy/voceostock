@@ -1,0 +1,10 @@
+{
+  "articulo_texto": "aceite",
+  "cantidad": 33.5,
+  "unidad_texto": "litros",
+  "unidad_normalizada": "Liter",
+  "hubo_correccion": false,
+  "confianza": 0.95,
+  "ambiguedad": null,
+  "empaque": null
+}

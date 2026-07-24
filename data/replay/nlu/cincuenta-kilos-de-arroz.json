@@ -1,0 +1,10 @@
+{
+  "articulo_texto": "arroz",
+  "cantidad": 50,
+  "unidad_texto": "kilos",
+  "unidad_normalizada": "Kilogram",
+  "hubo_correccion": false,
+  "confianza": 0.97,
+  "ambiguedad": null,
+  "empaque": null
+}

@@ -11,9 +11,12 @@ API (2.5 Flash para NLU multimodal, gemini-embedding-001 para matching).
   a la BD; el parser normaliza sinónimos (kilo/kg/kilito→Kilogram,
   lt/litros→Liter, paquete/unidades→Unidad, porción→Portion,
   arroba→12.5 Kilogram).
-- Conteo ciego: el SD (stock teórico) NUNCA aparece en endpoints usados
-  durante la captura, ni en el frontend de conteo, ni en mensajes de
-  WhatsApp. Solo existe en reportes de cierre.
+- Conteo ciego: el SD NUNCA se muestra ANTES de que el operario dicte su
+  cantidad — ni en pantallas de captura, ni en listas de artículos, ni en
+  progreso, ni en mensajes de WhatsApp. ÚNICA excepción: la pregunta de una
+  anomalía ya disparada puede citar el saldo del último corte, porque
+  ocurre después de que el operario ya comprometió su número. El SD
+  tampoco viaja en ningún otro campo de ninguna respuesta.
 - `conteos` es append-only: una corrección crea un registro nuevo con
   vínculo al que supersede. Nunca UPDATE de cantidad.
 - Contrato único de ingesta: POST /api/v1/conteos; el campo `fuente`

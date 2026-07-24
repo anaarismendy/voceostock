@@ -1,0 +1,10 @@
+{
+  "articulo_texto": "plato blanco",
+  "cantidad": 19,
+  "unidad_texto": "unidades",
+  "unidad_normalizada": "Unidad",
+  "hubo_correccion": true,
+  "confianza": 0.92,
+  "ambiguedad": null,
+  "empaque": null
+}

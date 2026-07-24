@@ -1,0 +1,10 @@
+{
+  "articulo_texto": "sal",
+  "cantidad": 0.5,
+  "unidad_texto": "kilo",
+  "unidad_normalizada": "Kilogram",
+  "hubo_correccion": false,
+  "confianza": 0.96,
+  "ambiguedad": null,
+  "empaque": null
+}

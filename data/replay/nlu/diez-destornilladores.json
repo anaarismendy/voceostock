@@ -1,0 +1,10 @@
+{
+  "articulo_texto": "destornillador",
+  "cantidad": 10,
+  "unidad_texto": "unidades",
+  "unidad_normalizada": "Unidad",
+  "hubo_correccion": false,
+  "confianza": 0.95,
+  "ambiguedad": null,
+  "empaque": null
+}

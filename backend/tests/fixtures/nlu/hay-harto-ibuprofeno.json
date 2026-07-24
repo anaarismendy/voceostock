@@ -1,0 +1,10 @@
+{
+  "articulo_texto": "ibuprofeno",
+  "cantidad": null,
+  "unidad_texto": null,
+  "unidad_normalizada": null,
+  "hubo_correccion": false,
+  "confianza": 0.6,
+  "ambiguedad": "no se especifico la cantidad",
+  "empaque": null
+}

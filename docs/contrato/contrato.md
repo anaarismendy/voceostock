@@ -67,7 +67,17 @@ Resuelve una captura pendiente de confirmación.
 
 ### Respuesta
 
-La misma estructura (los mismos tres estados) que `POST /conteos`.
+La misma estructura (los mismos tres estados) que `POST /conteos`, más un
+cuarto estado **exclusivo de este endpoint** cuando la respuesta es `"no"`
+(el operario descarta la captura pendiente; no se persiste nada):
+
+```json
+{ "status": "descartado" }
+```
+
+> Nota: este estado NO existe en `POST /conteos`, por lo que el contrato
+> congelado de captura no cambia. Errores del token: `404` inexistente,
+> `410` expirado (10 min), `409` ya resuelto.
 
 ## Ejemplos
 

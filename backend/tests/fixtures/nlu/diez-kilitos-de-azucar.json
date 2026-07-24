@@ -1,0 +1,10 @@
+{
+  "articulo_texto": "azucar",
+  "cantidad": 10,
+  "unidad_texto": "kilitos",
+  "unidad_normalizada": "Kilogram",
+  "hubo_correccion": false,
+  "confianza": 0.94,
+  "ambiguedad": null,
+  "empaque": null
+}

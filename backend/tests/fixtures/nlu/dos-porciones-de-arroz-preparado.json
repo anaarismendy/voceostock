@@ -1,0 +1,10 @@
+{
+  "articulo_texto": "arroz preparado",
+  "cantidad": 2,
+  "unidad_texto": "porciones",
+  "unidad_normalizada": "Portion",
+  "hubo_correccion": false,
+  "confianza": 0.95,
+  "ambiguedad": null,
+  "empaque": null
+}
