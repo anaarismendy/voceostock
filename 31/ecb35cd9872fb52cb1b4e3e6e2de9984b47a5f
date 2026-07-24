@@ -1,0 +1,19 @@
+backend/app/pipeline/matching/embeddings.py
+  s_db654ea9d24c98::t_fe00862cffc1a0 85-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "31ecb35cd9872fb52cb1b4e3e6e2de9984b47a5f",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
