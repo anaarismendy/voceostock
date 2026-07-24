@@ -6,7 +6,7 @@ hay varios workers.
 """
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -33,14 +33,14 @@ async def emitir(
         "operario_id": str(operario_id) if operario_id else None,
         "fuente": fuente,
         "data": data,
-        "ts": datetime.now(timezone.utc).isoformat(),
+        "ts": datetime.now(UTC).isoformat(),
     }
     async with _lock:
         sockets = list(_salas.get(bodega_id, ()))
     for ws in sockets:
         try:
             await ws.send_json(evento)
-        except Exception:  # noqa: BLE001 — socket muerto: su handler lo saca de la sala
+        except Exception:  # noqa: BLE001, S110 — socket muerto: su handler lo saca de la sala
             pass
 
 

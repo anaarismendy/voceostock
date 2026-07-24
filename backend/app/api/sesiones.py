@@ -3,16 +3,16 @@
 REGLA INVIOLABLE: nada de aquí devuelve SD (conteo ciego).
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.db import get_db
+from app.db import Db
 from app.models import Articulo, Bodega, Conteo, Operario, SesionConteo, StockTeorico
 
 router = APIRouter(prefix="/api/v1/sesiones", tags=["sesiones"])
@@ -72,7 +72,7 @@ def _sesion_o_404(s: Session, sesion_id: UUID) -> SesionConteo:
 
 
 @router.post("", response_model=SesionOut)
-async def crear_sesion(req: SesionRequest, s: Session = Depends(get_db)) -> SesionOut:
+async def crear_sesion(req: SesionRequest, s: Db) -> SesionOut:
     bodega = s.get(Bodega, req.bodega_id)
     if bodega is None:
         raise HTTPException(404, "bodega desconocida")
@@ -102,7 +102,7 @@ async def crear_sesion(req: SesionRequest, s: Session = Depends(get_db)) -> Sesi
 
 
 @router.get("/{sesion_id}/progreso", response_model=ProgresoOut)
-async def progreso(sesion_id: UUID, s: Session = Depends(get_db)) -> ProgresoOut:
+async def progreso(sesion_id: UUID, s: Db) -> ProgresoOut:
     sesion = _sesion_o_404(s, sesion_id)
     familia = func.coalesce(Articulo.familia, "General")
 
@@ -116,11 +116,11 @@ async def progreso(sesion_id: UUID, s: Session = Depends(get_db)) -> ProgresoOut
     )
     contados_familia = dict(
         s.execute(
-            select(func.coalesce(Articulo.familia, "General"), func.count())
+            select(familia, func.count())
             .select_from(Conteo)
             .outerjoin(Articulo, Articulo.id == Conteo.articulo_id)
             .where(Conteo.sesion_id == sesion.id, Conteo.activo.is_(True))
-            .group_by(func.coalesce(Articulo.familia, "General"))
+            .group_by(familia)
         ).all()
     )
 
@@ -157,12 +157,12 @@ async def progreso(sesion_id: UUID, s: Session = Depends(get_db)) -> ProgresoOut
 
 
 @router.post("/{sesion_id}/cerrar")
-async def cerrar_sesion(sesion_id: UUID, s: Session = Depends(get_db)) -> dict:
+async def cerrar_sesion(sesion_id: UUID, s: Db) -> dict:
     sesion = _sesion_o_404(s, sesion_id)
     if sesion.estado == "cerrada":
         raise HTTPException(409, "la sesión ya está cerrada")
     sesion.estado = "cerrada"
-    sesion.cerrada_en = datetime.now(timezone.utc)
+    sesion.cerrada_en = datetime.now(UTC)
     s.commit()
     return {
         "sesion_id": str(sesion.id),

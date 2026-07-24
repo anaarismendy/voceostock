@@ -5,17 +5,17 @@ cantidad) y conteo ciego (ninguna respuesta ni evento incluye SD).
 """
 
 import base64
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import models
 from app.api import ws
 from app.api.sesiones import contados_sesion, total_articulos
-from app.db import get_db
+from app.db import Db
 from app.pipeline.core import ContextoBodega, PayloadConteo, ResultadoPipeline, procesar_conteo
 from app.schemas.conteos import (
     Candidato,
@@ -160,7 +160,7 @@ def _respuesta_confirmado(
 
 
 @router.post("", response_model=RespuestaConteo)
-async def crear_conteo(req: ConteoRequest, s: Session = Depends(get_db)) -> RespuestaConteo:
+async def crear_conteo(req: ConteoRequest, s: Db) -> RespuestaConteo:
     sesion = _sesion_abierta(s, req.sesion_id)
 
     evidencia_url = None
@@ -190,7 +190,7 @@ async def crear_conteo(req: ConteoRequest, s: Session = Depends(get_db)) -> Resp
             sesion_id=sesion.id,
             payload_original=req.model_dump(mode="json"),
             resultado_pipeline=r.model_dump(mode="json"),
-            expira_en=datetime.now(timezone.utc) + TOKEN_TTL,
+            expira_en=datetime.now(UTC) + TOKEN_TTL,
         )
         s.add(token)
         s.commit()
@@ -221,12 +221,12 @@ async def crear_conteo(req: ConteoRequest, s: Session = Depends(get_db)) -> Resp
 
 @router.post("/{token_pendiente}/resolver", response_model=RespuestaResolver)
 async def resolver_conteo(
-    token_pendiente: UUID, req: ResolverRequest, s: Session = Depends(get_db)
+    token_pendiente: UUID, req: ResolverRequest, s: Db
 ) -> RespuestaResolver:
     token = s.get(models.TokenPendiente, token_pendiente)
     if token is None:
         raise HTTPException(404, "token_pendiente desconocido")
-    if token.expira_en < datetime.now(timezone.utc):
+    if token.expira_en < datetime.now(UTC):
         raise HTTPException(410, "token_pendiente expirado")
     if token.resuelto:
         raise HTTPException(409, "token_pendiente ya resuelto")
