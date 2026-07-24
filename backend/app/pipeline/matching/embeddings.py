@@ -82,11 +82,11 @@ class EmbedderGemini:
         api_key: str,
         ruta_cache: Path,
         dim: int = DIM_GEMINI,
-        # I2/H11: medido contra gemini-embedding-001 real (768d): el mejor
-        # coseno de un sinónimo legítimo ("cinta pegante"→"cinta sellamiento")
-        # es 0.734, así que 0.80 lo mataba. Con 0.70, empates cercanos caen a
-        # ambigüedad (margen), que es la UX correcta.
-        umbral: float = 0.70,
+        # Calibrado contra gemini-embedding-001 real (768d), mediciones I2:
+        # sinónimo legítimo "cinta pegante"→"cinta sellamiento" = 0.734 (debe
+        # pasar); falso positivo "destornillador"→"pasta en tornillos" = 0.704
+        # (debe morir). 0.72 corta justo en medio; 0.80 mataba al legítimo.
+        umbral: float = 0.72,
         margen: float = 0.05,
         lote: int = 100,
         reintentos: int = 3,
