@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { getDashboard, tiempoRelativo, type ResumenDashboard } from '../lib/dashboard'
+import { useOperario } from '../state/OperarioContext'
 
 const INTERVALO_MS = 2500
 
@@ -10,6 +11,7 @@ const INTERVALO_MS = 2500
  * último dato bueno y muestra "reconectando", nunca una pantalla en blanco.
  */
 export default function Dashboard() {
+  const { bodega } = useOperario()
   const [datos, setDatos] = useState<ResumenDashboard | null>(null)
   const [desconectado, setDesconectado] = useState(false)
   const [ahora, setAhora] = useState(() => Date.now())
@@ -19,7 +21,7 @@ export default function Dashboard() {
     montado.current = true
     const tick = async () => {
       try {
-        const d = await getDashboard()
+        const d = await getDashboard(bodega!.id)
         if (!montado.current) return
         setDatos(d)
         setDesconectado(false)

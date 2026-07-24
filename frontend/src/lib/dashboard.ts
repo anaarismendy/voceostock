@@ -15,8 +15,8 @@ export interface ResumenDashboard {
   recientes: ConteoReciente[]
 }
 
-export async function getDashboard(): Promise<ResumenDashboard> {
-  const r = await fetch('/api/v1/dashboard')
+export async function getDashboard(bodegaId: number): Promise<ResumenDashboard> {
+  const r = await fetch(`/api/v1/dashboard?bodega_id=${bodegaId}`)
   if (!r.ok) throw new Error(`Error ${r.status} al cargar el dashboard`)
   return r.json()
 }

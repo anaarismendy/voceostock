@@ -9,11 +9,14 @@ export interface FilaCierre {
   sd: number
   contado: number
   diferencia: number // contado - sd
+  /** Audio de evidencia del conteo (URL firmada), si la captura fue por voz grabada. */
+  evidencia_url?: string | null
 }
 
-export async function getCierre(esperados: number[] = []): Promise<FilaCierre[]> {
-  const query = esperados.length ? `?ids=${esperados.join(',')}` : ''
-  const r = await fetch(`/api/v1/cierre${query}`)
+export async function getCierre(bodegaId: number, esperados: number[] = []): Promise<FilaCierre[]> {
+  const params = new URLSearchParams({ bodega_id: String(bodegaId) })
+  if (esperados.length) params.set('ids', esperados.join(','))
+  const r = await fetch(`/api/v1/cierre?${params}`)
   if (!r.ok) throw new Error(`Error ${r.status} al cargar el cierre`)
   return r.json()
 }

@@ -120,8 +120,10 @@ export default function PantallaConteo() {
 
   function aplicarRespuesta(respuesta: ConteoResponse) {
     if (respuesta.status === 'confirmado') {
-      // Progreso: marca el artículo como contado (sirve al modo guiado y a la barra).
-      const id = respuesta.conteo.articulo_id
+      // Progreso de la guía: se marca por NOMBRE porque el checklist habla en
+      // nr_articulo (mock) y el backend real responde con ids de BD.
+      const item = CHECKLIST_DEMO.find((a) => a.articulo_nombre === respuesta.conteo.articulo_nombre)
+      const id = item?.articulo_id ?? respuesta.conteo.articulo_id
       setContados((prev) => (prev.has(id) ? prev : new Set(prev).add(id)))
       setPantalla({ tipo: 'confirmando', conteo: respuesta.conteo })
       hablar(mensajeConfirmacion(respuesta.conteo))
