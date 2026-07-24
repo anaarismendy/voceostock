@@ -125,7 +125,8 @@ def test_flujo_tres_estados_y_resolver(client, seed):
     resuelto = client.post(
         f"/api/v1/conteos/{anomalia['token_pendiente']}/resolver", json={"respuesta": "si"}
     ).json()
-    assert resuelto["status"] in ("confirmado", "no_catalogado")
+    assert resuelto["status"] == "confirmado"
+    assert resuelto["conteo"]["cantidad"] == 90
     with Session(engine) as s:
         anomalos = s.scalars(select(Conteo).where(Conteo.anomalia_flag.is_(True))).all()
     assert len(anomalos) == 1
@@ -164,7 +165,27 @@ def test_flujo_tres_estados_y_resolver(client, seed):
         f"/api/v1/conteos/{otra_anomalia['token_pendiente']}/resolver",
         json={"respuesta": "cantidad:12"},
     ).json()
-    assert ajustado["cantidad"] == 12.0
+    assert ajustado["conteo"]["cantidad"] == 12.0
+
+
+def test_resolver_si_persiste_valores_del_pipeline(client, seed):
+    """El bug corregido: "si" debe guardar lo que el pipeline determinó ANTES
+    de preguntar (cantidad 90), no 0 con el texto crudo como artículo."""
+    sesion_id, _ = _sesion(client, seed, seed.op1)
+    anomalia = _conteo(client, seed, sesion_id, "noventa cajas de cazuelas")
+    resp = client.post(
+        f"/api/v1/conteos/{anomalia['token_pendiente']}/resolver", json={"respuesta": "si"}
+    ).json()
+    assert resp["status"] == "confirmado"
+    assert resp["conteo"]["cantidad"] == 90
+    assert resp["conteo"]["articulo_nombre"] == "CAZUELA 16 ONZ"
+    assert resp["conteo"]["unidad"] == "Unidad"
+    with Session(engine) as s:
+        conteo = s.scalar(select(Conteo).where(Conteo.activo.is_(True)))
+        assert conteo.cantidad == 90
+        assert conteo.unidad == "Unidad"
+        assert conteo.articulo_id == seed.cazuela_id
+        assert conteo.anomalia_flag is True
 
 
 def test_supersede_append_only(client, seed):

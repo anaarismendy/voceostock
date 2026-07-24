@@ -256,12 +256,12 @@ async def resolver_conteo(
         raise HTTPException(422, "respuesta no reconocida")
 
     anomalia_tipo = r.motivo if r.motivo == "anomalia" else None
-    # ponytail: el stub no trae articulo/cantidad en sus resultados pendientes;
-    # defaults seguros hasta que P1 llene el ResultadoPipeline completo.
+    # "si" persiste exactamente lo que el pipeline determinó antes de preguntar
+    # (resultado_pipeline guarda articulo/cantidad/unidad en el token).
     unidad = r.unidad or (articulo.unidad_base if articulo else "Unidad")
     conteo = _persistir(
         s, sesion, original.fuente,
-        articulo=articulo, cantidad=cantidad or 0, unidad=unidad,
+        articulo=articulo, cantidad=cantidad if cantidad is not None else 0, unidad=unidad,
         confianza=r.confianza, texto=original.payload_texto,
         anomalia_tipo=anomalia_tipo,
     )

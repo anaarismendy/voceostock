@@ -55,10 +55,16 @@ async def procesar_conteo(payload: PayloadConteo,
 
     if texto:
         if "noventa" in texto:
+            # La anomalía SIEMPRE trae lo que el pipeline ya determinó antes
+            # de preguntar: /resolver "si" persiste exactamente estos valores.
             return ResultadoPipeline(
                 status="requiere_confirmacion",
                 motivo="anomalia",
                 pregunta="¿Confirmas 90? El corte anterior registró 10.",
+                articulo_id=1,
+                articulo_nombre="CAZUELA 16 ONZ",
+                cantidad=90,
+                unidad="Unidad",
             )
         if "cazuela" in texto:
             return ResultadoPipeline(
