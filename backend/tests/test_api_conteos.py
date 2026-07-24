@@ -249,6 +249,28 @@ def test_ws_dos_clientes_reciben_conteo_nuevo(client, seed):
             assert ws.receive_json()["tipo"] == "progreso"
 
 
+def test_fallo_del_nlu_degrada_sin_500_y_sin_persistir(client, seed):
+    """Endurecimiento: un audio sin fixture de replay (= NLU que falla) debe
+    responder 200 no_catalogado vacío, sin persistir nada — jamás un 500."""
+    sesion_id, _ = _sesion(client, seed, seed.op1)
+    resp = client.post(
+        "/api/v1/conteos",
+        json={
+            "sesion_id": sesion_id,
+            "bodega_id": seed.bodega_id,
+            "operario_id": seed.op1,
+            "fuente": "voz-tablet",
+            "payload_audio_b64": "YXVkaW8gc2luIGZpeHR1cmU=",
+        },
+    )
+    assert resp.status_code == 200
+    assert resp.json() == {
+        "status": "no_catalogado", "texto_capturado": "", "cantidad": None, "unidad": None,
+    }
+    with Session(engine) as s:
+        assert s.scalars(select(Conteo)).all() == []
+
+
 def test_token_expirado_y_ya_resuelto(client, seed):
     sesion_id, _ = _sesion(client, seed, seed.op1)
 

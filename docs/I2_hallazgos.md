@@ -117,3 +117,56 @@ proxy) actualizando el progreso con cada conteo.
 - Cada evento WS dispara un refetch de GET /progreso (2–3 por conteo).
   Chatty pero inofensivo a escala de demo; si molestara, bastaría
   debounce en useProgreso.
+
+# Endurecimiento para la demo (rama p2/endurecimiento)
+
+## E1 — El replay ya cubre la ruta de audio
+- `scripts/record_audio_fixtures.py`: los audios del guion viven en
+  `data/replay/audio/<slug>.webm` y el script genera
+  `data/replay/nlu/audio-<hash>.json` copiando el fixture de texto del
+  mismo slug (sin red). Con `--live` los regraba contra Gemini.
+- OJO: los .webm commiteados son PLACEHOLDERS (bytes de relleno). Antes de
+  la demo hay que grabar las 4 frases reales, reemplazar los archivos y
+  re-correr el script (2 min, documentado en el docstring).
+- E2E verificado con PIPELINE_MODE=replay y sin key: los 4 dictados por
+  texto Y por audio → 200 (confirmado/anomalía/ambigüedad/confirmado),
+  guion completo en el navegador sin un solo error en pantalla.
+
+## E2 — Degradación con gracia del NLU (adiós al 500)
+- Backend: cualquier excepción del pipeline (ReplayNoEncontrado, Gemini
+  caído, cuota) o texto capturado vacío → 200 `no_catalogado` con
+  `texto_capturado:""` y SIN persistir nada (guardia de texto vacío).
+  Prueba: `test_fallo_del_nlu_degrada_sin_500_y_sin_persistir`.
+- Frontend: ese estado cae automáticamente al teclado con toast "No pude
+  entender el audio, usa el teclado" (+ voz). Verificado en navegador
+  grabando audio desconocido en replay.
+
+## E3 — Errores honestos en /resolver y /conteos
+- `ApiError` con código en el cliente: 410 → "La pregunta expiró, vuelve a
+  dictar el conteo" (verificado en navegador expirando el token por SQL);
+  409 → "Esa pregunta ya fue respondida"; 404 token → "La pregunta ya no
+  existe"; 404/409 de sesión → mensajes propios de volver a elegir bodega.
+  Todos vuelven al estado de escucha; solo la red cae al genérico.
+
+## E4 — articulos.familia poblada (heurística, no taxonomía)
+- Migración 0003 + `scripts/populate_familia.py` (rerunnable): primera
+  palabra significativa del nombre normalizado, ignorando de/del/la/el/
+  en/con/para/x/y/los/las y números. Top: BOLSA 20, CUCHILLO 19,
+  PORCION 16, VINO 13, TABLA 13, CAJA 13, SALSA 12…
+- La barra por familia del frontend ya muestra grupos reales (ACEITE 1/5,
+  etc.); se listan solo las familias con conteos para no enterrar la señal.
+- Ruido conocido de la heurística: nombres sucios generan familias tipo
+  "AFVT)". Es cosmético y está asumido.
+
+## E5 — Umbral del matcher 0.70 → 0.72 (medición, no corazonada)
+- cos("cinta pegante","cinta sellamiento…") = 0.734 (legítimo, pasa);
+  cos("destornillador","pasta en tornillos") = 0.704 (falso positivo,
+  muere). 0.72 corta en medio. 5 pruebas de matching + la live verdes;
+  no hizo falta bajar a 0.71.
+
+## E6 — Latencia percibida
+- La transcripción cruda + "Procesando…" aparecen al enviar el dictado:
+  **percibido 27 ms** (2 corridas). El ciclo real live quedó en 2,2 s en
+  caliente (5,7 s la primera llamada por warmup del pipeline; en replay
+  <300 ms). El objetivo <2 s del ciclo real sigue PENDIENTE y es decisión
+  de P1 (modelo/prompt intocables por acuerdo).

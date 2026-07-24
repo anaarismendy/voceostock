@@ -1,0 +1,10 @@
+{
+  "articulo_texto": "cazuela",
+  "cantidad": 1,
+  "unidad_texto": null,
+  "unidad_normalizada": "Unidad",
+  "hubo_correccion": false,
+  "confianza": 0.95,
+  "ambiguedad": null,
+  "empaque": null
+}

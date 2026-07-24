@@ -5,6 +5,7 @@ cantidad) y conteo ciego (ninguna respuesta ni evento incluye SD).
 """
 
 import base64
+import logging
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -33,7 +34,14 @@ from app.services import storage
 
 router = APIRouter(prefix="/api/v1/conteos", tags=["conteos"])
 
+logger = logging.getLogger(__name__)
+
 TOKEN_TTL = timedelta(minutes=10)
+
+# Degradación con gracia: cualquier fallo del NLU (ReplayNoEncontrado, Gemini
+# caído, cuota) o un texto capturado vacío NO revienta con 500 ni persiste
+# nada — se devuelve un no_catalogado vacío y el frontend cae al teclado.
+_NO_ENTENDIDO = RespuestaNoCatalogado(texto_capturado="", cantidad=None, unidad=None)
 
 
 def _sesion_abierta(s: Session, sesion_id: UUID) -> models.SesionConteo:
@@ -169,7 +177,11 @@ async def crear_conteo(req: ConteoRequest, s: Db) -> RespuestaConteo:
         evidencia_url = storage.url_firmada(archivo)
 
     payload = PayloadConteo(**req.model_dump())
-    r = await procesar_conteo(payload, ContextoBodega(bodega_id=req.bodega_id))
+    try:
+        r = await procesar_conteo(payload, ContextoBodega(bodega_id=req.bodega_id))
+    except Exception:
+        logger.exception("fallo del pipeline NLU; degradando a no_catalogado vacío")
+        return _NO_ENTENDIDO
 
     if r.status == "confirmado":
         articulo = _buscar_articulo(s, r.articulo_id)
@@ -206,8 +218,12 @@ async def crear_conteo(req: ConteoRequest, s: Db) -> RespuestaConteo:
             if r.candidatos else None,
         )
 
-    # no_catalogado: se persiste con articulo_id NULL y texto_capturado
+    # no_catalogado: se persiste con articulo_id NULL y texto_capturado.
+    # Guardia de texto vacío: sin texto no hay nada que persistir; se pide
+    # repetir (el frontend cae al teclado).
     texto = r.texto_capturado or req.payload_texto or ""
+    if not texto.strip():
+        return _NO_ENTENDIDO
     conteo = _persistir(
         s, sesion, req.fuente,
         articulo=None, cantidad=r.cantidad or 0, unidad=r.unidad or "Unidad",
