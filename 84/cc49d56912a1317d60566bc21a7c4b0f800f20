@@ -1,0 +1,26 @@
+backend/app/api/catalogo.py
+  s_db654ea9d24c98::t_f70d12876b719c 1-65
+backend/tests/test_api_catalogo.py
+  s_db654ea9d24c98::t_3b9561b165d02b 1,3,10-29
+  s_db654ea9d24c98::t_3e33baece144d2 2,6-8
+  s_db654ea9d24c98::t_918cc9e379bab7 5,9
+  s_db654ea9d24c98::t_7a29a53c4e438f 4
+backend/app/main.py
+  s_db654ea9d24c98::t_c1352aeb47a888 1-2,4,6,14-23,25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "84cc49d56912a1317d60566bc21a7c4b0f800f20",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
