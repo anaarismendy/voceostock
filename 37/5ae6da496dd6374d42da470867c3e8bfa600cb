@@ -1,0 +1,21 @@
+backend/app/main.py
+  s_db654ea9d24c98::t_c7e224d0190c3b 6,12
+backend/app/api/ws.py
+  s_db654ea9d24c98::t_22530d824d611f 1-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "375ae6da496dd6374d42da470867c3e8bfa600cb",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
