@@ -12,6 +12,7 @@ import {
   type Fuente,
   type MotivoConfirmacion,
 } from '../lib/conteos'
+import { conReintento } from '../lib/reintento'
 import { useVoz } from '../lib/useVoz'
 import { useOperario } from '../state/OperarioContext'
 
@@ -33,10 +34,14 @@ export default function PantallaConteo() {
   const { operario, bodega, cerrarSesion } = useOperario()
   const [pantalla, setPantalla] = useState<EstadoPantalla>({ tipo: 'lista' })
   const [enviandoRespuesta, setEnviandoRespuesta] = useState(false)
+  const [pendientes, setPendientes] = useState(0)
+  const [intentoActual, setIntentoActual] = useState<number | null>(null)
 
   const enviarCaptura = useCallback(
     async (payload: { texto?: string; audioBase64?: string }, fuente: Fuente) => {
       setPantalla({ tipo: 'procesando' })
+      setPendientes((p) => p + 1)
+      setIntentoActual(null)
       try {
         const request = nuevoConteoRequest({
           bodegaId: bodega!.id,
@@ -44,10 +49,15 @@ export default function PantallaConteo() {
           fuente,
           ...payload,
         })
-        const respuesta = await postConteo(request)
+        const respuesta = await conReintento(() => postConteo(request), {
+          onReintento: (intento) => setIntentoActual(intento),
+        })
         aplicarRespuesta(respuesta)
       } catch {
-        setPantalla({ tipo: 'error', mensaje: 'No se pudo enviar el conteo. Intenta de nuevo.' })
+        setPantalla({ tipo: 'error', mensaje: 'No se pudo enviar el conteo. Revisa tu conexión e intenta de nuevo.' })
+      } finally {
+        setPendientes((p) => Math.max(0, p - 1))
+        setIntentoActual(null)
       }
     },
     [bodega, operario],
@@ -100,13 +110,18 @@ export default function PantallaConteo() {
 
   async function responderConfirmacion(tokenPendiente: string, respuesta: string) {
     setEnviandoRespuesta(true)
+    setPendientes((p) => p + 1)
     try {
-      const resultado = await resolverConteo(tokenPendiente, respuesta)
+      const resultado = await conReintento(() => resolverConteo(tokenPendiente, respuesta), {
+        onReintento: (intento) => setIntentoActual(intento),
+      })
       aplicarRespuesta(resultado)
     } catch {
-      setPantalla({ tipo: 'error', mensaje: 'No se pudo enviar la respuesta. Intenta de nuevo.' })
+      setPantalla({ tipo: 'error', mensaje: 'No se pudo enviar la respuesta. Revisa tu conexión e intenta de nuevo.' })
     } finally {
       setEnviandoRespuesta(false)
+      setPendientes((p) => Math.max(0, p - 1))
+      setIntentoActual(null)
     }
   }
 
@@ -118,9 +133,16 @@ export default function PantallaConteo() {
     <main className="flex min-h-screen flex-col bg-slate-900 p-6 text-white">
       <header className="flex items-center justify-between">
         <span className="text-lg font-medium capitalize">{bodega!.nombre}</span>
-        <button className="text-sm text-slate-400 underline" onClick={cerrarSesion}>
-          Cerrar sesión
-        </button>
+        <div className="flex items-center gap-3">
+          {pendientes > 0 && (
+            <span className="rounded-full bg-amber-600 px-3 py-1 text-xs font-semibold" aria-live="polite">
+              {pendientes} pendiente{pendientes > 1 ? 's' : ''}
+            </span>
+          )}
+          <button className="text-sm text-slate-400 underline" onClick={cerrarSesion}>
+            Cerrar sesión
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-8">
@@ -140,7 +162,11 @@ export default function PantallaConteo() {
         )}
 
         {pantalla.tipo === 'procesando' && (
-          <p className="text-2xl text-slate-300">Procesando…</p>
+          <p className="text-2xl text-slate-300">
+            {intentoActual
+              ? `Sin conexión, reintentando… (intento ${intentoActual})`
+              : 'Procesando…'}
+          </p>
         )}
 
         {pantalla.tipo === 'confirmando' && (
