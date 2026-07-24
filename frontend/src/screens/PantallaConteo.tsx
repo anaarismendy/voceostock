@@ -228,6 +228,7 @@ export default function PantallaConteo() {
             )}
 
             <BotonMicrofono estadoVoz={estadoVoz} onTocar={alTocarMicrofono} />
+            <DictadoPorTexto onEnviar={(texto) => enviarCaptura({ texto }, 'voz-tablet')} />
             <TecladoManual bodegaId={bodega!.id} onEnviar={(texto) => enviarCaptura({ texto }, 'manual')} />
             <PanelProgreso progreso={progreso} enVivo={enVivo} />
           </>
@@ -308,6 +309,40 @@ export default function PantallaConteo() {
         )}
       </div>
     </main>
+  )
+}
+
+/** Dictado escrito: mismo pipeline NLU que la voz (fuente voz-tablet), para
+ * ensayar la demo sin micrófono o salvarla si el auditorio es muy ruidoso. */
+function DictadoPorTexto({ onEnviar }: { onEnviar: (texto: string) => void }) {
+  const [texto, setTexto] = useState('')
+  return (
+    <form
+      className="flex w-full max-w-md gap-2"
+      onSubmit={(e) => {
+        e.preventDefault()
+        const limpio = texto.trim()
+        if (!limpio) return
+        onEnviar(limpio)
+        setTexto('')
+      }}
+    >
+      <input
+        type="text"
+        value={texto}
+        onChange={(e) => setTexto(e.target.value)}
+        placeholder='Escribe el dictado: "noventa cajas de cazuelas"…'
+        aria-label="Dictado por texto"
+        className="h-14 flex-1 rounded-xl bg-slate-800 px-4 text-base text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-white"
+      />
+      <button
+        type="submit"
+        disabled={!texto.trim()}
+        className="h-14 rounded-xl bg-slate-700 px-5 text-base font-semibold active:bg-slate-600 disabled:opacity-40"
+      >
+        Enviar
+      </button>
+    </form>
   )
 }
 

@@ -65,3 +65,55 @@ con causa, solución y estado.
   `payload_audio_b64` — el contrato no tiene campo de mime y el backend
   guarda `.webm` por defecto (`storage.guardar_audio`). Coherente de punta
   a punta; verificación en navegador en el PASO 4.
+
+## Flujos desde el navegador (PASO 4, bodega 3 "almacen general", live Gemini)
+Ejecutados con Playwright contra vite (:5173, VITE_API=real) → backend
+(:8020) → BD del contenedor. Evidencia: snapshots de accesibilidad,
+requests de red y queries SQL.
+10. Login PIN 1234 → operario "Operario 1234" creado (find-or-create) →
+    41 bodegas reales paginadas → sesión abierta en BD (estado=abierta).
+11. Feliz: "treinta y tres litros de aceite de oliva" (dictado por texto,
+    NLU live) → tarjeta 33 Liter ACEITE DE OLIVA → ✓ → BD: 33/Liter/
+    voz-tablet.
+12. Anomalía: pantalla muestra "¿Confirmas 90? El corte anterior registró
+    10." → Sí → BD: 90 CAZUELA 16 ONZ, anomalia_flag=t, resuelta=t.
+13. Ambigüedad: "una cazuela" → botones CAZUELA/TAPA CAZUELA → elegido
+    TAPA → BD: TAPA CAZUELA cantidad 1 (la dictada).
+14. Corrección: "Otra cantidad: 19" → BD: 90 activo=f, 19 activo=t con
+    supersede_id.
+15. No catalogado: "cinco flurbos galacticos" → pantalla "No encontré…"
+    → BD: articulo_id NULL, texto "flurbos galacticos", cantidad 5.
+16. Teclado manual: buscador con artículos reales de la bodega → cantidad
+    → BD: fuente=manual con supersede del conteo por voz anterior.
+17. Ruta B de audio: Web Speech deshabilitado a mano → botón pasa a
+    grabar (MediaRecorder, mic falsificado con oscilador) → webm de 218KB
+    al backend → evidencia firmada: GET 200 con firma / 403 sin firma.
+    Gemini live procesó el audio (onda seno → no_catalogado vacío: la
+    tubería multimodal completa funciona).
+18. Reintento C7: fetch caído 10 s en pleno conteo → badge "1 pendiente"
+    + "Sin conexión, reintentando… (intento 3)" → al volver la red el
+    conteo llegó a BD sin perderse (7 ARROZ BASMATI).
+19. Auditoría conteo ciego UI: bodegas/articulos/progreso sin claves ni
+    valores de SD; DOM sin rastro de stock teórico. Única aparición: el
+    número dentro de la pregunta de anomalía (excepción sancionada).
+C8 en pantalla: toggle Libre/Guiado, "Cuenta ahora (7 de 566): …" con
+Saltar, barra global y por familia, punto "En vivo" (WS conectado vía
+proxy) actualizando el progreso con cada conteo.
+
+## H9 — Falso positivo semántico con umbral 0.70 (observación para P1)
+- Con embeddings reales, "diez destornilladores" matcheó "PASTA EN
+  TORNILLOS" (raíz "tornillo"). La validación conversacional lo atrapó
+  (regla unidad_incoherente preguntó y el "No" lo descartó), así que no
+  llegó nada malo a la BD — pero es el costo del umbral 0.70 (H11 de I1).
+  Si P1 prefiere, un margen mayor o un umbral 0.72–0.75 lo mitiga.
+
+## H10 — Latencia live dictado→tarjeta: 2,5–2,7 s (objetivo <2 s) — PENDIENTE
+- Medida en navegador (performance.now, 2 corridas) con gemini-flash-latest.
+  El backend solo (curl) da ~2,0 s; el resto es proxy+render. Opciones si
+  importa: modelo más liviano para NLU (flash-lite), recortar el prompt del
+  parser, o presumir el catálogo. En modo replay el ciclo es <300 ms.
+
+## Nota de eficiencia (aceptada para la demo)
+- Cada evento WS dispara un refetch de GET /progreso (2–3 por conteo).
+  Chatty pero inofensivo a escala de demo; si molestara, bastaría
+  debounce en useProgreso.
