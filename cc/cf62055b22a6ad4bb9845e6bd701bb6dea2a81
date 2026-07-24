@@ -1,0 +1,23 @@
+backend/app/api/conteos.py
+  s_db654ea9d24c98::t_4b285bbd659f7d 259-260,264
+backend/app/pipeline/core.py
+  s_db654ea9d24c98::t_8c28318ef3b528 58-59,64-67
+backend/tests/test_api_conteos.py
+  s_db654ea9d24c98::t_2cf5db7e21a53e 128-129,168-188
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "cccf62055b22a6ad4bb9845e6bd701bb6dea2a81",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "unknown"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
