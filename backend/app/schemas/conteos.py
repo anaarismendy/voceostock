@@ -65,3 +65,13 @@ RespuestaConteo = RespuestaConfirmado | RespuestaRequiereConfirmacion | Respuest
 class ResolverRequest(BaseModel):
     # "si" | "no" | "articulo_id:<int>" | "cantidad:<float>"
     respuesta: str
+
+
+class RespuestaDescartado(BaseModel):
+    """Cuarto estado SOLO como respuesta de POST /conteos/{token}/resolver
+    (respuesta "no"). POST /conteos no cambia — acordado, ver contrato.md."""
+
+    status: Literal["descartado"] = "descartado"
+
+
+RespuestaResolver = RespuestaConteo | RespuestaDescartado
