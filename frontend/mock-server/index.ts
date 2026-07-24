@@ -137,6 +137,41 @@ export function mockApiPlugin(): Plugin {
             return
           }
 
+          // I2: rutas que el frontend real necesita (login, sesión, progreso).
+          if (req.method === 'POST' && url.pathname === '/api/v1/operarios/login') {
+            const body = await leerCuerpoJson(req)
+            const pin = String(body.pin ?? '')
+            if (!/^\d{4}$/.test(pin)) {
+              enviarJson(res, 422, { detail: 'PIN inválido' })
+              return
+            }
+            enviarJson(res, 200, { id: randomUUID(), nombre: `Operario ${pin}` })
+            return
+          }
+
+          if (req.method === 'POST' && url.pathname === '/api/v1/sesiones') {
+            const body = await leerCuerpoJson(req)
+            const bodegas = cargarBodegas()
+            const bodega = bodegas.find((b) => b.id === Number(body.bodega_id)) ?? bodegas[0]
+            enviarJson(res, 200, {
+              sesion_id: randomUUID(),
+              bodega: { id: bodega.id, nombre: bodega.nombre },
+              total_articulos: catalogo.length,
+            })
+            return
+          }
+
+          const progresoMatch = url.pathname.match(/^\/api\/v1\/sesiones\/([^/]+)\/progreso$/)
+          if (req.method === 'GET' && progresoMatch) {
+            enviarJson(res, 200, {
+              contados: 3,
+              total: catalogo.length,
+              por_familia: [{ familia: 'General', contados: 3, total: catalogo.length }],
+              colisiones: 0,
+            })
+            return
+          }
+
           if (req.method === 'GET' && url.pathname === '/api/v1/articulos') {
             // Conteo ciego: nunca se expone `sd` en este endpoint.
             const vistos = new Set<string>()
