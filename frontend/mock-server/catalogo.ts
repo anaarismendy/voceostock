@@ -89,3 +89,25 @@ export function buscarPorId(
 ): ArticuloCatalogo | undefined {
   return catalogo.find((a) => a.nr_articulo === nrArticulo)
 }
+
+/**
+ * El teclado manual (C5) manda como texto "<cantidad> <nombre exacto>"
+ * (el operario lo eligió de la lista de /api/v1/articulos), así que el
+ * match debe ser por substring dentro del texto, no al revés. Se toma el
+ * nombre más largo que calce para no confundir "ACEITE" con "ACEITE DE
+ * OLIVA" cuando ambos son substring del texto dictado.
+ */
+export function buscarMejorMatch(
+  catalogo: ArticuloCatalogo[],
+  texto: string,
+): ArticuloCatalogo | undefined {
+  const normalizado = texto.toLowerCase()
+  let mejor: ArticuloCatalogo | undefined
+  for (const a of catalogo) {
+    const nombre = a.articulo.toLowerCase()
+    if (nombre.length >= 4 && normalizado.includes(nombre)) {
+      if (!mejor || nombre.length > mejor.articulo.length) mejor = a
+    }
+  }
+  return mejor
+}

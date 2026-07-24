@@ -1,6 +1,7 @@
+import { randomUUID } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
-import { cargarCatalogo, buscarPorNombre } from './catalogo.ts'
+import { cargarCatalogo, buscarPorNombre, buscarMejorMatch } from './catalogo.ts'
 import { cargarBodegas } from './bodegas.ts'
 import {
   ejemploAmbiguedad,
@@ -62,23 +63,53 @@ export function mockApiPlugin(): Plugin {
             const texto = String(body.payload_texto ?? '').toLowerCase()
             const fuente = String(body.fuente ?? 'manual')
 
-            if (texto.includes('noventa')) {
-              const cazuela = buscarPorNombre(catalogo, 'cazuela 16 onz')!
-              const cantidad = extraerCantidad(texto, 90)
-              const token_pendiente = crearTokenAnomalia(cazuela, cantidad, fuente)
-              enviarJson(res, 200, { ...ejemploAnomalia(), token_pendiente })
-              return
+            // Las palabras clave de demo (noventa/cazuela/xyz) simulan texto
+            // dictado sin precisión. El teclado manual (C5) manda el nombre
+            // EXACTO que el operario eligió de /api/v1/articulos, así que
+            // debe ir directo al match real y no disparar esos casos — de lo
+            // contrario elegir "CAZUELA 16 ONZ" de la lista dispararía la
+            // ambigüedad de demo en vez de confirmar lo que el operario tocó.
+            if (fuente !== 'manual') {
+              if (texto.includes('noventa')) {
+                const cazuela = buscarPorNombre(catalogo, 'cazuela 16 onz')!
+                const cantidad = extraerCantidad(texto, 90)
+                const token_pendiente = crearTokenAnomalia(cazuela, cantidad, fuente)
+                enviarJson(res, 200, { ...ejemploAnomalia(), token_pendiente })
+                return
+              }
+
+              if (texto.includes('cazuela')) {
+                const cantidad = extraerCantidad(texto, 1)
+                const token_pendiente = crearTokenAmbiguedad(cantidad, 'Unidad', fuente)
+                enviarJson(res, 200, { ...ejemploAmbiguedad(), token_pendiente })
+                return
+              }
+
+              if (texto.includes('xyz')) {
+                enviarJson(res, 200, ejemploNoCatalogado())
+                return
+              }
             }
 
-            if (texto.includes('cazuela')) {
+            // Resto de textos: intenta un match real contra el catálogo (así
+            // el teclado manual de C5, que manda "<cantidad> <nombre exacto>",
+            // confirma el artículo que el operario realmente eligió).
+            const encontrado = buscarMejorMatch(catalogo, texto)
+            if (encontrado) {
               const cantidad = extraerCantidad(texto, 1)
-              const token_pendiente = crearTokenAmbiguedad(cantidad, 'Unidad', fuente)
-              enviarJson(res, 200, { ...ejemploAmbiguedad(), token_pendiente })
-              return
-            }
-
-            if (texto.includes('xyz')) {
-              enviarJson(res, 200, ejemploNoCatalogado())
+              enviarJson(res, 200, {
+                status: 'confirmado',
+                conteo: {
+                  id: randomUUID(),
+                  articulo_id: Number(encontrado.nr_articulo),
+                  articulo_nombre: encontrado.articulo,
+                  cantidad,
+                  unidad: encontrado.unidad,
+                  confianza: 0.95,
+                  fuente,
+                  evidencia_url: null,
+                },
+              })
               return
             }
 

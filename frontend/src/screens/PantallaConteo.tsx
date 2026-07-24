@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import ConfirmacionPendiente from '../components/ConfirmacionPendiente'
+import TecladoManual from '../components/TecladoManual'
 import {
   mensajeConfirmacion,
   nuevoConteoRequest,
@@ -8,6 +9,7 @@ import {
   type Candidato,
   type Conteo,
   type ConteoResponse,
+  type Fuente,
   type MotivoConfirmacion,
 } from '../lib/conteos'
 import { useVoz } from '../lib/useVoz'
@@ -32,15 +34,15 @@ export default function PantallaConteo() {
   const [pantalla, setPantalla] = useState<EstadoPantalla>({ tipo: 'lista' })
   const [enviandoRespuesta, setEnviandoRespuesta] = useState(false)
 
-  const manejarTranscripcion = useCallback(
-    async (texto: string) => {
+  const enviarTexto = useCallback(
+    async (texto: string, fuente: Fuente) => {
       setPantalla({ tipo: 'procesando' })
       try {
         const request = nuevoConteoRequest({
           texto,
           bodegaId: bodega!.id,
           operarioId: operario!.id,
-          fuente: 'voz-tablet',
+          fuente,
         })
         const respuesta = await postConteo(request)
         aplicarRespuesta(respuesta)
@@ -50,6 +52,8 @@ export default function PantallaConteo() {
     },
     [bodega, operario],
   )
+
+  const manejarTranscripcion = useCallback((texto: string) => enviarTexto(texto, 'voz-tablet'), [enviarTexto])
 
   const { estado: estadoVoz, escuchar, hablar } = useVoz(manejarTranscripcion)
 
@@ -102,7 +106,10 @@ export default function PantallaConteo() {
 
       <div className="flex flex-1 flex-col items-center justify-center gap-8">
         {pantalla.tipo === 'lista' && (
-          <BotonMicrofono estadoVoz={estadoVoz} onTocar={escuchar} />
+          <>
+            <BotonMicrofono estadoVoz={estadoVoz} onTocar={escuchar} />
+            <TecladoManual onEnviar={(texto) => enviarTexto(texto, 'manual')} />
+          </>
         )}
 
         {estadoVoz === 'escuchando' && pantalla.tipo === 'lista' && (
@@ -155,7 +162,7 @@ export default function PantallaConteo() {
 
         {estadoVoz === 'no_soportado' && pantalla.tipo === 'lista' && (
           <p className="max-w-sm text-center text-lg text-amber-300">
-            Este navegador no soporta reconocimiento de voz. El teclado de respaldo llega en C5.
+            Este navegador no soporta reconocimiento de voz. Usa el teclado de abajo.
           </p>
         )}
       </div>

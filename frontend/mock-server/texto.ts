@@ -59,5 +59,15 @@ export function extraerCantidad(texto: string, porDefecto = 1): number {
     }
   }
 
+  // Fracciones simples ("... y medio" = +0.5): suficiente para el mock,
+  // fracciones compuestas reales son la tarea A3 de P1.
+  if (/\bmedio\b/.test(normalizado)) {
+    total += 0.5
+    encontrada = true
+  } else if (/\bcuarto\b/.test(normalizado)) {
+    total += 0.25
+    encontrada = true
+  }
+
   return encontrada ? total : porDefecto
 }
