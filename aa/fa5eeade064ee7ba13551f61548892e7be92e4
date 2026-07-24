@@ -1,0 +1,21 @@
+data/replay/nlu/audio-cf340b8b772b838d.json
+  s_db654ea9d24c98::t_41fcf721b1cf20 1-10
+docs/I1_hallazgos.md
+  s_db654ea9d24c98::t_4889f86cf57433 75-107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "aafa5eeade064ee7ba13551f61548892e7be92e4",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
