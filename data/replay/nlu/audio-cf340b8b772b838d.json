@@ -1,0 +1,10 @@
+{
+  "articulo_texto": "aceite de oliva",
+  "cantidad": 12,
+  "unidad_texto": "litros",
+  "unidad_normalizada": "Liter",
+  "hubo_correccion": false,
+  "confianza": 0.92,
+  "ambiguedad": null,
+  "empaque": null
+}

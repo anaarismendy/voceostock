@@ -72,3 +72,36 @@ queda marcado **PENDIENTE**.
   feliz. La guardiana del conteo ciego mantiene todo blindado con la
   excepción explícita del campo `pregunta` cuando `motivo == "anomalia"`
   (y también vigila el formato con coma "9137,25").
+
+## H10 — eslint del frontend reventaba por un artefacto de vite
+- **Causa:** `frontend/vite.config.ts.timestamp-*.mjs` (residuo de un vite
+  interrumpido) disparaba `no-undef`. No es código fuente.
+- **Solución:** borrado; lint verde. Sugerencia a P3: agregar el patrón a
+  `.eslintignore`/ignores de eslint.config.js.
+
+## Flujos E2E ejecutados (bodega 3 "almacen general", 566 artículos, replay)
+Todos verificados contra la API real en :8020 y la BD del contenedor:
+1. Feliz: "treinta y tres litros de aceite de oliva" → confirmado ACEITE
+   DE OLIVA (id 299) 33 Liter.
+2. Anomalía: "noventa cajas de cazuelas" → pregunta "¿Confirmas 90? El
+   corte anterior registró 10." (SD real) → "si" → BD: cantidad 90,
+   CAZUELA 16 ONZ, anomalia_flag=t, anomalia_resuelta=t.
+3. Ambigüedad: "una cazuela" → candidatos CAZUELA/TAPA CAZUELA →
+   "articulo_id:269" → BD: TAPA CAZUELA cantidad 1 (la cantidad dictada
+   sobrevive, fix H7).
+4. Corrección: "cantidad:19" → supersede verificado (90 activo=f; 19
+   activo=t con supersede_id al viejo).
+5. No catalogado: "diez destornilladores" → articulo_id NULL,
+   texto_capturado "destornillador".
+6. Audio: payload_audio_b64 → evidencia_url firmada; GET firmado 200
+   (bytes exactos), sin firma 403. Fixture de replay
+   data/replay/nlu/audio-cf340b8b772b838d.json.
+7. WebSocket: 18 eventos coherentes (conteo_nuevo/progreso/anomalia con
+   resolucion); el único SD visible viaja en la pregunta de anomalía.
+8. Reporte A9: diferencias con semáforo (3 filas, resumen critico=3) y
+   export.xlsx con columnas 1:1 (CANTIDAD=orden_original, Nr.Artículo,
+   Artículo, Unidad, SD=cantidad física) ordenado por orden_original.
+
+## Suite y lint
+- backend: 84 passed, 16 skipped (integration, sin GEMINI_API_KEY), ruff OK.
+- frontend: 1 test OK, eslint OK (tras H10).
