@@ -50,40 +50,16 @@ class ResultadoPipeline(BaseModel):
 
 async def procesar_conteo(payload: PayloadConteo,
                           contexto: ContextoBodega) -> ResultadoPipeline:
-    # STUB determinista — P1 lo reemplaza en la tarea A8 sin cambiar la firma.
-    texto = (payload.payload_texto or "").lower()
+    # A8: cuerpo real detrás de la firma CONGELADA. Toda la inteligencia (parser
+    # NLU, matching en cascada, motor de anomalías) vive en app.pipeline; aquí
+    # solo se delega. El pipeline concreto (Gemini vs replay, BD vs CSV) lo arma
+    # `servicios.get_pipeline()` según el entorno. Import perezoso para no crear
+    # un ciclo con servicios, que importa los tipos de este módulo.
+    import asyncio
 
-    if texto:
-        if "noventa" in texto:
-            return ResultadoPipeline(
-                status="requiere_confirmacion",
-                motivo="anomalia",
-                pregunta="¿Confirmas 90? El corte anterior registró 10.",
-            )
-        if "cazuela" in texto:
-            return ResultadoPipeline(
-                status="requiere_confirmacion",
-                motivo="ambiguedad",
-                pregunta="¿Cuál artículo es?",
-                candidatos=[
-                    Candidato(articulo_id=1, articulo_nombre="CAZUELA 16 ONZ"),
-                    Candidato(articulo_id=2, articulo_nombre="CALDERO RECORT TAPA 50X60 CM"),
-                ],
-            )
-        if "xyz" in texto:
-            return ResultadoPipeline(
-                status="no_catalogado",
-                texto_capturado=payload.payload_texto,
-                cantidad=4,
-                unidad="Unidad",
-            )
+    from app.pipeline.servicios import get_pipeline
 
-    # Cualquier otro texto, o cualquier audio → confirmado con datos plausibles.
-    return ResultadoPipeline(
-        status="confirmado",
-        articulo_id=7290,
-        articulo_nombre="ACEITE DE OLIVA",
-        cantidad=33.5,
-        unidad="Liter",
-        confianza=0.95,
-    )
+    pipeline = get_pipeline()
+    # El pipeline es síncrono (el SDK de Gemini lo es); se corre en un hilo para
+    # no bloquear el event loop de FastAPI.
+    return await asyncio.to_thread(pipeline.procesar, payload, contexto)
