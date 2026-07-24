@@ -55,10 +55,15 @@ class Pipeline:
             )
 
         if resultado.tipo == "ambiguedad":
+            # cantidad/unidad parseadas viajan en el resultado: /resolver
+            # "articulo_id:N" persiste lo que el operario ya dictó, no 0.
             return ResultadoPipeline(
                 status="requiere_confirmacion",
                 motivo="ambiguedad",
                 pregunta="¿Cuál artículo es?",
+                cantidad=parse.cantidad,
+                unidad=parse.unidad_normalizada,
+                confianza=parse.confianza,
                 candidatos=[
                     Candidato(articulo_id=c.articulo_id, articulo_nombre=c.nombre)
                     for c in resultado.candidatos
