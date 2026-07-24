@@ -1,0 +1,10 @@
+{
+  "articulo_texto": "esencia",
+  "cantidad": 0.75,
+  "unidad_texto": "litro",
+  "unidad_normalizada": "Liter",
+  "hubo_correccion": false,
+  "confianza": 0.9,
+  "ambiguedad": null,
+  "empaque": null
+}

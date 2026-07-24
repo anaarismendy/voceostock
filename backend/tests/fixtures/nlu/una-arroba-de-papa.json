@@ -1,0 +1,10 @@
+{
+  "articulo_texto": "papa",
+  "cantidad": 1,
+  "unidad_texto": "arroba",
+  "unidad_normalizada": "Kilogram",
+  "hubo_correccion": false,
+  "confianza": 0.9,
+  "ambiguedad": null,
+  "empaque": null
+}
