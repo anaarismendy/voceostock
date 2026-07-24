@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
-import { loginOperario, type Operario } from '../lib/operario'
+import { loginOperario, type Operario, type Rol } from '../lib/operario'
 import { crearSesion } from '../lib/sesiones'
 import type { Bodega } from '../lib/bodegas'
 
@@ -9,7 +9,7 @@ interface SesionOperario {
   /** id de la sesión de conteo REAL en BD (I2); null hasta elegir bodega. */
   sesionId: string | null
   totalArticulos: number
-  iniciarSesion: (pin: string) => Promise<void>
+  iniciarSesion: (pin: string, rol?: Rol) => Promise<void>
   seleccionarBodega: (bodega: Bodega) => Promise<void>
   volverASeleccionarBodega: () => void
   cerrarSesion: () => void
@@ -29,8 +29,8 @@ export function OperarioProvider({ children }: { children: ReactNode }) {
       bodega,
       sesionId,
       totalArticulos,
-      iniciarSesion: async (pin) => {
-        setOperario(await loginOperario(pin))
+      iniciarSesion: async (pin, rol = 'operario') => {
+        setOperario(await loginOperario(pin, rol))
       },
       seleccionarBodega: async (b) => {
         const sesion = await crearSesion(b.id, operario!.id)

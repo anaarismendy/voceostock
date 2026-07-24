@@ -1,0 +1,10 @@
+{
+  "articulo_texto": "pollo entero",
+  "cantidad": 12,
+  "unidad_texto": null,
+  "unidad_normalizada": null,
+  "hubo_correccion": false,
+  "confianza": 0.95,
+  "ambiguedad": null,
+  "empaque": null
+}
