@@ -14,9 +14,11 @@ from app.db import DATABASE_URL, engine
 from app.main import app
 from app.models import Articulo, Base, Bodega, Conteo, Operario, StockTeorico, TokenPendiente
 
-# Valor centinela de SD: si aparece en cualquier respuesta o evento, se filtró
-# stock teórico y la prueba guardiana debe reventar.
+# Valor centinela de SD: si aparece en una respuesta o evento se filtró stock
+# teórico y la prueba guardiana revienta. ÚNICA excepción sancionada: el campo
+# `pregunta` de una anomalía de orden de magnitud sí cita el saldo anterior.
 SD_PROHIBIDO = 9137.25
+SD_PROHIBIDO_STR = ("9137.25", "9137,25")  # _num() formatea con coma decimal
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -51,9 +53,16 @@ def seed(_bootstrap_db):
         bodega = Bodega(nombre="bodega demo", nombre_normalizado="bodega demo")
         op1 = Operario(nombre="Ana", pin="hash", rol="operario")
         op2 = Operario(nombre="Luis", pin="hash", rol="operario")
-        # ids 1 y 2 a propósito: el stub los usa como candidatos de ambigüedad
+        # Catálogo mínimo para el pipeline real en replay: "cazuela" es ambigua
+        # (CAZUELA vs TAPA CAZUELA), "cazuelas"=90 dispara ratio_sd contra el
+        # centinela, y el aceite (SD 33 ≈ conteo 30) pasa sin anomalía.
         cazuela = Articulo(
             nombre="CAZUELA 16 ONZ", nombre_normalizado="cazuela 16 onz", unidad_base="Unidad"
+        )
+        tapa = Articulo(
+            nombre="TAPA CAZUELA 16 ONZ",
+            nombre_normalizado="tapa cazuela 16 onz",
+            unidad_base="Unidad",
         )
         caldero = Articulo(
             nombre="CALDERO RECORT TAPA 50X60 CM",
@@ -66,13 +75,12 @@ def seed(_bootstrap_db):
             nombre_normalizado="aceite de oliva",
             unidad_base="Liter",
         )
-        s.add_all([bodega, op1, op2, cazuela, caldero, aceite])
+        s.add_all([bodega, op1, op2, cazuela, tapa, caldero, aceite])
         s.flush()
-        for art in (cazuela, caldero, aceite):
+        for art, sd in ((cazuela, SD_PROHIBIDO), (tapa, SD_PROHIBIDO),
+                        (caldero, SD_PROHIBIDO), (aceite, 33.0)):
             s.add(
-                StockTeorico(
-                    bodega_id=bodega.id, articulo_id=art.id, sd=SD_PROHIBIDO, orden_original=1
-                )
+                StockTeorico(bodega_id=bodega.id, articulo_id=art.id, sd=sd, orden_original=1)
             )
         s.commit()
         return SimpleNamespace(
@@ -111,13 +119,13 @@ def _conteo(client, seed, sesion_id: str, texto: str, operario: str | None = Non
 def test_flujo_tres_estados_y_resolver(client, seed):
     sesion_id, sesion = _sesion(client, seed, seed.op1)
     assert sesion["bodega"]["nombre"] == "bodega demo"
-    assert sesion["total_articulos"] == 3
+    assert sesion["total_articulos"] == 4
 
     confirmado = _conteo(client, seed, sesion_id, "treinta litros de aceite")
     assert confirmado["status"] == "confirmado"
     assert confirmado["conteo"]["articulo_nombre"] == "ACEITE DE OLIVA"
     assert confirmado["conteo"]["articulo_id"] == seed.aceite_id
-    assert confirmado["conteo"]["cantidad"] == 33.5
+    assert confirmado["conteo"]["cantidad"] == 30
 
     anomalia = _conteo(client, seed, sesion_id, "noventa cajas de cazuelas")
     assert anomalia["status"] == "requiere_confirmacion"
@@ -135,19 +143,23 @@ def test_flujo_tres_estados_y_resolver(client, seed):
 
     progreso = client.get(f"/api/v1/sesiones/{sesion_id}/progreso").json()
     assert progreso["contados"] == 2
-    assert progreso["total"] == 3
+    assert progreso["total"] == 4
     assert progreso["colisiones"] == 0
 
     ambiguo = _conteo(client, seed, sesion_id, "cazuela")
     assert ambiguo["status"] == "requiere_confirmacion"
     assert ambiguo["motivo"] == "ambiguedad"
-    assert len(ambiguo["candidatos"]) == 2
+    assert {c["articulo_nombre"] for c in ambiguo["candidatos"]} == {
+        "CAZUELA 16 ONZ", "TAPA CAZUELA 16 ONZ",
+    }
     elegido = client.post(
         f"/api/v1/conteos/{ambiguo['token_pendiente']}/resolver",
         json={"respuesta": f"articulo_id:{seed.cazuela_id}"},
     ).json()
     assert elegido["status"] == "confirmado"
     assert elegido["conteo"]["articulo_nombre"] == "CAZUELA 16 ONZ"
+    # la cantidad dictada sobrevive a la ambigüedad (no se persiste 0)
+    assert elegido["conteo"]["cantidad"] == 1
 
     descartable = _conteo(client, seed, sesion_id, "otra cazuela")
     descarte = client.post(
@@ -257,11 +269,18 @@ def test_token_expirado_y_ya_resuelto(client, seed):
 
 
 def _sin_rastro_de_sd(obj, ruta="$"):
-    """La guardia del conteo ciego: ni claves de stock ni el valor de SD."""
+    """La guardia del conteo ciego: ni claves de stock ni el valor de SD.
+
+    ÚNICA excepción (decisión de producto): el campo `pregunta` de una anomalía
+    de orden de magnitud (motivo="anomalia") sí puede citar el saldo anterior.
+    Todo lo demás sigue blindado, incluidas las claves."""
     if isinstance(obj, dict):
+        es_anomalia = obj.get("motivo") == "anomalia"
         for k, v in obj.items():
             k_norm = k.lower()
             assert k_norm != "sd" and "stock" not in k_norm, f"clave prohibida {k!r} en {ruta}"
+            if es_anomalia and k == "pregunta":
+                continue  # la pregunta de la anomalía puede traer el saldo
             _sin_rastro_de_sd(v, f"{ruta}.{k}")
     elif isinstance(obj, list):
         for i, v in enumerate(obj):
@@ -269,7 +288,8 @@ def _sin_rastro_de_sd(obj, ruta="$"):
     else:
         assert obj != SD_PROHIBIDO, f"valor de SD filtrado en {ruta}"
         if isinstance(obj, str):
-            assert str(SD_PROHIBIDO) not in obj, f"valor de SD filtrado en {ruta}"
+            for forma in SD_PROHIBIDO_STR:
+                assert forma not in obj, f"valor de SD filtrado en {ruta}"
 
 
 def test_conteo_ciego_guardian(client, seed):
@@ -292,6 +312,8 @@ def test_conteo_ciego_guardian(client, seed):
     with client.websocket_connect(f"/ws/bodegas/{seed.bodega_id}") as ws:
         respuestas.append(_conteo(client, seed, sesion_id, "treinta litros de aceite"))
         anomalia = _conteo(client, seed, sesion_id, "noventa cajas de cazuelas")
+        # la excepción se ejercita de verdad: la pregunta SÍ trae el saldo
+        assert "9137,25" in anomalia["pregunta"]
         respuestas.append(anomalia)
         respuestas.append(
             client.post(

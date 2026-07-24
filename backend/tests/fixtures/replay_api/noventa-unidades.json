@@ -1,0 +1,10 @@
+{
+  "articulo_texto": "cazuelas",
+  "cantidad": 90,
+  "unidad_texto": "cajas",
+  "unidad_normalizada": "Unidad",
+  "hubo_correccion": false,
+  "confianza": 0.93,
+  "ambiguedad": null,
+  "empaque": null
+}
