@@ -66,6 +66,7 @@ export type ResultadoResolver =
       candidatos: null
     }
   | { status: 'no_catalogado'; texto_capturado: string; cantidad: number; unidad: string }
+  | { status: 'descartado' }
 
 function confirmar(articulo_id: number, articulo_nombre: string, cantidad: number, unidad: string, fuente: string): ResultadoResolver {
   return {
@@ -128,14 +129,9 @@ export function resolverToken(
   }
 
   if (valor === 'no') {
-    const nuevoToken = crearToken({ ...pendiente, motivo: 'baja_confianza' })
-    return {
-      status: 'requiere_confirmacion',
-      token_pendiente: nuevoToken,
-      motivo: 'baja_confianza',
-      pregunta: `¿Cuál es la cantidad correcta de ${pendiente.articulo_nombre}?`,
-      candidatos: null,
-    }
+    // I2: igual que el backend real — "no" descarta sin persistir (cuarto
+    // estado del contrato, exclusivo de /resolver).
+    return { status: 'descartado' }
   }
 
   return confirmar(pendiente.articulo_id, pendiente.articulo_nombre, pendiente.cantidad, pendiente.unidad, pendiente.fuente)

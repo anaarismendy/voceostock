@@ -1,7 +1,9 @@
 import { ArrowLeft, LogOut, Mic, Square } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import ConfirmacionPendiente from '../components/ConfirmacionPendiente'
+import PanelProgreso from '../components/PanelProgreso'
 import TecladoManual from '../components/TecladoManual'
+import { getArticulos, type ArticuloResumen } from '../lib/articulos'
 import {
   mensajeConfirmacion,
   nuevoConteoRequest,
@@ -14,6 +16,7 @@ import {
   type MotivoConfirmacion,
 } from '../lib/conteos'
 import { conReintento } from '../lib/reintento'
+import { useProgreso } from '../lib/useProgreso'
 import { useVoz } from '../lib/useVoz'
 import { useOperario } from '../state/OperarioContext'
 
@@ -32,11 +35,27 @@ type EstadoPantalla =
   | { tipo: 'error'; mensaje: string }
 
 export default function PantallaConteo() {
-  const { operario, bodega, cerrarSesion, volverASeleccionarBodega } = useOperario()
+  const { operario, bodega, sesionId, cerrarSesion, volverASeleccionarBodega } = useOperario()
   const [pantalla, setPantalla] = useState<EstadoPantalla>({ tipo: 'lista' })
   const [enviandoRespuesta, setEnviandoRespuesta] = useState(false)
   const [pendientes, setPendientes] = useState(0)
   const [intentoActual, setIntentoActual] = useState<number | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+  // C8: modo guiado recorre el catálogo de la bodega artículo por artículo.
+  const [modoGuiado, setModoGuiado] = useState(false)
+  const [articulos, setArticulos] = useState<ArticuloResumen[]>([])
+  const [indiceGuiado, setIndiceGuiado] = useState(0)
+  const { progreso, enVivo } = useProgreso(bodega!.id, sesionId!)
+
+  useEffect(() => {
+    if (!modoGuiado || articulos.length > 0) return
+    getArticulos(bodega!.id).then(setArticulos).catch(() => setArticulos([]))
+  }, [modoGuiado, articulos.length, bodega])
+
+  function mostrarToast(mensaje: string) {
+    setToast(mensaje)
+    setTimeout(() => setToast(null), 2500)
+  }
 
   const enviarCaptura = useCallback(
     async (payload: { texto?: string; audioBase64?: string }, fuente: Fuente) => {
@@ -45,6 +64,7 @@ export default function PantallaConteo() {
       setIntentoActual(null)
       try {
         const request = nuevoConteoRequest({
+          sesionId: sesionId!,
           bodegaId: bodega!.id,
           operarioId: operario!.id,
           fuente,
@@ -61,7 +81,7 @@ export default function PantallaConteo() {
         setIntentoActual(null)
       }
     },
-    [bodega, operario],
+    [bodega, operario, sesionId],
   )
 
   const manejarTranscripcion = useCallback((texto: string) => enviarCaptura({ texto }, 'voz-tablet'), [enviarCaptura])
@@ -91,6 +111,15 @@ export default function PantallaConteo() {
     if (respuesta.status === 'confirmado') {
       setPantalla({ tipo: 'confirmando', conteo: respuesta.conteo })
       hablar(mensajeConfirmacion(respuesta.conteo))
+      setIndiceGuiado((i) => i + 1) // C8: en guiado, pasar al siguiente artículo
+      return
+    }
+
+    if (respuesta.status === 'descartado') {
+      // Cuarto estado del contrato (/resolver con "no"): nada se persistió.
+      setPantalla({ tipo: 'lista' })
+      mostrarToast('Conteo descartado')
+      hablar('Descartado. Puedes dictar el siguiente conteo.')
       return
     }
 
@@ -162,12 +191,56 @@ export default function PantallaConteo() {
         </div>
       </header>
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-8">
+      <div className="flex flex-1 flex-col items-center justify-center gap-8 py-6">
         {pantalla.tipo === 'lista' && (
           <>
+            <div className="flex items-center gap-2 rounded-full bg-slate-800 p-1" role="group" aria-label="Modo de conteo">
+              <button
+                type="button"
+                onClick={() => setModoGuiado(false)}
+                className={`h-12 rounded-full px-5 text-base font-semibold ${!modoGuiado ? 'bg-white text-slate-900' : 'text-slate-300'}`}
+              >
+                Libre
+              </button>
+              <button
+                type="button"
+                onClick={() => setModoGuiado(true)}
+                className={`h-12 rounded-full px-5 text-base font-semibold ${modoGuiado ? 'bg-white text-slate-900' : 'text-slate-300'}`}
+              >
+                Guiado
+              </button>
+            </div>
+
+            {modoGuiado && articulos.length > 0 && (
+              <div className="w-full max-w-md rounded-2xl bg-slate-800 p-4 text-center">
+                <p className="text-sm text-slate-400">Cuenta ahora ({Math.min(indiceGuiado + 1, articulos.length)} de {articulos.length}):</p>
+                <p className="mt-1 text-2xl font-semibold">
+                  {articulos[Math.min(indiceGuiado, articulos.length - 1)].articulo_nombre}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIndiceGuiado((i) => Math.min(i + 1, articulos.length - 1))}
+                  className="mt-3 h-12 rounded-xl bg-slate-700 px-5 text-base font-medium active:bg-slate-600"
+                >
+                  Saltar →
+                </button>
+              </div>
+            )}
+
             <BotonMicrofono estadoVoz={estadoVoz} onTocar={alTocarMicrofono} />
-            <TecladoManual onEnviar={(texto) => enviarCaptura({ texto }, 'manual')} />
+            <TecladoManual bodegaId={bodega!.id} onEnviar={(texto) => enviarCaptura({ texto }, 'manual')} />
+            <PanelProgreso progreso={progreso} enVivo={enVivo} />
           </>
+        )}
+
+        {toast && (
+          <div
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-slate-700 px-6 py-3 text-lg shadow-lg"
+            role="status"
+            aria-live="polite"
+          >
+            {toast}
+          </div>
         )}
 
         {estadoVoz === 'escuchando' && pantalla.tipo === 'lista' && (
