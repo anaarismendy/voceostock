@@ -27,8 +27,10 @@ export default defineConfig(({ mode }) => {
       proxy: usaMock
         ? undefined
         : {
-            '/api': process.env.VITE_API_PROXY ?? 'http://localhost:8010',
-            '/health': process.env.VITE_API_PROXY ?? 'http://localhost:8010',
+            '/api': env.VITE_API_PROXY ?? 'http://localhost:8010',
+            '/health': env.VITE_API_PROXY ?? 'http://localhost:8010',
+            // C8: el progreso en vivo llega por el WebSocket real del backend.
+            '/ws': { target: env.VITE_API_PROXY ?? 'http://localhost:8010', ws: true },
           },
     },
   }
