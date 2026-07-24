@@ -113,3 +113,27 @@ Todos verificados contra la API real en :8020 y la BD del contenedor:
 ## Suite y lint
 - backend: 84 passed, 16 skipped (integration, sin GEMINI_API_KEY), ruff OK.
 - frontend: 1 test OK, eslint OK (tras H10).
+
+## H11 — Umbral de embeddings reales descalibrado (PENDIENTE, decisión de P1)
+- **Hallazgo:** con la key viva, 16/17 pruebas de integración pasan. La
+  única falla real: `test_cinta_pegante_embeddings_reales` — "cinta
+  pegante" da `no_catalogado` porque el coseno máximo real de
+  gemini-embedding-001 (768d) es 0,734 y el umbral de EmbedderGemini es
+  0,80. Ranking correcto: cinta sellamiento 0,734 > cinta enmascarar
+  0,725 > resto <0,58.
+- **Dato extra:** el top-2 queda a 0,009 (< margen 0,05), así que con
+  umbral ~0,70 el resultado sería AMBIGÜEDAD entre las dos cintas — UX
+  razonable ("¿cuál cinta?").
+- **Propuesta para P1:** bajar umbral a ~0,70 y aceptar ambigüedad en esa
+  prueba (o ajustar margen). No se tocó por ser calibración del matcher
+  (dominio P1). CI no se ve afectado (las integration se saltan sin key).
+
+## Credenciales fijadas (decisión del equipo)
+- `.env`: key AQ de la cuenta con créditos + `GEMINI_MODEL_NLU=
+  gemini-flash-latest` (ese proyecto no expone gemini-2.5-flash).
+- RIESGO CONOCIDO: los tokens `AQ.…` caducan (~1 h observada). Antes de la
+  demo, generar una key permanente `AIzaSy…` desde ESA cuenta en
+  https://aistudio.google.com/apikey y reemplazarla en .env.
+- Con la key gratuita (AIza actual de respaldo) el free tier limita:
+  10 req/min de NLU (11 pruebas de integración fallaron por 429, no por
+  bugs) y 100 items/min de embeddings.
