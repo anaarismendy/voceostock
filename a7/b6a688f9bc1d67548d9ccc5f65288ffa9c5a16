@@ -1,0 +1,42 @@
+frontend/src/lib/articulos.ts
+  s_db654ea9d24c98::t_37fb540ece9492 7-9
+frontend/src/lib/conteos.ts
+  s_db654ea9d24c98::t_5b5c27ade0da12 14,23,31-33
+  s_db654ea9d24c98::t_719d502c4a636a 70-72
+frontend/src/lib/sesiones.ts
+  s_db654ea9d24c98::t_5a365a785759bc 1-36
+frontend/src/lib/operario.ts
+  s_db654ea9d24c98::t_8b15240a93eee1 7,10-18
+frontend/src/screens/LoginPin.tsx
+  s_db654ea9d24c98::t_ceda9eea52cc22 9,15-22
+  s_db654ea9d24c98::t_60f81ab895317d 36-37
+frontend/src/screens/SeleccionBodega.tsx
+  s_db654ea9d24c98::t_af46c7c19a7373 11
+  s_db654ea9d24c98::t_1feb8bd4543e29 57
+  s_db654ea9d24c98::t_80a540bb7cb042 66-70
+frontend/src/lib/conteos.test.ts
+  s_db654ea9d24c98::t_c504e450db89f2 5,11,15,20
+frontend/src/state/OperarioContext.tsx
+  s_db654ea9d24c98::t_9702ce19305cfd 2-3,9-13,23-24,30-45,49-50,53
+frontend/src/lib/operario.test.ts
+  s_db654ea9d24c98::t_8df4c6273d9f4d 2,4
+frontend/src/components/TecladoManual.tsx
+  s_db654ea9d24c98::t_e1cacf53a9ee64 5
+  s_db654ea9d24c98::t_0d2fdca476248d 18,25,28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "a7b6a688f9bc1d67548d9ccc5f65288ffa9c5a16",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
