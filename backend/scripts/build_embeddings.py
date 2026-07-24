@@ -59,7 +59,12 @@ def main() -> None:
         sys.exit("GEMINI_API_KEY no configurada")
 
     nombres = nombres_catalogo()
-    emb = EmbedderGemini(api_key=key, ruta_cache=CACHE)
+    # Free tier: 100 items/min en embed_content → lotes de 20 con pausa de 15s.
+    emb = EmbedderGemini(
+        api_key=key, ruta_cache=CACHE,
+        lote=int(os.environ.get("EMBED_LOTE", "20")),
+        pausa_lote=float(os.environ.get("EMBED_PAUSA", "15")),
+    )
     ya = len(emb._cache)
     print(f"{len(nombres)} nombres distintos; {ya} ya en caché")
 

@@ -6,6 +6,7 @@ cuál está hablando. Esa indirección es lo que hace que `pytest -m "not
 integration"` corra sin red y que la demo sobreviva a un wifi caído.
 """
 
+import os
 import re
 from hashlib import sha1
 from pathlib import Path
@@ -17,7 +18,9 @@ from app.pipeline.normalizacion import normalizar
 
 T = TypeVar("T", bound=BaseModel)
 
-MODELO_NLU = "gemini-2.5-flash"
+# I1: configurable — algunos proyectos de Gemini no exponen gemini-2.5-flash
+# (404 para cuentas nuevas) y hay que apuntar a gemini-flash-latest.
+MODELO_NLU = os.environ.get("GEMINI_MODEL_NLU", "gemini-2.5-flash")
 
 
 class ReplayNoEncontrado(RuntimeError):

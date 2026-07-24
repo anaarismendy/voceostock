@@ -86,6 +86,7 @@ class EmbedderGemini:
         margen: float = 0.05,
         lote: int = 100,
         reintentos: int = 3,
+        pausa_lote: float = 0.0,
         cliente=None,
     ):
         # `cliente` inyectable para pruebas; en producción se crea el real.
@@ -100,6 +101,7 @@ class EmbedderGemini:
         self.margen = margen
         self.lote = lote
         self.reintentos = reintentos
+        self.pausa_lote = pausa_lote  # free tier: 100 items/min en embed_content
         self._cache: dict[str, list[float]] = self._cargar_cache()
 
     def _cargar_cache(self) -> dict[str, list[float]]:
@@ -138,8 +140,11 @@ class EmbedderGemini:
         faltantes = list(dict.fromkeys(faltantes))
         if faltantes:
             for i in range(0, len(faltantes), self.lote):
+                if i and self.pausa_lote:
+                    time.sleep(self.pausa_lote)
                 trozo = faltantes[i : i + self.lote]
                 for texto, vector in zip(trozo, self._embeber_lote(trozo)):
                     self._cache[self._clave(texto)] = vector
-            self._guardar_cache()
+                # guardar por lote: un 429 a mitad de camino no pierde lo hecho
+                self._guardar_cache()
         return _normalizar_filas(np.array([self._cache[self._clave(t)] for t in textos]))

@@ -26,13 +26,19 @@ queda marcado **PENDIENTE**.
   determinados antes de preguntar" ahora debe cumplirlo el pipeline real
   (verificar en flujos E2E, PASO 5.13).
 
-## H4 — No hay .env ni GEMINI_API_KEY
-- **Hallazgo:** el repo no tenía `.env` (solo `.env.example`). Sin key,
-  `PIPELINE_MODE=auto` resuelve **replay** (NLU desde `data/replay/nlu/`).
-- **Actualización:** `.env` creado con la key (gitignored). La key
-  autentica, pero Gemini devuelve `429 RESOURCE_EXHAUSTED: prepayment
-  credits depleted`. **PENDIENTE**: recargar créditos del proyecto en
-  https://ai.studio/projects; mientras tanto la demo sigue en replay.
+## H4 — GEMINI_API_KEY: RESUELTO (con matices)
+- `.env` creado (gitignored). Dos credenciales disponibles:
+  - **AIza… (free tier)**: estable, funciona con `gemini-2.5-flash`;
+    límites: 100 items/min en embeddings.
+  - **AQ… (cuenta con créditos)**: sin límites free-tier, pero el proyecto
+    no expone `gemini-2.5-flash` (404 usuarios nuevos) → usar
+    `GEMINI_MODEL_NLU=gemini-flash-latest`. OJO: los tokens `AQ.…` caducan
+    rápido (el primero pasó a 401 en <1 h). Para la demo conviene generar
+    una key `AIza…` permanente DESDE la cuenta con créditos.
+- **Verificado live** (bodega 3): NLU real "veinte litros de aceite de
+  oliva" → confirmado ACEITE DE OLIVA 20 L (2,0 s en estado estable);
+  "dieciocho kilos de arroz basmati" → anomalía real "¿Confirmas 18? El
+  corte anterior registró 2." con el SD de la BD.
 
 ## H5 — ingest revienta en consola Windows (cp1252)
 - **Causa:** `data/ingest.py` imprime "→" y la consola cp1252 no lo codifica.
@@ -54,16 +60,16 @@ queda marcado **PENDIENTE**.
 - **Solución:** la ambigüedad ahora viaja con cantidad, unidad y confianza
   parseadas; prueba en la suite de API (`elegido.cantidad == 1`).
 
-## H8 — Embeddings en pgvector: 0 (PENDIENTE, bloqueado por H4)
-- **Hallazgo:** `SELECT count(*) FROM articulos WHERE embedding IS NOT
-  NULL;` → **0**. No hay GEMINI_API_KEY ni caché `embeddings.pkl` de la
-  que cargar.
-- **Qué se hizo:** `scripts/build_embeddings.py` ahora carga la caché a la
-  columna pgvector al final (`cargar_a_pgvector`). Con key es un comando:
-  `GEMINI_API_KEY=… DATABASE_URL=… uv run python -m scripts.build_embeddings`.
-- **Mitigación:** en replay el matcher calcula embeddings léxicos al vuelo
-  (el guard de dimensión en `matcher.py` ignora la columna vacía), así que
-  el matching sí opera; semántico real queda pendiente de la key.
+## H8 — Embeddings en pgvector: RESUELTO
+- `SELECT count(*) FROM articulos WHERE embedding IS NOT NULL;` → **936**
+  (936/936, cargados con gemini-embedding-001 a 768 dims vía la cuenta
+  con créditos; 16,5 s).
+- `scripts/build_embeddings.py` carga la caché a pgvector al final
+  (`cargar_a_pgvector`) y ahora respeta el free tier: lotes de 20 con
+  pausa de 15 s (`EMBED_LOTE`/`EMBED_PAUSA`); `EmbedderGemini` guarda la
+  caché por lote para que un 429 a mitad de camino no pierda el progreso.
+- En replay el matcher sigue calculando embeddings léxicos al vuelo (el
+  guard de dimensión ignora los vectores de otro espacio).
 
 ## H9 — Suite de API migrada del stub al pipeline real
 - **Causa:** las pruebas B8 usaban textos del stub eliminado; con replay
