@@ -1,9 +1,10 @@
 import { ArrowLeft, LogOut, Mic, Square } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import ConfirmacionPendiente from '../components/ConfirmacionPendiente'
+import ModoGuiado from '../components/ModoGuiado'
 import PanelProgreso from '../components/PanelProgreso'
 import TecladoManual from '../components/TecladoManual'
-import { getArticulos, type ArticuloResumen } from '../lib/articulos'
+import type { ArticuloResumen } from '../lib/articulos'
 import {
   ApiError,
   mensajeConfirmacion,
@@ -16,10 +17,14 @@ import {
   type Fuente,
   type MotivoConfirmacion,
 } from '../lib/conteos'
+import { CHECKLIST_DEMO } from '../lib/listaGuiada'
+import { resumenProgreso, siguientePendiente, textoCantidadArticulo } from '../lib/progreso'
 import { conReintento } from '../lib/reintento'
 import { useProgreso } from '../lib/useProgreso'
 import { useVoz } from '../lib/useVoz'
 import { useOperario } from '../state/OperarioContext'
+
+type Modo = 'libre' | 'guiado'
 
 type EstadoPantalla =
   | { tipo: 'lista' }
@@ -42,16 +47,19 @@ export default function PantallaConteo() {
   const [pendientes, setPendientes] = useState(0)
   const [intentoActual, setIntentoActual] = useState<number | null>(null)
   const [toast, setToast] = useState<string | null>(null)
-  // C8: modo guiado recorre el catálogo de la bodega artículo por artículo.
-  const [modoGuiado, setModoGuiado] = useState(false)
-  const [articulos, setArticulos] = useState<ArticuloResumen[]>([])
-  const [indiceGuiado, setIndiceGuiado] = useState(0)
-  const { progreso, enVivo } = useProgreso(bodega!.id, sesionId!)
+  // C8: modo guiado/libre. `contados` = artículos del checklist ya confirmados
+  // (guía de P3); `saltados` = omitidos en el recorrido guiado. El progreso de
+  // la BODEGA completa llega del WebSocket real (PanelProgreso).
+  const [modo, setModo] = useState<Modo>('libre')
+  const [contados, setContados] = useState<Set<number>>(new Set())
+  const [saltados, setSaltados] = useState<Set<number>>(new Set())
+  const { progreso: progresoBodega, enVivo } = useProgreso(bodega!.id, sesionId!)
 
-  useEffect(() => {
-    if (!modoGuiado || articulos.length > 0) return
-    getArticulos(bodega!.id).then(setArticulos).catch(() => setArticulos([]))
-  }, [modoGuiado, articulos.length, bodega])
+  const progresoGuia = useMemo(() => resumenProgreso(CHECKLIST_DEMO, contados), [contados])
+  const objetivoGuiado = useMemo(
+    () => siguientePendiente(CHECKLIST_DEMO, new Set([...contados, ...saltados])),
+    [contados, saltados],
+  )
 
   function mostrarToast(mensaje: string) {
     setToast(mensaje)
@@ -112,9 +120,11 @@ export default function PantallaConteo() {
 
   function aplicarRespuesta(respuesta: ConteoResponse) {
     if (respuesta.status === 'confirmado') {
+      // Progreso: marca el artículo como contado (sirve al modo guiado y a la barra).
+      const id = respuesta.conteo.articulo_id
+      setContados((prev) => (prev.has(id) ? prev : new Set(prev).add(id)))
       setPantalla({ tipo: 'confirmando', conteo: respuesta.conteo })
       hablar(mensajeConfirmacion(respuesta.conteo))
-      setIndiceGuiado((i) => i + 1) // C8: en guiado, pasar al siguiente artículo
       return
     }
 
@@ -184,6 +194,21 @@ export default function PantallaConteo() {
     setPantalla({ tipo: 'lista' })
   }
 
+  // --- Modo guiado (C8) ---
+  function registrarGuiado(cantidadTexto: string, articulo: ArticuloResumen) {
+    // Fuente 'manual': el artículo lo fija la guía, así el match es exacto y no
+    // dispara los casos de demo por palabra clave (noventa/cazuela/xyz).
+    enviarCaptura({ texto: textoCantidadArticulo(cantidadTexto, articulo) }, 'manual')
+  }
+
+  function saltarGuiado(articulo: ArticuloResumen) {
+    setSaltados((prev) => new Set(prev).add(articulo.articulo_id))
+  }
+
+  function reiniciarGuiado() {
+    setSaltados(new Set())
+  }
+
   return (
     <main className="flex min-h-screen flex-col bg-slate-900 p-6 text-white">
       <header className="flex items-start justify-between gap-3 rounded-2xl bg-slate-800 px-4 py-3 shadow-md">
@@ -216,47 +241,66 @@ export default function PantallaConteo() {
         </div>
       </header>
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-8 py-6">
+      {/* C8: barra de progreso de la guía (siempre) + selector de modo. */}
+      <section className="mt-4 rounded-2xl bg-slate-800 px-4 py-3">
+        <div className="flex items-center justify-between text-lg font-medium">
+          <span>Progreso de la guía</span>
+          <span className="tabular-nums text-slate-300">
+            {progresoGuia.hechos} / {progresoGuia.total}
+          </span>
+        </div>
+        <div
+          className="mt-2 h-3 w-full overflow-hidden rounded-full bg-slate-700"
+          role="progressbar"
+          aria-valuenow={progresoGuia.porcentaje}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-all"
+            style={{ width: `${progresoGuia.porcentaje}%` }}
+          />
+        </div>
+
         {pantalla.tipo === 'lista' && (
+          <div className="mt-3 grid grid-cols-2 gap-2" role="tablist" aria-label="Modo de conteo">
+            {(['libre', 'guiado'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="tab"
+                aria-selected={modo === m}
+                onClick={() => setModo(m)}
+                className={`h-14 rounded-xl text-lg font-semibold capitalize transition-colors ${
+                  modo === m ? 'bg-white text-slate-900' : 'bg-slate-700 text-slate-200 active:bg-slate-600'
+                }`}
+              >
+                {m === 'libre' ? 'Modo libre' : 'Modo guiado'}
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <div className="flex flex-1 flex-col items-center justify-center gap-8">
+        {pantalla.tipo === 'lista' && modo === 'libre' && (
           <>
-            <div className="flex items-center gap-2 rounded-full bg-slate-800 p-1" role="group" aria-label="Modo de conteo">
-              <button
-                type="button"
-                onClick={() => setModoGuiado(false)}
-                className={`h-12 rounded-full px-5 text-base font-semibold ${!modoGuiado ? 'bg-white text-slate-900' : 'text-slate-300'}`}
-              >
-                Libre
-              </button>
-              <button
-                type="button"
-                onClick={() => setModoGuiado(true)}
-                className={`h-12 rounded-full px-5 text-base font-semibold ${modoGuiado ? 'bg-white text-slate-900' : 'text-slate-300'}`}
-              >
-                Guiado
-              </button>
-            </div>
-
-            {modoGuiado && articulos.length > 0 && (
-              <div className="w-full max-w-md rounded-2xl bg-slate-800 p-4 text-center">
-                <p className="text-sm text-slate-400">Cuenta ahora ({Math.min(indiceGuiado + 1, articulos.length)} de {articulos.length}):</p>
-                <p className="mt-1 text-2xl font-semibold">
-                  {articulos[Math.min(indiceGuiado, articulos.length - 1)].articulo_nombre}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setIndiceGuiado((i) => Math.min(i + 1, articulos.length - 1))}
-                  className="mt-3 h-12 rounded-xl bg-slate-700 px-5 text-base font-medium active:bg-slate-600"
-                >
-                  Saltar →
-                </button>
-              </div>
-            )}
-
             <BotonMicrofono estadoVoz={estadoVoz} onTocar={alTocarMicrofono} />
             <DictadoPorTexto onEnviar={(texto) => enviarCaptura({ texto }, 'voz-tablet')} />
             <TecladoManual bodegaId={bodega!.id} onEnviar={(texto) => enviarCaptura({ texto }, 'manual')} />
-            <PanelProgreso progreso={progreso} enVivo={enVivo} />
+            <PanelProgreso progreso={progresoBodega} enVivo={enVivo} />
           </>
+        )}
+
+        {pantalla.tipo === 'lista' && modo === 'guiado' && (
+          <ModoGuiado
+            objetivo={objetivoGuiado}
+            progreso={progresoGuia}
+            enviando={pendientes > 0}
+            onRegistrar={registrarGuiado}
+            onSaltar={saltarGuiado}
+            onReiniciar={reiniciarGuiado}
+          />
         )}
 
         {toast && (
@@ -269,11 +313,11 @@ export default function PantallaConteo() {
           </div>
         )}
 
-        {estadoVoz === 'escuchando' && pantalla.tipo === 'lista' && (
+        {estadoVoz === 'escuchando' && pantalla.tipo === 'lista' && modo === 'libre' && (
           <p className="text-2xl text-slate-300">Escuchando…</p>
         )}
 
-        {estadoVoz === 'grabando' && pantalla.tipo === 'lista' && (
+        {estadoVoz === 'grabando' && pantalla.tipo === 'lista' && modo === 'libre' && (
           <p className="text-2xl text-red-300">🔴 Grabando… toca de nuevo para enviar</p>
         )}
 
@@ -330,7 +374,7 @@ export default function PantallaConteo() {
           </div>
         )}
 
-        {usarAudio && estadoVoz !== 'grabando' && pantalla.tipo === 'lista' && (
+        {usarAudio && estadoVoz !== 'grabando' && pantalla.tipo === 'lista' && modo === 'libre' && (
           <p className="max-w-sm text-center text-lg text-amber-300">
             {estadoVoz === 'no_soportado'
               ? 'Este navegador no transcribe voz en vivo: el micrófono ahora graba audio.'

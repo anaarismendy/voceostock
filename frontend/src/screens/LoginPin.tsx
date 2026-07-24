@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useOperario } from '../state/OperarioContext'
+import type { Rol } from '../lib/operario'
 
 const TECLAS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'borrar'] as const
 
@@ -7,15 +8,17 @@ export default function LoginPin() {
   const { iniciarSesion } = useOperario()
   const [pin, setPin] = useState('')
   const [error, setError] = useState(false)
+  const [rol, setRol] = useState<Rol>('operario')
 
   function agregarDigito(d: string) {
     if (pin.length >= 4) return
     const siguiente = pin + d
     setPin(siguiente)
     setError(false)
-    // I2: login real contra POST /api/v1/operarios/login (find-or-create).
+    // I2: login real contra POST /api/v1/operarios/login (find-or-create),
+    // con el rol elegido arriba (solo del cliente, C9).
     if (siguiente.length === 4) {
-      iniciarSesion(siguiente).catch(() => {
+      iniciarSesion(siguiente, rol).catch(() => {
         setError(true)
         setPin('')
       })
@@ -34,6 +37,23 @@ export default function LoginPin() {
       </div>
 
       {error && <p className="text-lg text-red-400">No se pudo iniciar sesión. Intenta de nuevo.</p>}
+
+      <div className="flex gap-3" role="radiogroup" aria-label="Rol">
+        {(['operario', 'lider'] as const).map((r) => (
+          <button
+            key={r}
+            type="button"
+            role="radio"
+            aria-checked={rol === r}
+            onClick={() => setRol(r)}
+            className={`h-14 w-36 rounded-2xl text-lg font-semibold capitalize transition-colors ${
+              rol === r ? 'bg-white text-slate-900' : 'bg-slate-800 text-slate-200 active:bg-slate-700'
+            }`}
+          >
+            {r === 'operario' ? 'Operario' : 'Líder'}
+          </button>
+        ))}
+      </div>
 
       <div className="flex gap-4" aria-label={`PIN, ${pin.length} de 4 dígitos ingresados`}>
         {[0, 1, 2, 3].map((i) => (
