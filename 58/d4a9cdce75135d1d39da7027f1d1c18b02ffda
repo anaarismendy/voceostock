@@ -1,0 +1,47 @@
+backend/app/api/ws.py
+  s_db654ea9d24c98::t_e79c6ba0f3e6b1 1-59
+backend/tests/conftest.py
+  s_db654ea9d24c98::t_e79c6ba0f3e6b1 1-16
+backend/app/api/sesiones.py
+  s_db654ea9d24c98::t_e79c6ba0f3e6b1 1-171
+backend/app/models/__init__.py
+  s_db654ea9d24c98::t_e79c6ba0f3e6b1 19,160-177
+backend/alembic/versions/0002_tokens_pendientes.py
+  s_db654ea9d24c98::t_e79c6ba0f3e6b1 1-23
+backend/app/schemas/conteos.py
+  s_db654ea9d24c98::t_e79c6ba0f3e6b1 68-77
+backend/tests/test_api_conteos.py
+  s_db654ea9d24c98::t_e79c6ba0f3e6b1 1-317
+backend/app/services/storage.py
+  s_db654ea9d24c98::t_e79c6ba0f3e6b1 1-44
+README.md
+  s_db654ea9d24c98::t_e79c6ba0f3e6b1 1-63
+docs/contrato/contrato.md
+  s_db654ea9d24c98::t_e79c6ba0f3e6b1 70-80
+backend/app/main.py
+  s_db654ea9d24c98::t_78404dc07e0579 4-6,11-13
+backend/app/api/evidencia.py
+  s_db654ea9d24c98::t_e79c6ba0f3e6b1 1-22
+backend/app/api/conteos.py
+  s_db654ea9d24c98::t_e79c6ba0f3e6b1 1-9,12-13,15-18,27,30,32,36,39-80,83-187,189-200,202,205-206,209-219,222-232,234-237,240-245,247-248,250-252,255-279
+backend/app/db.py
+  s_db654ea9d24c98::t_e79c6ba0f3e6b1 1-21
+.env.example
+  s_db654ea9d24c98::t_e79c6ba0f3e6b1 3-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "58d4a9cdce75135d1d39da7027f1d1c18b02ffda",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
