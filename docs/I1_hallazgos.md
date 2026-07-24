@@ -27,10 +27,12 @@ queda marcado **PENDIENTE**.
   (verificar en flujos E2E, PASO 5.13).
 
 ## H4 — No hay .env ni GEMINI_API_KEY
-- **Hallazgo:** el repo no tiene `.env` (solo `.env.example`). Sin key,
+- **Hallazgo:** el repo no tenía `.env` (solo `.env.example`). Sin key,
   `PIPELINE_MODE=auto` resuelve **replay** (NLU desde `data/replay/nlu/`).
-- **Estado:** los flujos E2E y la demo corren en replay. **PENDIENTE**:
-  crear `.env` con `GEMINI_API_KEY` para modo live.
+- **Actualización:** `.env` creado con la key (gitignored). La key
+  autentica, pero Gemini devuelve `429 RESOURCE_EXHAUSTED: prepayment
+  credits depleted`. **PENDIENTE**: recargar créditos del proyecto en
+  https://ai.studio/projects; mientras tanto la demo sigue en replay.
 
 ## H5 — ingest revienta en consola Windows (cp1252)
 - **Causa:** `data/ingest.py` imprime "→" y la consola cp1252 no lo codifica.
