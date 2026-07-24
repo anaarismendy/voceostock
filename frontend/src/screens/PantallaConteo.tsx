@@ -1,5 +1,15 @@
 import { useCallback, useState } from 'react'
-import { mensajeConfirmacion, nuevoConteoRequest, postConteo, type Conteo, type ConteoResponse } from '../lib/conteos'
+import ConfirmacionPendiente from '../components/ConfirmacionPendiente'
+import {
+  mensajeConfirmacion,
+  nuevoConteoRequest,
+  postConteo,
+  resolverConteo,
+  type Candidato,
+  type Conteo,
+  type ConteoResponse,
+  type MotivoConfirmacion,
+} from '../lib/conteos'
 import { useVoz } from '../lib/useVoz'
 import { useOperario } from '../state/OperarioContext'
 
@@ -7,12 +17,20 @@ type EstadoPantalla =
   | { tipo: 'lista' }
   | { tipo: 'procesando' }
   | { tipo: 'confirmando'; conteo: Conteo }
-  | { tipo: 'pendiente'; pregunta: string }
+  | {
+      tipo: 'requiere_confirmacion'
+      tokenPendiente: string
+      motivo: MotivoConfirmacion
+      pregunta: string
+      candidatos: Candidato[] | null
+    }
+  | { tipo: 'no_catalogado'; textoCapturado: string }
   | { tipo: 'error'; mensaje: string }
 
 export default function PantallaConteo() {
   const { operario, bodega, cerrarSesion } = useOperario()
   const [pantalla, setPantalla] = useState<EstadoPantalla>({ tipo: 'lista' })
+  const [enviandoRespuesta, setEnviandoRespuesta] = useState(false)
 
   const manejarTranscripcion = useCallback(
     async (texto: string) => {
@@ -24,7 +42,7 @@ export default function PantallaConteo() {
           operarioId: operario!.id,
           fuente: 'voz-tablet',
         })
-        const respuesta: ConteoResponse = await postConteo(request)
+        const respuesta = await postConteo(request)
         aplicarRespuesta(respuesta)
       } catch {
         setPantalla({ tipo: 'error', mensaje: 'No se pudo enviar el conteo. Intenta de nuevo.' })
@@ -42,13 +60,31 @@ export default function PantallaConteo() {
       return
     }
 
-    // requiere_confirmacion / no_catalogado: pantalla dedicada en C4.
-    const pregunta =
-      respuesta.status === 'requiere_confirmacion'
-        ? respuesta.pregunta
-        : `No encontré "${respuesta.texto_capturado}" en el catálogo de esta bodega.`
-    setPantalla({ tipo: 'pendiente', pregunta })
-    hablar(pregunta)
+    if (respuesta.status === 'requiere_confirmacion') {
+      setPantalla({
+        tipo: 'requiere_confirmacion',
+        tokenPendiente: respuesta.token_pendiente,
+        motivo: respuesta.motivo,
+        pregunta: respuesta.pregunta,
+        candidatos: respuesta.candidatos,
+      })
+      return
+    }
+
+    setPantalla({ tipo: 'no_catalogado', textoCapturado: respuesta.texto_capturado })
+    hablar(`No encontré "${respuesta.texto_capturado}" en el catálogo de esta bodega.`)
+  }
+
+  async function responderConfirmacion(tokenPendiente: string, respuesta: string) {
+    setEnviandoRespuesta(true)
+    try {
+      const resultado = await resolverConteo(tokenPendiente, respuesta)
+      aplicarRespuesta(resultado)
+    } catch {
+      setPantalla({ tipo: 'error', mensaje: 'No se pudo enviar la respuesta. Intenta de nuevo.' })
+    } finally {
+      setEnviandoRespuesta(false)
+    }
   }
 
   function volverAEscuchar() {
@@ -81,13 +117,19 @@ export default function PantallaConteo() {
           <TarjetaConfirmacion conteo={pantalla.conteo} onCerrar={volverAEscuchar} />
         )}
 
-        {pantalla.tipo === 'pendiente' && (
+        {pantalla.tipo === 'requiere_confirmacion' && (
+          <ConfirmacionPendiente
+            tokenPendiente={pantalla.tokenPendiente}
+            pregunta={pantalla.pregunta}
+            candidatos={pantalla.candidatos}
+            enviando={enviandoRespuesta}
+            onResponder={(respuesta) => responderConfirmacion(pantalla.tokenPendiente, respuesta)}
+          />
+        )}
+
+        {pantalla.tipo === 'no_catalogado' && (
           <div className="max-w-lg rounded-2xl bg-slate-800 p-6 text-center">
-            <p className="text-2xl font-semibold">{pantalla.pregunta}</p>
-            <p className="mt-3 text-base text-slate-400">
-              La pantalla para responder esto llega en la próxima tarea (C4). Por ahora, vuelve a
-              intentar.
-            </p>
+            <p className="text-3xl font-semibold">No encontré "{pantalla.textoCapturado}" en el catálogo.</p>
             <button
               type="button"
               onClick={volverAEscuchar}

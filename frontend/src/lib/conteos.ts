@@ -75,3 +75,13 @@ export async function postConteo(request: ConteoRequest): Promise<ConteoResponse
   if (!r.ok) throw new Error(`Error ${r.status} al enviar conteo`)
   return r.json()
 }
+
+export async function resolverConteo(tokenPendiente: string, respuesta: string): Promise<ConteoResponse> {
+  const r = await fetch(`/api/v1/conteos/${encodeURIComponent(tokenPendiente)}/resolver`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ respuesta }),
+  })
+  if (!r.ok) throw new Error(`Error ${r.status} al resolver conteo`)
+  return r.json()
+}
