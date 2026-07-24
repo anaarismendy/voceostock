@@ -16,7 +16,7 @@ from sqlalchemy import (
     Text,
     text,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, TIMESTAMP, UUID
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TIMESTAMP, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 UNIDADES_CANONICAS = ("Unidad", "Kilogram", "Liter", "Portion")
@@ -155,6 +155,24 @@ class Conteo(Base):
     creado_en: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=text("now()")
     )
+
+
+class TokenPendiente(Base):
+    """Captura en espera de confirmación humana (B5). Expira a los 10 min."""
+
+    __tablename__ = "tokens_pendientes"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    sesion_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("sesiones_conteo.id"))
+    payload_original: Mapped[dict] = mapped_column(JSONB)
+    resultado_pipeline: Mapped[dict] = mapped_column(JSONB)
+    creado_en: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=text("now()")
+    )
+    expira_en: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True))
+    resuelto: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
 
 
 class AliasArticulo(Base):
