@@ -1,0 +1,10 @@
+{
+  "articulo_texto": "arroz basmati",
+  "cantidad": 7,
+  "unidad_texto": "kilos",
+  "unidad_normalizada": "Kilogram",
+  "hubo_correccion": false,
+  "confianza": 0.96,
+  "ambiguedad": null,
+  "empaque": null
+}
