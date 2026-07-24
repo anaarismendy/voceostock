@@ -1,0 +1,21 @@
+data/replay/nlu/12-pollo-entero.json
+  s_db654ea9d24c98::t_910c879450a568 1-10
+data/replay/nlu/5-abrelatas-mariposa.json
+  s_db654ea9d24c98::t_11928c9b4d0204 1-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "ea75c40a0e21d00bceba5c7a6391a54f28b5f55c",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
