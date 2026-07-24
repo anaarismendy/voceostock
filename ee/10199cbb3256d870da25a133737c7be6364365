@@ -1,0 +1,25 @@
+backend/app/main.py
+  s_db654ea9d24c98::t_8914df57b6ab55 4,10
+backend/app/services/storage.py
+  s_db654ea9d24c98::t_7b0f5083559595 1-44
+backend/app/api/evidencia.py
+  s_db654ea9d24c98::t_3b4babf670abbf 1-22
+.env.example
+  s_db654ea9d24c98::t_b497d151603a9c 3-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "ee10199cbb3256d870da25a133737c7be6364365",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
