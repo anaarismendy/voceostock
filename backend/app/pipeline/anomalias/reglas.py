@@ -4,9 +4,11 @@ Cinco reglas puras `(conteo_parseado, articulo) -> Anomalia`. Cada una decide si
 frenar y guardar, y con qué pregunta en español. El contexto (SD del artículo,
 unidad del catálogo) llega en el `ArticuloCtx`.
 
-REGLA INVIOLABLE (conteo ciego): las preguntas NUNCA revelan el SD. Señalan que
-la cantidad es inusual, no contra qué. El operario no debe poder deducir el
-stock teórico desde la pregunta.
+Conteo ciego: el SD no se muestra ANTES de que el operario dicte su cantidad.
+ÚNICA excepción (decisión de producto, reto Colsubsidio): la pregunta de una
+anomalía de orden de magnitud (`ratio_sd`) SÍ cita el saldo del último corte,
+porque ocurre después de que el operario ya comprometió su número. Las otras
+cuatro reglas siguen sin revelar el SD.
 """
 
 from app.pipeline.nlu.unidades import es_unidad_entera
@@ -37,17 +39,13 @@ def regla_ratio_sd(parse: ConteoParseado, art: ArticuloCtx) -> Anomalia:
     if parse.cantidad is None or parse.cantidad <= 0 or art.sd <= 0:
         return _sin_anomalia()
     ratio = parse.cantidad / art.sd
-    if ratio > RATIO_ALTO:
+    if ratio > RATIO_ALTO or ratio < RATIO_BAJO:
+        # Única regla que revela el SD: la pregunta ocurre DESPUÉS de que el
+        # operario ya comprometió su número (ver regla de conteo ciego).
         return Anomalia(
             flag=True, tipo="ratio_sd",
-            pregunta=f"Registraste {_num(parse.cantidad)} de {art.nombre}. Es bastante "
-                     f"más de lo habitual para este artículo. ¿Lo confirmas?",
-        )
-    if ratio < RATIO_BAJO:
-        return Anomalia(
-            flag=True, tipo="ratio_sd",
-            pregunta=f"Registraste {_num(parse.cantidad)} de {art.nombre}. Es bastante "
-                     f"menos de lo habitual para este artículo. ¿Lo confirmas?",
+            pregunta=f"¿Confirmas {_num(parse.cantidad)}? "
+                     f"El corte anterior registró {_num(art.sd)}.",
         )
     return _sin_anomalia()
 

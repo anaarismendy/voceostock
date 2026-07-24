@@ -24,11 +24,13 @@ def _parse(**kw) -> ConteoParseado:
     return ConteoParseado(**{**base, **kw})
 
 
-def test_ratio_sd_cazuelas_90_vs_10():
-    # cazuelas: SD 10 vs conteo 90 → ratio 9× → anomalía
+def test_ratio_sd_cazuelas_90_vs_10_revela_el_saldo():
+    # cazuelas: SD 10 vs conteo 90 → ratio 9× → anomalía. Única regla que SÍ
+    # cita el saldo del último corte (excepción del conteo ciego, ya que la
+    # pregunta ocurre después de que el operario comprometió su número).
     a = regla_ratio_sd(_parse(cantidad=90), _art("CAZUELA 16 ONZ", "Unidad", 10.0))
     assert a.flag and a.tipo == "ratio_sd"
-    assert "10" not in a.pregunta  # conteo ciego: no revela el SD
+    assert a.pregunta == "¿Confirmas 90? El corte anterior registró 10."
 
 
 def test_unidad_incoherente_gramos_en_liter():
@@ -36,21 +38,25 @@ def test_unidad_incoherente_gramos_en_liter():
         _parse(unidad_normalizada="Kilogram"), _art("ACEITE DE OLIVA", "Liter", 33.0)
     )
     assert a.flag and a.tipo == "unidad_incoherente"
+    assert "33" not in a.pregunta  # conteo ciego: esta regla no revela el SD
 
 
 def test_decimal_en_articulo_de_unidad_entera():
-    a = regla_decimal_en_entero(_parse(cantidad=3.5), _art("CALDERO", "Unidad", 4.0))
+    a = regla_decimal_en_entero(_parse(cantidad=3.5), _art("CALDERO", "Unidad", 47.0))
     assert a.flag and a.tipo == "decimal_en_entero"
+    assert "47" not in a.pregunta  # conteo ciego: esta regla no revela el SD
 
 
 def test_cero_en_articulo_con_sd_alto():
     a = regla_cero_sospechoso(_parse(cantidad=0), _art("IBUPROFENO", "Unidad", 100.0))
     assert a.flag and a.tipo == "cero_sospechoso"
+    assert "100" not in a.pregunta  # conteo ciego: esta regla no revela el SD
 
 
 def test_baja_confianza_del_parser():
-    a = regla_baja_confianza(_parse(confianza=0.6), _art("CINTA", "Unidad", 14.0))
+    a = regla_baja_confianza(_parse(confianza=0.6), _art("CINTA", "Unidad", 47.0))
     assert a.flag and a.tipo == "baja_confianza"
+    assert "47" not in a.pregunta  # conteo ciego: esta regla no revela el SD
 
 
 def test_conteo_normal_no_dispara_nada():

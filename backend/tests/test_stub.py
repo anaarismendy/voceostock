@@ -57,10 +57,11 @@ async def test_anomalia_calculada_del_sd_real():
     assert r.pregunta and "90" in r.pregunta
 
 
-async def test_conteo_ciego_la_pregunta_no_revela_el_sd():
-    """La cazuela tiene SD 10; la pregunta jamás puede contener ese número."""
+async def test_orden_de_magnitud_revela_el_saldo_del_ultimo_corte():
+    """Decisión de producto (reto Colsubsidio): la pregunta de una anomalía de
+    orden de magnitud SÍ cita el saldo anterior — la cazuela tiene SD 10."""
     r = await _procesar("noventa cajas de cazuelas")
-    assert "10" not in r.pregunta  # regla INVIOLABLE: conteo ciego
+    assert r.pregunta == "¿Confirmas 90? El corte anterior registró 10."
 
 
 async def test_ambiguedad():
