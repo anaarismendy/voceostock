@@ -1,0 +1,27 @@
+frontend/src/screens/PantallaConteo.tsx
+  s_db654ea9d24c98::t_c894a873dcb82c 67
+  s_db654ea9d24c98::t_524eee9d92cc41 84
+  s_db654ea9d24c98::t_a32e8ae2b832ba 114-122
+  s_db654ea9d24c98::t_185407d30b0168 194,197-229,231-232,236-243
+  s_db654ea9d24c98::t_a51be01670a95e 2,4,6,19,38,43-58
+  s_db654ea9d24c98::t_d32809c6c631a3 244-245
+frontend/mock-server/store.ts
+  s_db654ea9d24c98::t_333877a0eccc96 69
+  s_db654ea9d24c98::t_c9ed1a9da31e82 132-134
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "28f2ba2d6ba5c33aa34662b9b6175969ae27a700",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
