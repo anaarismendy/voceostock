@@ -75,13 +75,35 @@ export function mensajeConfirmacion(conteo: Conteo): string {
   return `${conteo.cantidad} ${conteo.unidad} de ${conteo.articulo_nombre}`
 }
 
+/** Error HTTP del backend con su código: permite mensajes honestos por caso
+ * (410 token expirado, 404 sesión/token, 409 sesión cerrada) en vez del
+ * genérico de conexión. */
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    mensaje: string,
+  ) {
+    super(mensaje)
+  }
+}
+
+async function lanzarApiError(r: Response, contexto: string): Promise<never> {
+  let detalle = ''
+  try {
+    detalle = (await r.json()).detail ?? ''
+  } catch {
+    /* cuerpo no-JSON: se usa solo el código */
+  }
+  throw new ApiError(r.status, `Error ${r.status} ${contexto}: ${detalle}`)
+}
+
 export async function postConteo(request: ConteoRequest): Promise<ConteoResponse> {
   const r = await fetch('/api/v1/conteos', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
   })
-  if (!r.ok) throw new Error(`Error ${r.status} al enviar conteo`)
+  if (!r.ok) await lanzarApiError(r, 'al enviar conteo')
   return r.json()
 }
 
@@ -91,6 +113,6 @@ export async function resolverConteo(tokenPendiente: string, respuesta: string):
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ respuesta }),
   })
-  if (!r.ok) throw new Error(`Error ${r.status} al resolver conteo`)
+  if (!r.ok) await lanzarApiError(r, 'al resolver conteo')
   return r.json()
 }

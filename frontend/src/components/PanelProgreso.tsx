@@ -21,9 +21,11 @@ export default function PanelProgreso({ progreso, enVivo }: { progreso: Progreso
         <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${pct}%` }} />
       </div>
 
-      {progreso.por_familia.length > 0 && (
+      {/* Solo las familias ya tocadas: con 566 artículos hay cientos de
+          familias y listarlas todas entierra la señal. */}
+      {progreso.por_familia.filter((f) => f.contados > 0).length > 0 && (
         <ul className="mt-3 space-y-2">
-          {progreso.por_familia.map((f) => {
+          {progreso.por_familia.filter((f) => f.contados > 0).map((f) => {
             const fpct = f.total > 0 ? Math.round((f.contados / f.total) * 100) : 0
             return (
               <li key={f.familia}>

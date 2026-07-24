@@ -5,6 +5,7 @@ import PanelProgreso from '../components/PanelProgreso'
 import TecladoManual from '../components/TecladoManual'
 import { getArticulos, type ArticuloResumen } from '../lib/articulos'
 import {
+  ApiError,
   mensajeConfirmacion,
   nuevoConteoRequest,
   postConteo,
@@ -22,7 +23,7 @@ import { useOperario } from '../state/OperarioContext'
 
 type EstadoPantalla =
   | { tipo: 'lista' }
-  | { tipo: 'procesando' }
+  | { tipo: 'procesando'; transcripcion?: string }
   | { tipo: 'confirmando'; conteo: Conteo }
   | {
       tipo: 'requiere_confirmacion'
@@ -59,7 +60,9 @@ export default function PantallaConteo() {
 
   const enviarCaptura = useCallback(
     async (payload: { texto?: string; audioBase64?: string }, fuente: Fuente) => {
-      setPantalla({ tipo: 'procesando' })
+      // Latencia percibida: la transcripción cruda aparece al instante,
+      // aunque la respuesta del backend tarde ~2,5 s en modo live.
+      setPantalla({ tipo: 'procesando', transcripcion: payload.texto ?? '🎙️ audio grabado' })
       setPendientes((p) => p + 1)
       setIntentoActual(null)
       try {
@@ -74,8 +77,8 @@ export default function PantallaConteo() {
           onReintento: (intento) => setIntentoActual(intento),
         })
         aplicarRespuesta(respuesta)
-      } catch {
-        setPantalla({ tipo: 'error', mensaje: 'No se pudo enviar el conteo. Revisa tu conexión e intenta de nuevo.' })
+      } catch (error) {
+        setPantalla({ tipo: 'error', mensaje: mensajeErrorConteo(error) })
       } finally {
         setPendientes((p) => Math.max(0, p - 1))
         setIntentoActual(null)
@@ -123,6 +126,15 @@ export default function PantallaConteo() {
       return
     }
 
+    if (respuesta.status === 'no_catalogado' && !respuesta.texto_capturado.trim()) {
+      // Degradación con gracia: el NLU no entendió (o falló) → caer al
+      // teclado con mensaje claro, nunca pantalla de error genérica.
+      setPantalla({ tipo: 'lista' })
+      mostrarToast('No pude entender el audio, usa el teclado')
+      hablar('No pude entender. Usa el teclado o repite el conteo.')
+      return
+    }
+
     if (respuesta.status === 'requiere_confirmacion') {
       setPantalla({
         tipo: 'requiere_confirmacion',
@@ -146,8 +158,21 @@ export default function PantallaConteo() {
         onReintento: (intento) => setIntentoActual(intento),
       })
       aplicarRespuesta(resultado)
-    } catch {
-      setPantalla({ tipo: 'error', mensaje: 'No se pudo enviar la respuesta. Revisa tu conexión e intenta de nuevo.' })
+    } catch (error) {
+      // 410/404/409 del token: mensajes honestos y volver a escuchar —
+      // reintentar el mismo token nunca va a funcionar.
+      if (error instanceof ApiError && [404, 409, 410].includes(error.status)) {
+        setPantalla({ tipo: 'lista' })
+        mostrarToast(
+          error.status === 410
+            ? 'La pregunta expiró, vuelve a dictar el conteo'
+            : error.status === 409
+              ? 'Esa pregunta ya fue respondida'
+              : 'La pregunta ya no existe, vuelve a dictar el conteo',
+        )
+      } else {
+        setPantalla({ tipo: 'error', mensaje: 'No se pudo enviar la respuesta. Revisa tu conexión e intenta de nuevo.' })
+      }
     } finally {
       setEnviandoRespuesta(false)
       setPendientes((p) => Math.max(0, p - 1))
@@ -253,11 +278,16 @@ export default function PantallaConteo() {
         )}
 
         {pantalla.tipo === 'procesando' && (
-          <p className="text-2xl text-slate-300">
-            {intentoActual
-              ? `Sin conexión, reintentando… (intento ${intentoActual})`
-              : 'Procesando…'}
-          </p>
+          <div className="max-w-lg text-center">
+            {pantalla.transcripcion && (
+              <p className="text-3xl font-medium text-white">"{pantalla.transcripcion}"</p>
+            )}
+            <p className="mt-3 animate-pulse text-2xl text-slate-300">
+              {intentoActual
+                ? `Sin conexión, reintentando… (intento ${intentoActual})`
+                : 'Procesando…'}
+            </p>
+          </div>
         )}
 
         {pantalla.tipo === 'confirmando' && (
@@ -310,6 +340,14 @@ export default function PantallaConteo() {
       </div>
     </main>
   )
+}
+
+function mensajeErrorConteo(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 404) return 'La sesión ya no existe. Vuelve a elegir la bodega.'
+    if (error.status === 409) return 'La sesión está cerrada. Vuelve a elegir la bodega.'
+  }
+  return 'No se pudo enviar el conteo. Revisa tu conexión e intenta de nuevo.'
 }
 
 /** Dictado escrito: mismo pipeline NLU que la voz (fuente voz-tablet), para
