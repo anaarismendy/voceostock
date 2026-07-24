@@ -5,9 +5,23 @@
 > conversacional en el punto de captura**, sobre una plataforma de ingesta con
 > adaptadores. Prioridad: robusto > bonito. Cada paso trae su **plan B**.
 
-Este guion corre sobre el **frontend + el mock** (`VITE_API=mock`), sin backend,
-sin base de datos y sin llaves de Gemini. Todo lo que se ve aquí es
-determinista y reproducible.
+Este guion corre en DOS modos (fase final):
+
+- **Mock** (`npm run dev` a secas): sin backend ni BD ni llaves. Determinista.
+- **Real**: backend + Postgres, con Gemini **live** (si hay key con saldo) o
+  **replay** (sin red — los dictados del guion están grabados). Arranque:
+  ```
+  docker compose up -d db
+  cd backend && uv run uvicorn app.main:app --port 8020        # live si hay GEMINI_API_KEY en el entorno; replay si no
+  cd frontend && VITE_API=real VITE_API_PROXY=http://localhost:8020 npm run dev
+  ```
+  Sembrar/reiniciar la demo real: `POST /api/v1/demo/seed?bodega_id=3` y
+  `POST /api/v1/demo/reset?bodega_id=3` (misma consola F12 del navegador).
+  OJO replay: la ruta de audio usa los archivos de `data/replay/audio/`
+  (regrabar las 4 frases reales y correr
+  `uv run python -m scripts.record_audio_fixtures` antes de la demo).
+  En modo real usa la bodega **"almacen general"** (566 artículos; AGUACATE
+  del checklist no existe en esa bodega y sale "sin contar").
 
 ---
 
