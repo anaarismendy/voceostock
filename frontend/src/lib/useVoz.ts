@@ -1,5 +1,6 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { blobABase64 } from './audioBase64'
+import { elegirVozEspanol } from './vozEspanol'
 
 export type EstadoVoz = 'inactivo' | 'escuchando' | 'no_soportado' | 'error' | 'grabando'
 
@@ -40,8 +41,21 @@ export function useVoz(
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const recorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const vocesRef = useRef<SpeechSynthesisVoice[]>([])
 
   const usarAudio = !obtenerConstructor() || fallosSeguidos >= FALLOS_PARA_RUTA_B
+
+  // Las voces del navegador se cargan async — a veces llegan vacías en la
+  // primera consulta y se pueblan luego vía este evento.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return
+    const actualizarVoces = () => {
+      vocesRef.current = window.speechSynthesis.getVoices()
+    }
+    actualizarVoces()
+    window.speechSynthesis.addEventListener('voiceschanged', actualizarVoces)
+    return () => window.speechSynthesis.removeEventListener('voiceschanged', actualizarVoces)
+  }, [])
 
   const escuchar = useCallback(() => {
     const Ctor = obtenerConstructor()
@@ -82,6 +96,13 @@ export function useVoz(
     if (typeof window === 'undefined' || !window.speechSynthesis) return
     const utterance = new SpeechSynthesisUtterance(texto)
     utterance.lang = 'es-CO'
+    utterance.rate = 0.9
+    utterance.pitch = 1.1
+
+    const voces = vocesRef.current.length ? vocesRef.current : window.speechSynthesis.getVoices()
+    const voz = elegirVozEspanol(voces)
+    if (voz) utterance.voice = voz
+
     window.speechSynthesis.speak(utterance)
   }, [])
 
