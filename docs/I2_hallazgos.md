@@ -170,3 +170,49 @@ proxy) actualizando el progreso con cada conteo.
   caliente (5,7 s la primera llamada por warmup del pipeline; en replay
   <300 ms). El objetivo <2 s del ciclo real sigue PENDIENTE y es decisión
   de P1 (modelo/prompt intocables por acuerdo).
+
+# Fase final (rama integracion/final → main, tag v1.0-demo)
+
+## F1 — Merges en orden
+- PR #7 (endurecimiento) → main. Luego el PR #6 de P3 (rama `p4`, C8–C13):
+  6 archivos en conflicto, resueltos conservando ambos lados — login REAL
+  por PIN + rol operario/líder de P3; ModoGuiado + checklist de P3 con el
+  progreso real por WS, toast, degradación y errores honestos de P2; mock
+  con las rutas de ambos. El progreso de la guía se marca por NOMBRE
+  (el checklist habla en nr_articulo y el backend real en ids de BD).
+
+## F2 — Warmup del NLU
+- Al arrancar, un parse dummy en background (lifespan) calienta el cliente
+  Gemini; `WARMUP_BODEGA_ID` precalienta además el catálogo de la bodega
+  de la demo. Primera frase real: 5,7 s → 3,0–3,7 s (estable de esa
+  corrida: 2,4–2,8 s por varianza de red). El delta de primera llamada
+  quedó en ~1 s; no llega a los ~2 s ideales — PENDIENTE menor.
+
+## F3 — C9–C11 contra el sistema real
+- P3 los construyó contra el mock: /cierre, /dashboard y /demo/* no
+  existían en el backend real → implementados con el mismo contrato
+  (app/api/demo.py, con pruebas). El checklist AGUACATE no existe en
+  "almacen general": sale "sin contar" (asumido).
+- Verificado en navegador con datos reales: cierre con semáforo
+  (1 cuadra / 2 sobran / 1 falta / 5 sin contar), filtros, descarga del
+  Excel (abierto: columnas 1:1, CANTIDAD/Nr.Artículo/Artículo/Unidad/SD)
+  y reproductor de audio de evidencia por fila (HTTP 200 firmado).
+- Dashboard en vivo con DOS sesiones simultáneas: el conteo de la segunda
+  sesión apareció en el feed en <3 s ("hace 12 s"). "Modo demo corriendo
+  solo" NO existe (P3 no lo construyó); la semilla C11 cubre el arranque.
+- Seed C11 real: /demo/seed deja el estado EXACTO de docs/DEMO.md
+  (aceite cuadra, cazuela +2, costilla −3, resto sin contar, escalonados).
+
+## F4 — Ensayo cronometrado del guion (Playwright, sin errores en pantalla)
+- LIVE (Gemini real): login+bodega 0,8s · feliz 3,0s · anomalía 6,6s ·
+  ambigüedad 10,3s · guiado 13,7s · corte de red+retry 31,3s · líder
+  32,1s. Total interacción ~32 s (la demo hablada será mayor).
+- REPLAY (sin key): mismo guion completo en 19,3 s. Cero errores en
+  pantalla en ambos modos.
+
+## Pendientes finales (quién)
+- Regrabar los 4 audios reales del guion y correr record_audio_fixtures
+  (P3/P2, 5 min, antes de la demo).
+- Key AIzaSy… permanente de la cuenta con créditos (Ana). La AQ caduca.
+- Ciclo live ~2,2–2,8 s vs objetivo 2 s (P1: modelo/prompt congelados).
+- Umbral 0.72 quedó verde; si P1 quiere otro corte, tiene las mediciones.
