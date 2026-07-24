@@ -1,0 +1,27 @@
+frontend/README.md
+  s_db654ea9d24c98::t_d3b4fe5e6b4f06 1-42
+frontend/eslint.config.js
+  s_db654ea9d24c98::t_07522d983d20ac 5-6
+docs/I2_hallazgos.md
+  s_db654ea9d24c98::t_9e6babce914c6c 1-67
+frontend/mock-server/index.ts
+  s_db654ea9d24c98::t_211016a1d0a861 140-174
+frontend/package-lock.json
+  s_db654ea9d24c98::t_403c054810112a 76,2908,2926,3001,3392,3726,4464,5822,6474,6677,6892,7633,7814,8005,8405
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "6899b66ad37f99e1290c1be7853b8bbfc2e790b6",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
