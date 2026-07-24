@@ -29,6 +29,30 @@ def nombres_catalogo() -> list[str]:
     return sorted(nombres)
 
 
+def cargar_a_pgvector(emb: EmbedderGemini) -> None:
+    """I1: los vectores de la caché van a la columna pgvector de `articulos`,
+    no solo al disco — RepoDB los lee de ahí para el matching semántico."""
+    url = os.environ.get("DATABASE_URL")
+    if not url:
+        print("DATABASE_URL no configurada; no se cargó nada a pgvector")
+        return
+    from sqlalchemy import create_engine, select
+    from sqlalchemy.orm import Session
+
+    from app.models import Articulo
+
+    with Session(create_engine(url)) as s:
+        articulos = s.scalars(select(Articulo)).all()
+        cargados = 0
+        for a in articulos:
+            vector = emb._cache.get(emb._clave(a.nombre_normalizado))
+            if vector is not None:
+                a.embedding = vector
+                cargados += 1
+        s.commit()
+    print(f"pgvector: {cargados}/{len(articulos)} artículos con embedding")
+
+
 def main() -> None:
     key = os.environ.get("GEMINI_API_KEY")
     if not key:
@@ -44,6 +68,7 @@ def main() -> None:
     dt = time.perf_counter() - t0
     print(f"caché en {CACHE} ({len(emb._cache)} vectores) — {dt:.1f}s")
     print("Vuelve a correrlo: debería tardar <5s y hacer 0 llamadas a la API.")
+    cargar_a_pgvector(emb)
 
 
 if __name__ == "__main__":
