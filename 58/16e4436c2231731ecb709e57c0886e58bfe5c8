@@ -1,0 +1,48 @@
+README.md
+  s_db654ea9d24c98::t_8bd03451394449 1-63
+backend/app/api/conteos.py
+  s_db654ea9d24c98::t_f7afd278a556a1 224
+  s_db654ea9d24c98::t_63c8951a818314 163
+  s_db654ea9d24c98::t_f5dcbedaf52312 11,18
+  s_db654ea9d24c98::t_7472dc01e3d67d 8,193,229
+backend/app/db.py
+  s_db654ea9d24c98::t_053be48d2a8209 4,6,19-21
+backend/app/api/sesiones.py
+  s_db654ea9d24c98::t_336ca47cf45097 119,123
+  s_db654ea9d24c98::t_b910dee7d92692 160
+  s_db654ea9d24c98::t_316d0e5fa3146d 105
+  s_db654ea9d24c98::t_1cba2c25baba63 75
+  s_db654ea9d24c98::t_ff12204d85a8cc 10,15
+  s_fd71a03c4f5e6b::t_eaca90c735c88a 6,165
+backend/tests/test_api_conteos.py
+  s_db654ea9d24c98::t_679494ba336642 1-296
+backend/app/api/ws.py
+  s_db654ea9d24c98::t_5cb74a19f5dcda 43
+  s_db654ea9d24c98::t_e2c8dcf05a4ed3 9,36
+backend/tests/conftest.py
+  s_db654ea9d24c98::t_8d02f5a6141f2a 1-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "5816e4436c2231731ecb709e57c0886e58bfe5c8",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    },
+    "s_fd71a03c4f5e6b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8fa8467d-118c-40eb-a260-081fa2cff5e1",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
