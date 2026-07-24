@@ -1,0 +1,27 @@
+backend/app/pipeline/nlu/cliente.py
+  s_db654ea9d24c98::t_bb0e941cd69e11 9,21-23
+docs/I1_hallazgos.md
+  s_db654ea9d24c98::t_288fff7e89ff0f 29-41,63-72
+backend/app/pipeline/matching/embeddings.py
+  s_db654ea9d24c98::t_c23b549b9a4500 89
+  s_db654ea9d24c98::t_ce1c3de049886a 104
+  s_db654ea9d24c98::t_be7eff118a48ad 143-144,148-149
+backend/scripts/build_embeddings.py
+  s_db654ea9d24c98::t_436700b4a6d7c8 62-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "ff72d3d2c1c45eeabfcf0d51c60ccbfd84a794d7",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
