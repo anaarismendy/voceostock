@@ -1,0 +1,40 @@
+frontend/src/lib/dashboard.ts
+  s_db654ea9d24c98::t_2693bf8a196a4e 18-19
+frontend/src/lib/cierre.ts
+  s_db654ea9d24c98::t_749e9e5cc5d6ff 12-13,16-19
+backend/app/main.py
+  s_db654ea9d24c98::t_3e8df6aa017375 37-38
+  s_db654ea9d24c98::t_9ae215c059ad79 27-30,32,36
+  s_db654ea9d24c98::t_db281ef4e46236 12
+  s_db654ea9d24c98::t_eb294721715906 1-2,4-5,18-26,31,33-35,39-49
+  s_db654ea9d24c98::t_95b4c3f8c85e93 66
+frontend/src/screens/VistaCierre.tsx
+  s_db654ea9d24c98::t_4db9ca931113c6 98,109,116-119
+  s_db654ea9d24c98::t_268ded02ac89f5 17,20,27,30,37-40,46-80
+  s_db654ea9d24c98::t_5464d5afa04e0c 1,5
+backend/tests/test_api_demo.py
+  s_db654ea9d24c98::t_22de6896932374 1-36
+backend/app/api/demo.py
+  s_db654ea9d24c98::t_320de271e166ba 1-199
+frontend/src/screens/PantallaConteo.tsx
+  s_db654ea9d24c98::t_63f5c38b57c2cb 123-126
+frontend/src/screens/Dashboard.tsx
+  s_db654ea9d24c98::t_57dcaf2589e322 14,24
+  s_db654ea9d24c98::t_31dc614a894811 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "dae8f22ddc2cf8662b0c33526647ac5f6f3b9782",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
