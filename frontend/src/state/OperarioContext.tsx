@@ -7,6 +7,7 @@ interface SesionOperario {
   bodega: Bodega | null
   iniciarSesion: (pin: string) => void
   seleccionarBodega: (bodega: Bodega) => void
+  volverASeleccionarBodega: () => void
   cerrarSesion: () => void
 }
 
@@ -22,6 +23,7 @@ export function OperarioProvider({ children }: { children: ReactNode }) {
       bodega,
       iniciarSesion: (pin) => setOperario(nuevoOperario(pin)),
       seleccionarBodega: (b) => setBodega(b),
+      volverASeleccionarBodega: () => setBodega(null),
       cerrarSesion: () => {
         setOperario(null)
         setBodega(null)

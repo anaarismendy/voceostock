@@ -1,3 +1,4 @@
+import { ArrowLeft, LogOut, Mic, Square } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import ConfirmacionPendiente from '../components/ConfirmacionPendiente'
 import TecladoManual from '../components/TecladoManual'
@@ -31,7 +32,7 @@ type EstadoPantalla =
   | { tipo: 'error'; mensaje: string }
 
 export default function PantallaConteo() {
-  const { operario, bodega, cerrarSesion } = useOperario()
+  const { operario, bodega, cerrarSesion, volverASeleccionarBodega } = useOperario()
   const [pantalla, setPantalla] = useState<EstadoPantalla>({ tipo: 'lista' })
   const [enviandoRespuesta, setEnviandoRespuesta] = useState(false)
   const [pendientes, setPendientes] = useState(0)
@@ -131,16 +132,32 @@ export default function PantallaConteo() {
 
   return (
     <main className="flex min-h-screen flex-col bg-slate-900 p-6 text-white">
-      <header className="flex items-center justify-between">
-        <span className="text-lg font-medium capitalize">{bodega!.nombre}</span>
-        <div className="flex items-center gap-3">
+      <header className="flex items-start justify-between gap-3 rounded-2xl bg-slate-800 px-4 py-3 shadow-md">
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={volverASeleccionarBodega}
+            aria-label="Volver a selección de bodega"
+            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-700 active:bg-slate-600"
+          >
+            <ArrowLeft className="h-7 w-7" />
+          </button>
+          <span className="line-clamp-2 text-2xl font-bold capitalize leading-tight">{bodega!.nombre}</span>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
           {pendientes > 0 && (
             <span className="rounded-full bg-amber-600 px-3 py-1 text-xs font-semibold" aria-live="polite">
               {pendientes} pendiente{pendientes > 1 ? 's' : ''}
             </span>
           )}
-          <button className="text-sm text-slate-400 underline" onClick={cerrarSesion}>
-            Cerrar sesión
+          <button
+            type="button"
+            onClick={cerrarSesion}
+            aria-label="Cerrar sesión"
+            className="flex items-center gap-2 rounded-xl px-3 py-3 text-sm font-medium text-slate-300 active:bg-slate-700"
+          >
+            <LogOut className="h-5 w-5" />
+            <span className="hidden sm:inline">Cerrar sesión</span>
           </button>
         </div>
       </header>
@@ -230,21 +247,25 @@ function BotonMicrofono({
 }) {
   const escuchando = estadoVoz === 'escuchando'
   const grabando = estadoVoz === 'grabando'
+  const activo = escuchando || grabando
+
   return (
     <button
       type="button"
       onClick={onTocar}
       disabled={escuchando}
       aria-label={grabando ? 'Detener grabación y enviar' : 'Hablar para registrar un conteo'}
-      className={`flex h-40 w-40 items-center justify-center rounded-full text-6xl shadow-lg transition-colors ${
-        grabando
-          ? 'animate-pulse bg-red-600'
-          : escuchando
-            ? 'bg-red-600'
-            : 'bg-emerald-600 active:bg-emerald-500'
+      className={`flex h-40 w-40 items-center justify-center rounded-full shadow-lg transition-all ${
+        activo
+          ? 'animate-pulse bg-red-600 ring-4 ring-red-400/60'
+          : 'bg-emerald-600 active:bg-emerald-500'
       }`}
     >
-      {grabando ? '⏹️' : '🎤'}
+      {grabando ? (
+        <Square className="h-16 w-16 text-white" fill="white" strokeWidth={1.5} />
+      ) : (
+        <Mic className="h-16 w-16 text-white" strokeWidth={1.75} />
+      )}
     </button>
   )
 }

@@ -62,7 +62,7 @@ export default function TecladoManual({ onEnviar }: Props) {
 
   return (
     <div className="w-full max-w-md rounded-2xl bg-slate-800 p-4">
-      <p className="text-sm text-slate-400">¿Falla el micrófono? Usa el teclado.</p>
+      <p className="text-base font-medium text-slate-300">⌨️ ¿Falla el micrófono? Usa el teclado.</p>
 
       <div className="relative mt-2">
         <input
