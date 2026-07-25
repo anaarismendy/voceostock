@@ -1,0 +1,44 @@
+frontend/mock-server/index.ts
+  s_db654ea9d24c98::t_82c972633c2a74 1-4
+  s_db654ea9d24c98::t_5920b8dd8b5a54 164-171,173-187
+  s_db654ea9d24c98::t_92caffb8382937 172
+backend/app/services/tts.py
+  s_db654ea9d24c98::t_7ffb2bdab30111 1-25,31-91
+  s_db654ea9d24c98::t_a995c8b298547a 26-30
+frontend/src/lib/useVoz.ts
+  s_db654ea9d24c98::t_651e3dccde6e5c 96,110-117
+  s_db654ea9d24c98::t_f16c60a8f917cf 3,118
+frontend/src/lib/tts.ts
+  s_db654ea9d24c98::t_b9b7b120275d61 1-15
+backend/scripts/warm_tts_cache.py
+  s_db654ea9d24c98::t_6cca318658d308 1-64
+.env.example
+  s_db654ea9d24c98::t_f0e5acc2434748 9-12
+backend/tests/test_api_tts.py
+  s_db654ea9d24c98::t_2d8a15280f4ce3 1-36
+backend/app/api/tts.py
+  s_db654ea9d24c98::t_d0234b95291ec6 1-29
+backend/tests/conftest.py
+  s_db654ea9d24c98::t_11dee6cf71adaf 18-20
+backend/app/main.py
+  s_db654ea9d24c98::t_59aed602342930 15
+  s_db654ea9d24c98::t_d1a3bae0b1d5ea 68
+docs/I2_hallazgos.md
+  s_db654ea9d24c98::t_979d9274128f80 219-254
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "234f1c5fd89f305f120ad49c5788ce958b8f7bd0",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
