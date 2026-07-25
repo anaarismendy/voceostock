@@ -3,74 +3,134 @@
 @tailwind utilities;
 
 /* ============================================================
-   SISTEMA DE DISEÑO — único lugar con valores crudos.
-   Las pantallas consumen SOLO los tokens vía Tailwind (ver
-   tailwind.config.js); ningún color hardcodeado fuera de aquí.
+   SISTEMA DE DISEÑO — claymorfismo Colsubsidio (VoceoStock.dc.html)
+   Único lugar con valores crudos; las pantallas consumen tokens
+   vía Tailwind (tailwind.config.js). Contrastes verificados en la
+   nota final del design doc y re-medidos aquí.
    ============================================================ */
 
 @font-face {
-  font-family: 'Inter';
+  font-family: 'Open Sans';
   /* Variable font self-hosted: la demo no depende de la red. */
-  src: url('/fonts/inter-latin.woff2') format('woff2');
-  font-weight: 100 900;
+  src: url('/fonts/opensans-latin.woff2') format('woff2');
+  font-weight: 300 800;
   font-style: normal;
   font-display: swap;
 }
 
 :root {
-  /* Fondos y superficies (oscuro con matiz lila) */
-  --fondo: #0d0b12;
-  --superficie-1: #17151f; /* tarjetas */
-  --superficie-2: #201d2b; /* elevados, inputs */
-  --borde-sutil: #2a2637;
-  --borde-fuerte: #3a3550;
+  /* Fondos y superficies (cálido, casi negro) */
+  --fondo: #151514; /* fondo app */
+  --pantalla: #1c1c1b; /* lienzo de cada pantalla */
+  --superficie-1: #242423; /* tarjetas clay */
+  --superficie-2: #2e2e2d; /* teclas, inputs, chips */
+  --lateral: #191918; /* sidebar del líder */
+  --borde: #2e2e2d; /* divisores 1px */
+  --grafito: #575756; /* elementos apagados (mic procesando) */
 
-  /* Lila: marca y acción */
-  --primario: #8b5cf6;
-  --primario-hover: #a78bfa;
-  --acento-texto: #c4b5fd;
-  --tinte-primario: rgba(139, 92, 246, 0.12);
+  /* Acción: azul Colsubsidio (relleno con texto blanco; como texto usa claro) */
+  --accion: #0067b1;
+  --accion-claro: #3384c1;
+  --azul-texto: #66a1d1;
+  --azul-suave: #99bee0;
+  --tinte-azul: rgba(0, 103, 177, 0.22);
+
+  /* Marca y anomalía: amarillo Colsubsidio — SIEMPRE con grafito encima */
+  --marca: #ffd000;
+  --marca-hover: #ffd933;
+  --sobre-marca: #1c1c1b;
+  --sobre-marca-suave: rgba(28, 28, 27, 0.12);
 
   /* Texto */
-  --texto: #f4f2f8;
-  --texto-sec: #a9a4b8;
-  /* Ajustado del #6F6B80 del brief: ese valor daba 3.2:1 sobre superficie-2
-     y se usa en texto real (timestamps, "Sin contar") → AA exigía subirlo. */
-  --texto-tenue: #8a859c;
+  --texto: #f5f5f4;
+  --texto-sec: #bcbcbb;
+  --texto-tenue: #9a9a99; /* solo etiquetas 12-14px sin información única */
 
-  /* Semánticos: SOLO con significado, nunca decorativos */
-  --exito: #34d399;
-  --alerta: #fbbf24;
-  --critico: #f87171;
-  --tinte-alerta: rgba(251, 191, 36, 0.1);
-  --tinte-exito: rgba(52, 211, 153, 0.1);
+  /* Semánticos (franjas y chips, nunca botones) */
+  --exito: #2e9e6b;
+  --exito-claro: #7fd3ae;
+  --critico: #d64545;
+  --critico-claro: #e58a8a;
+  --tinte-critico: rgba(214, 69, 69, 0.16);
 }
 
 html {
   background: var(--fondo);
   color: var(--texto);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Open Sans', system-ui, sans-serif;
   font-synthesis-weight: none;
 }
 
-/* --- Micro-interacciones (CSS puro, sobrias) --- */
+/* --- Clay: elevación con sombra exterior + luz arriba + sombra interior --- */
+.clay {
+  box-shadow:
+    0 22px 40px -18px rgba(4, 10, 26, 0.85),
+    inset 0 2px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.5);
+}
+.clay-tecla {
+  box-shadow:
+    0 14px 26px -10px rgba(4, 10, 26, 0.8),
+    inset 0 2px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.45);
+}
+.clay-hundido {
+  box-shadow:
+    inset 0 3px 8px rgba(0, 0, 0, 0.55),
+    inset 0 -2px 0 rgba(255, 255, 255, 0.05);
+}
+.clay-azul {
+  box-shadow: 0 20px 36px -14px rgba(0, 70, 125, 0.95);
+}
+.clay-marca {
+  box-shadow: 0 24px 44px -18px rgba(60, 45, 0, 0.6);
+}
 
-/* Pulso lila suave del micrófono mientras escucha/graba */
-@keyframes pulso-mic {
+/* --- Micro-interacciones del design doc --- */
+@keyframes breathe {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.45);
+    transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 0 24px rgba(139, 92, 246, 0);
+    transform: scale(1.06);
+  }
+}
+@keyframes ringout {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateY(-10px);
+    opacity: 1;
   }
 }
 
-.animar-pulso-mic {
-  animation: pulso-mic 1.6s ease-out infinite;
+.animar-respira {
+  animation: breathe 2.4s ease-in-out infinite;
+}
+.animar-anillo {
+  animation: ringout 2.4s ease-out infinite;
+}
+.animar-anillo-tarde {
+  animation: ringout 2.4s ease-out 1.2s infinite;
+}
+.animar-bob {
+  animation: bob 1s ease-in-out infinite;
 }
 
-/* Entrada suave de tarjetas (confirmación, pregunta) */
 @keyframes entrada-tarjeta {
   from {
     opacity: 0;
@@ -81,12 +141,10 @@ html {
     transform: translateY(0);
   }
 }
-
 .animar-entrada {
   animation: entrada-tarjeta 180ms ease-out;
 }
 
-/* Transición estándar de estados en controles */
 .transicion-estado {
   transition:
     background-color 150ms ease,
@@ -96,7 +154,10 @@ html {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animar-pulso-mic,
+  .animar-respira,
+  .animar-anillo,
+  .animar-anillo-tarde,
+  .animar-bob,
   .animar-entrada {
     animation: none;
   }

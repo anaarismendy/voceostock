@@ -16,6 +16,9 @@ router = APIRouter(prefix="/api/v1", tags=["catalogo"])
 class BodegaResumen(BaseModel):
     id: int
     nombre: str
+    # Rediseño (pantalla B): la tarjeta muestra tamaño y estado de la bodega.
+    total_articulos: int = 0
+    en_conteo: bool = False
 
 
 class ArticuloResumen(BaseModel):
@@ -35,8 +38,31 @@ class OperarioResumen(BaseModel):
 
 @router.get("/bodegas", response_model=list[BodegaResumen])
 def listar_bodegas(s: Db) -> list[BodegaResumen]:
+    from sqlalchemy import func
+
     filas = s.execute(select(models.Bodega.id, models.Bodega.nombre).order_by(models.Bodega.nombre)).all()
-    return [BodegaResumen(id=f.id, nombre=f.nombre) for f in filas]
+    conteo_articulos = dict(
+        s.execute(
+            select(models.StockTeorico.bodega_id, func.count(func.distinct(models.StockTeorico.articulo_id)))
+            .group_by(models.StockTeorico.bodega_id)
+        ).all()
+    )
+    abiertas = {
+        b
+        for (b,) in s.execute(
+            select(models.SesionConteo.bodega_id)
+            .where(models.SesionConteo.estado == "abierta")
+            .distinct()
+        ).all()
+    }
+    return [
+        BodegaResumen(
+            id=f.id, nombre=f.nombre,
+            total_articulos=conteo_articulos.get(f.id, 0),
+            en_conteo=f.id in abiertas,
+        )
+        for f in filas
+    ]
 
 
 @router.get("/articulos", response_model=list[ArticuloResumen])

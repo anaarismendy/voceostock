@@ -31,15 +31,15 @@ export default function ModoGuiado({ objetivo, progreso, enviando, onRegistrar, 
 
   if (!objetivo) {
     return (
-      <div className="animar-entrada w-full max-w-lg rounded-tarjeta border border-borde-sutil bg-superficie1 p-8 text-center">
-        <p className="text-xl font-semibold text-exito">✓ Recorrido completo</p>
+      <div className="clay animar-entrada w-full max-w-lg rounded-tarjeta bg-superficie1 p-8 text-center">
+        <p className="text-xl font-semibold text-exito-claro">✓ Recorrido completo</p>
         <p className="mt-3 text-base text-texto-sec">
           Contaste los {progreso.total} artículos de la guía.
         </p>
         <button
           type="button"
           onClick={onReiniciar}
-          className="transicion-estado mt-8 h-[72px] rounded-control bg-primario px-8 text-lg font-semibold text-texto active:bg-primario-hover"
+          className="clay-azul transicion-estado mt-8 h-[88px] rounded-control bg-accion px-8 text-lg font-semibold text-white active:bg-accion-claro"
         >
           Revisar de nuevo
         </button>
@@ -65,9 +65,9 @@ export default function ModoGuiado({ objetivo, progreso, enviando, onRegistrar, 
   }
 
   return (
-    <div className="animar-entrada w-full max-w-lg rounded-tarjeta border border-borde-sutil bg-superficie1 p-6 text-center">
-      <p className="text-sm font-semibold uppercase tracking-widest text-texto-sec">Cuenta ahora</p>
-      <p className="mt-2 text-xl font-semibold capitalize leading-tight text-acento">{objetivo.articulo_nombre}</p>
+    <div className="clay animar-entrada w-full max-w-lg rounded-tarjeta bg-superficie1 p-6 text-center">
+      <p className="text-sm tracking-widest text-texto-tenue">CUENTA AHORA</p>
+      <p className="mt-2 text-xl font-semibold leading-tight">{objetivo.articulo_nombre}</p>
       <p className="mt-1 text-base text-texto-sec">en {objetivo.unidad}</p>
 
       <p className="mt-4 text-xl font-semibold tabular-nums">
@@ -80,7 +80,7 @@ export default function ModoGuiado({ objetivo, progreso, enviando, onRegistrar, 
             key={t}
             type="button"
             onClick={() => (t === '⌫' ? setCantidad((c) => c.slice(0, -1)) : agregarTecla(t))}
-            className="transicion-estado h-16 rounded-control bg-superficie2 text-lg font-semibold active:bg-tinte"
+            className="clay-tecla transicion-estado h-16 rounded-control bg-superficie2 text-lg font-semibold active:bg-grafito"
           >
             {t}
           </button>
@@ -94,16 +94,16 @@ export default function ModoGuiado({ objetivo, progreso, enviando, onRegistrar, 
           disabled={enviando || estadoVoz === 'escuchando'}
           aria-label="Decir la cantidad por voz"
           className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full ${
-            estadoVoz === 'escuchando' ? 'animar-pulso-mic bg-primario' : 'bg-primario active:bg-primario-hover'
+            estadoVoz === 'escuchando' ? 'animar-respira bg-accion' : 'clay-azul bg-accion active:bg-accion-claro'
           }`}
         >
-          <Mic className="h-7 w-7 text-texto" />
+          <Mic className="h-7 w-7 text-white" />
         </button>
         <button
           type="button"
           disabled={!cantidad || enviando}
           onClick={registrar}
-          className="transicion-estado h-[72px] flex-1 rounded-control bg-primario text-lg font-semibold text-texto active:bg-primario-hover disabled:opacity-50"
+          className="clay-azul transicion-estado h-[72px] flex-1 rounded-control bg-accion text-lg font-semibold text-white active:bg-accion-claro disabled:opacity-50"
         >
           Registrar
         </button>

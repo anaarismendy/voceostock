@@ -40,11 +40,15 @@ class ConteoReciente(BaseModel):
     cantidad: float
     unidad: str
     creado_en: int  # epoch ms, como espera el frontend
+    # Rediseño (pantalla I): el feed destaca en amarillo las anomalías
+    # confirmadas. Es un flag del conteo, nunca el SD (conteo ciego).
+    es_anomalia: bool = False
 
 
 class ResumenDashboard(BaseModel):
     total_conteos: int
     articulos_unicos: int
+    anomalias: int
     recientes: list[ConteoReciente]
 
 
@@ -131,12 +135,15 @@ def dashboard(s: Db, bodega_id: int) -> ResumenDashboard:
             cantidad=float(c.cantidad),
             unidad=c.unidad,
             creado_en=int(c.creado_en.timestamp() * 1000),
+            es_anomalia=bool(c.anomalia_flag),
         )
         for c, nombre in conteos[:8]
     ]
     unicos = {c.articulo_id for c, _ in conteos if c.articulo_id is not None}
+    anomalias = sum(1 for c, _ in conteos if c.anomalia_flag)
     return ResumenDashboard(
-        total_conteos=len(conteos), articulos_unicos=len(unicos), recientes=recientes
+        total_conteos=len(conteos), articulos_unicos=len(unicos),
+        anomalias=anomalias, recientes=recientes,
     )
 
 
