@@ -42,44 +42,44 @@ export default function Dashboard() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 text-sm font-semibold">
         {desconectado ? (
-          <span className="text-amber-400">◌ Reconectando…</span>
+          <span className="text-alerta">◌ Reconectando…</span>
         ) : (
-          <span className="flex items-center gap-2 text-emerald-400">
-            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400" />
+          <span className="flex items-center gap-2 text-exito">
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-exito" />
             EN VIVO
           </span>
         )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-slate-800 p-5 text-center">
-          <p className="text-5xl font-bold tabular-nums">{datos?.total_conteos ?? '—'}</p>
-          <p className="mt-1 text-sm text-slate-400">conteos registrados</p>
+        <div className="rounded-tarjeta border border-borde-sutil bg-superficie1 p-5 text-center">
+          <p className="text-2xl font-semibold tabular-nums">{datos?.total_conteos ?? '—'}</p>
+          <p className="mt-1 text-sm text-texto-sec">conteos registrados</p>
         </div>
-        <div className="rounded-2xl bg-slate-800 p-5 text-center">
-          <p className="text-5xl font-bold tabular-nums">{datos?.articulos_unicos ?? '—'}</p>
-          <p className="mt-1 text-sm text-slate-400">artículos distintos</p>
+        <div className="rounded-tarjeta border border-borde-sutil bg-superficie1 p-5 text-center">
+          <p className="text-2xl font-semibold tabular-nums">{datos?.articulos_unicos ?? '—'}</p>
+          <p className="mt-1 text-sm text-texto-sec">artículos distintos</p>
         </div>
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-semibold text-slate-400">Últimas capturas</p>
-        {datos === null && <p className="text-slate-300">Cargando…</p>}
+        <p className="mb-2 text-sm font-semibold text-texto-sec">Últimas capturas</p>
+        {datos === null && <p className="text-texto-sec">Cargando…</p>}
         {datos && datos.recientes.length === 0 && (
-          <p className="text-slate-300">Aún no hay conteos en esta sesión.</p>
+          <p className="text-texto-sec">Aún no hay conteos en esta sesión.</p>
         )}
         <ul className="flex flex-col gap-2">
           {datos?.recientes.map((c, i) => (
             <li
               key={`${c.articulo_id}-${c.creado_en ?? i}`}
-              className="flex items-center justify-between rounded-xl bg-slate-800 px-4 py-3"
+              className="flex items-center justify-between rounded-control border border-borde-sutil bg-superficie1 px-4 py-3"
             >
               <span className="min-w-0">
                 <span className="text-lg font-semibold tabular-nums">{c.cantidad}</span>{' '}
-                <span className="text-slate-400">{c.unidad}</span>{' '}
+                <span className="text-texto-sec">{c.unidad}</span>{' '}
                 <span className="capitalize">{c.articulo_nombre.toLowerCase()}</span>
               </span>
-              <span className="shrink-0 pl-3 text-sm text-slate-500">{tiempoRelativo(c.creado_en, ahora)}</span>
+              <span className="shrink-0 pl-3 text-sm text-texto-tenue">{tiempoRelativo(c.creado_en, ahora)}</span>
             </li>
           ))}
         </ul>

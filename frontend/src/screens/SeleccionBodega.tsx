@@ -35,29 +35,29 @@ export default function SeleccionBodega() {
   const visibles = filtradas.slice(paginaActual * POR_PAGINA, (paginaActual + 1) * POR_PAGINA)
 
   return (
-    <main className="flex min-h-screen flex-col bg-slate-900 p-6 text-white">
-      <h1 className="text-center text-2xl font-bold">¿En qué bodega estás?</h1>
+    <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col bg-fondo p-6 text-texto">
+      <h1 className="text-center text-lg font-semibold">¿En qué bodega estás?</h1>
 
       <input
         type="text"
         value={busqueda}
         onChange={(e) => setBusqueda(e.target.value)}
         placeholder="Buscar bodega…"
-        className="mt-6 h-16 rounded-2xl bg-slate-800 px-4 text-xl text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white"
+        className="transicion-estado mt-6 h-16 rounded-control border border-borde-sutil bg-superficie2 px-4 text-base text-texto placeholder:text-texto-tenue focus:border-primario focus:outline-none"
       />
 
       {totalPaginas > 1 && (
-        <p className="mt-3 text-center text-sm text-slate-400">
+        <p className="mt-3 text-center text-sm text-texto-sec">
           Página {paginaActual + 1} de {totalPaginas} ({filtradas.length} bodegas)
         </p>
       )}
 
-      <div className="mt-4 flex-1 space-y-3 overflow-y-auto pb-6">
-        {error && <p className="text-lg text-red-400">No se pudo cargar la lista de bodegas.</p>}
-        {errorSesion && <p className="text-lg text-red-400">No se pudo abrir la sesión de conteo. Toca la bodega de nuevo.</p>}
-        {!error && bodegas === null && <p className="text-lg text-slate-300">Cargando bodegas…</p>}
+      <div className="mt-4 flex-1 space-y-2 overflow-y-auto pb-6">
+        {error && <p className="text-base text-critico">No se pudo cargar la lista de bodegas.</p>}
+        {errorSesion && <p className="text-base text-critico">No se pudo abrir la sesión de conteo. Toca la bodega de nuevo.</p>}
+        {!error && bodegas === null && <p className="text-base text-texto-sec">Cargando bodegas…</p>}
         {!error && bodegas !== null && filtradas.length === 0 && (
-          <p className="text-lg text-slate-300">Sin resultados para "{busqueda}".</p>
+          <p className="text-base text-texto-sec">Sin resultados para "{busqueda}".</p>
         )}
         {visibles.map((bodega) => (
           <button
@@ -68,7 +68,7 @@ export default function SeleccionBodega() {
               // I2: al elegir bodega se abre la sesión REAL en BD.
               seleccionarBodega(bodega).catch(() => setErrorSesion(true))
             }}
-            className="block min-h-16 w-full rounded-2xl bg-slate-800 px-5 py-4 text-left text-xl font-medium capitalize active:bg-slate-700"
+            className="transicion-estado block min-h-16 w-full rounded-control border border-borde-sutil bg-superficie1 px-5 py-4 text-left text-base font-medium capitalize active:border-primario active:bg-superficie2"
           >
             {bodega.nombre}
           </button>
@@ -81,7 +81,7 @@ export default function SeleccionBodega() {
             type="button"
             disabled={paginaActual === 0}
             onClick={() => setPagina((p) => p - 1)}
-            className="h-16 flex-1 rounded-2xl bg-slate-800 text-lg font-semibold active:bg-slate-700 disabled:opacity-40"
+            className="transicion-estado h-16 flex-1 rounded-control border border-borde-sutil bg-superficie1 text-base font-semibold active:bg-superficie2 disabled:opacity-40"
           >
             ← Anterior
           </button>
@@ -89,7 +89,7 @@ export default function SeleccionBodega() {
             type="button"
             disabled={paginaActual >= totalPaginas - 1}
             onClick={() => setPagina((p) => p + 1)}
-            className="h-16 flex-1 rounded-2xl bg-slate-800 text-lg font-semibold active:bg-slate-700 disabled:opacity-40"
+            className="transicion-estado h-16 flex-1 rounded-control border border-borde-sutil bg-superficie1 text-base font-semibold active:bg-superficie2 disabled:opacity-40"
           >
             Siguiente →
           </button>

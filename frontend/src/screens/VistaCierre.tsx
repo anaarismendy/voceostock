@@ -5,10 +5,10 @@ import { CHECKLIST_DEMO } from '../lib/listaGuiada'
 import { useOperario } from '../state/OperarioContext'
 
 const ESTILO_ESTADO: Record<EstadoFila, { etiqueta: string; clase: string }> = {
-  cuadra: { etiqueta: 'Cuadra', clase: 'text-emerald-400' },
-  sobrante: { etiqueta: 'Sobra', clase: 'text-sky-400' },
-  faltante: { etiqueta: 'Falta', clase: 'text-amber-400' },
-  sin_contar: { etiqueta: 'Sin contar', clase: 'text-slate-500' },
+  cuadra: { etiqueta: 'OK Cuadra', clase: 'text-exito' },
+  sobrante: { etiqueta: '+ Sobra', clase: 'text-alerta' },
+  faltante: { etiqueta: '- Falta', clase: 'text-critico' },
+  sin_contar: { etiqueta: 'Sin contar', clase: 'text-texto-tenue' },
 }
 
 // Contenido del reporte de cierre (C9). El header (bodega/volver/salir) lo pone
@@ -42,13 +42,13 @@ export default function VistaCierre() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-slate-400">Contado vs. teórico</p>
+        <p className="text-sm font-semibold text-texto-sec">Contado vs. teórico</p>
         <div className="flex gap-2">
           <a
             href={`/api/v1/reportes/bodegas/${bodega!.id}/export`}
             download
             aria-label="Descargar Excel de cierre"
-            className="flex h-12 items-center gap-2 rounded-xl bg-slate-800 px-4 text-sm font-semibold active:bg-slate-700"
+            className="transicion-estado flex h-16 items-center gap-2 rounded-control border border-borde-sutil bg-superficie1 px-4 text-sm font-semibold active:bg-superficie2"
           >
             <Download className="h-5 w-5" /> Excel
           </a>
@@ -56,7 +56,7 @@ export default function VistaCierre() {
             type="button"
             onClick={cargar}
             aria-label="Actualizar cierre"
-            className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-800 active:bg-slate-700"
+            className="transicion-estado flex h-16 w-16 items-center justify-center rounded-control border border-borde-sutil bg-superficie1 active:bg-superficie2"
           >
             <RefreshCw className="h-5 w-5" />
           </button>
@@ -71,8 +71,8 @@ export default function VistaCierre() {
             role="radio"
             aria-checked={filtro === f}
             onClick={() => setFiltro(f)}
-            className={`h-10 rounded-full px-4 text-sm font-semibold capitalize ${
-              filtro === f ? 'bg-white text-slate-900' : 'bg-slate-800 text-slate-300 active:bg-slate-700'
+            className={`transicion-estado h-16 rounded-control px-4 text-sm font-semibold capitalize ${
+              filtro === f ? 'bg-tinte text-acento' : 'border border-borde-sutil bg-superficie1 text-texto-sec active:bg-superficie2'
             }`}
           >
             {f === 'todos' ? 'Todos' : ESTILO_ESTADO[f].etiqueta}
@@ -82,22 +82,22 @@ export default function VistaCierre() {
 
       {totales && (
         <div className="grid grid-cols-4 gap-2 text-center">
-          <Tarjeta valor={totales.cuadran} etiqueta="Cuadran" clase="text-emerald-400" />
-          <Tarjeta valor={totales.sobrantes} etiqueta="Sobran" clase="text-sky-400" />
-          <Tarjeta valor={totales.faltantes} etiqueta="Faltan" clase="text-amber-400" />
-          <Tarjeta valor={totales.sinContar} etiqueta="Sin contar" clase="text-slate-400" />
+          <Tarjeta valor={totales.cuadran} etiqueta="Cuadran" clase="text-exito" />
+          <Tarjeta valor={totales.sobrantes} etiqueta="Sobran" clase="text-alerta" />
+          <Tarjeta valor={totales.faltantes} etiqueta="Faltan" clase="text-critico" />
+          <Tarjeta valor={totales.sinContar} etiqueta="Sin contar" clase="text-texto-sec" />
         </div>
       )}
 
-      {error && <p className="text-lg text-red-400">No se pudo cargar el reporte de cierre.</p>}
-      {!error && filas === null && <p className="text-lg text-slate-300">Cargando cierre…</p>}
+      {error && <p className="text-base text-critico">No se pudo cargar el reporte de cierre.</p>}
+      {!error && filas === null && <p className="text-base text-texto-sec">Cargando cierre…</p>}
       {filas && filas.length === 0 && (
-        <p className="text-lg text-slate-300">Todavía no hay conteos en esta sesión.</p>
+        <p className="text-base text-texto-sec">Todavía no hay conteos en esta sesión.</p>
       )}
 
       {filas && visibles.length > 0 && (
-        <table className="w-full border-collapse text-left">
-          <thead className="text-sm text-slate-400">
+        <table className="w-full border-collapse text-left text-base">
+          <thead className="text-sm text-texto-sec">
             <tr>
               <th className="py-2 pr-2">Artículo</th>
               <th className="px-2 text-right">Contado</th>
@@ -109,7 +109,7 @@ export default function VistaCierre() {
             {visibles.map((fila) => {
               const estilo = ESTILO_ESTADO[estadoFila(fila)]
               return (
-                <tr key={fila.articulo_id} className="border-t border-slate-800">
+                <tr key={fila.articulo_id} className="border-t border-borde-sutil">
                   <td className="py-3 pr-2">
                     <span className="font-medium capitalize">{fila.articulo_nombre.toLowerCase()}</span>
                     <span className={`ml-2 text-xs font-semibold uppercase ${estilo.clase}`}>{estilo.etiqueta}</span>
@@ -119,7 +119,7 @@ export default function VistaCierre() {
                     )}
                   </td>
                   <td className="px-2 text-right tabular-nums">{fila.contado}</td>
-                  <td className="px-2 text-right tabular-nums text-slate-400">{fila.sd}</td>
+                  <td className="px-2 text-right tabular-nums text-texto-sec">{fila.sd}</td>
                   <td className={`px-2 text-right font-semibold tabular-nums ${estilo.clase}`}>
                     {fila.diferencia > 0 ? `+${fila.diferencia}` : fila.diferencia}
                   </td>
@@ -135,9 +135,9 @@ export default function VistaCierre() {
 
 function Tarjeta({ valor, etiqueta, clase }: { valor: number; etiqueta: string; clase: string }) {
   return (
-    <div className="rounded-2xl bg-slate-800 py-3">
-      <p className={`text-3xl font-bold tabular-nums ${clase}`}>{valor}</p>
-      <p className="text-xs text-slate-400">{etiqueta}</p>
+    <div className="rounded-tarjeta border border-borde-sutil bg-superficie1 py-3">
+      <p className={`text-xl font-semibold tabular-nums ${clase}`}>{valor}</p>
+      <p className="text-xs text-texto-sec">{etiqueta}</p>
     </div>
   )
 }

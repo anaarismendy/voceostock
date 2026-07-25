@@ -31,15 +31,15 @@ export default function ModoGuiado({ objetivo, progreso, enviando, onRegistrar, 
 
   if (!objetivo) {
     return (
-      <div className="w-full max-w-lg rounded-3xl bg-slate-800 p-8 text-center">
-        <p className="text-5xl font-bold">✓ Recorrido completo</p>
-        <p className="mt-3 text-2xl text-slate-300">
+      <div className="animar-entrada w-full max-w-lg rounded-tarjeta border border-borde-sutil bg-superficie1 p-8 text-center">
+        <p className="text-xl font-semibold text-exito">✓ Recorrido completo</p>
+        <p className="mt-3 text-base text-texto-sec">
           Contaste los {progreso.total} artículos de la guía.
         </p>
         <button
           type="button"
           onClick={onReiniciar}
-          className="mt-8 h-16 rounded-2xl bg-white px-8 text-xl font-semibold text-slate-900 active:bg-slate-200"
+          className="transicion-estado mt-8 h-[72px] rounded-control bg-primario px-8 text-lg font-semibold text-texto active:bg-primario-hover"
         >
           Revisar de nuevo
         </button>
@@ -65,13 +65,13 @@ export default function ModoGuiado({ objetivo, progreso, enviando, onRegistrar, 
   }
 
   return (
-    <div className="w-full max-w-lg rounded-3xl bg-slate-800 p-6 text-center">
-      <p className="text-lg font-medium text-slate-400">Cuenta ahora:</p>
-      <p className="mt-1 text-4xl font-bold leading-tight">{objetivo.articulo_nombre}</p>
-      <p className="mt-1 text-2xl text-slate-300">en {objetivo.unidad}</p>
+    <div className="animar-entrada w-full max-w-lg rounded-tarjeta border border-borde-sutil bg-superficie1 p-6 text-center">
+      <p className="text-sm font-semibold uppercase tracking-widest text-texto-sec">Cuenta ahora</p>
+      <p className="mt-2 text-xl font-semibold capitalize leading-tight text-acento">{objetivo.articulo_nombre}</p>
+      <p className="mt-1 text-base text-texto-sec">en {objetivo.unidad}</p>
 
-      <p className="mt-4 text-3xl font-semibold tabular-nums">
-        {cantidad || '0'} <span className="text-lg font-normal text-slate-400">{objetivo.unidad}</span>
+      <p className="mt-4 text-xl font-semibold tabular-nums">
+        {cantidad || '0'} <span className="text-base font-normal text-texto-sec">{objetivo.unidad}</span>
       </p>
 
       <div className="mt-3 grid grid-cols-3 gap-2">
@@ -80,7 +80,7 @@ export default function ModoGuiado({ objetivo, progreso, enviando, onRegistrar, 
             key={t}
             type="button"
             onClick={() => (t === '⌫' ? setCantidad((c) => c.slice(0, -1)) : agregarTecla(t))}
-            className="h-16 rounded-xl bg-slate-700 text-2xl font-semibold active:bg-slate-600"
+            className="transicion-estado h-16 rounded-control bg-superficie2 text-lg font-semibold active:bg-tinte"
           >
             {t}
           </button>
@@ -94,16 +94,16 @@ export default function ModoGuiado({ objetivo, progreso, enviando, onRegistrar, 
           disabled={enviando || estadoVoz === 'escuchando'}
           aria-label="Decir la cantidad por voz"
           className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full ${
-            estadoVoz === 'escuchando' ? 'animate-pulse bg-red-600' : 'bg-emerald-600 active:bg-emerald-500'
+            estadoVoz === 'escuchando' ? 'animar-pulso-mic bg-primario' : 'bg-primario active:bg-primario-hover'
           }`}
         >
-          <Mic className="h-7 w-7 text-white" />
+          <Mic className="h-7 w-7 text-texto" />
         </button>
         <button
           type="button"
           disabled={!cantidad || enviando}
           onClick={registrar}
-          className="h-16 flex-1 rounded-2xl bg-white text-xl font-semibold text-slate-900 active:bg-slate-200 disabled:opacity-50"
+          className="transicion-estado h-[72px] flex-1 rounded-control bg-primario text-lg font-semibold text-texto active:bg-primario-hover disabled:opacity-50"
         >
           Registrar
         </button>
@@ -113,12 +113,12 @@ export default function ModoGuiado({ objetivo, progreso, enviando, onRegistrar, 
         type="button"
         onClick={saltar}
         disabled={enviando}
-        className="mt-4 h-14 w-full rounded-2xl text-lg font-medium text-slate-300 active:bg-slate-700 disabled:opacity-50"
+        className="transicion-estado mt-4 h-16 w-full rounded-control text-base font-medium text-texto-sec active:bg-superficie2 disabled:opacity-50"
       >
         Saltar este artículo →
       </button>
 
-      {estadoVoz === 'escuchando' && <p className="mt-2 text-sm text-slate-400">Escuchando la cantidad…</p>}
+      {estadoVoz === 'escuchando' && <p className="mt-2 text-sm text-texto-sec">Escuchando la cantidad…</p>}
     </div>
   )
 }

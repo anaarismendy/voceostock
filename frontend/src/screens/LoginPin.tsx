@@ -30,15 +30,15 @@ export default function LoginPin() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-10 bg-slate-900 p-6 text-white">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-10 bg-fondo p-6 text-texto">
       <div>
-        <h1 className="text-center text-3xl font-bold">VoceoStock</h1>
-        <p className="mt-2 text-center text-lg text-slate-300">Ingresa tu PIN</p>
+        <h1 className="text-center text-xl font-semibold tracking-tight">VoceoStock</h1>
+        <p className="mt-2 text-center text-base text-texto-sec">Ingresa tu PIN</p>
       </div>
 
-      {error && <p className="text-lg text-red-400">No se pudo iniciar sesión. Intenta de nuevo.</p>}
+      {error && <p className="text-base text-critico">No se pudo iniciar sesión. Intenta de nuevo.</p>}
 
-      <div className="flex gap-3" role="radiogroup" aria-label="Rol">
+      <div className="flex gap-2 rounded-control border border-borde-sutil bg-superficie1 p-1" role="radiogroup" aria-label="Rol">
         {(['operario', 'lider'] as const).map((r) => (
           <button
             key={r}
@@ -46,8 +46,8 @@ export default function LoginPin() {
             role="radio"
             aria-checked={rol === r}
             onClick={() => setRol(r)}
-            className={`h-14 w-36 rounded-2xl text-lg font-semibold capitalize transition-colors ${
-              rol === r ? 'bg-white text-slate-900' : 'bg-slate-800 text-slate-200 active:bg-slate-700'
+            className={`transicion-estado h-16 w-36 rounded-control text-base font-semibold capitalize ${
+              rol === r ? 'bg-primario text-texto' : 'text-texto-sec active:bg-superficie2'
             }`}
           >
             {r === 'operario' ? 'Operario' : 'Líder'}
@@ -59,12 +59,14 @@ export default function LoginPin() {
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className={`h-6 w-6 rounded-full border-2 border-white ${i < pin.length ? 'bg-white' : 'bg-transparent'}`}
+            className={`transicion-estado h-4 w-4 rounded-full border-2 ${
+              i < pin.length ? 'border-primario bg-primario' : 'border-borde-fuerte bg-transparent'
+            }`}
           />
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3">
         {TECLAS.map((tecla, i) => {
           if (tecla === '') return <div key={`vacio-${i}`} className="h-20 w-20" />
           if (tecla === 'borrar')
@@ -73,7 +75,7 @@ export default function LoginPin() {
                 key={tecla}
                 type="button"
                 onClick={borrar}
-                className="h-20 w-20 rounded-2xl bg-slate-800 text-xl font-semibold active:bg-slate-700"
+                className="transicion-estado h-20 w-20 rounded-control border border-borde-sutil bg-superficie1 text-lg font-semibold text-texto-sec active:bg-superficie2"
                 aria-label="Borrar"
               >
                 ⌫
@@ -84,7 +86,7 @@ export default function LoginPin() {
               key={tecla}
               type="button"
               onClick={() => agregarDigito(tecla)}
-              className="h-20 w-20 rounded-2xl bg-slate-800 text-3xl font-semibold active:bg-slate-700"
+              className="transicion-estado h-20 w-20 rounded-control border border-borde-sutil bg-superficie1 text-lg font-semibold active:border-borde-fuerte active:bg-superficie2"
             >
               {tecla}
             </button>

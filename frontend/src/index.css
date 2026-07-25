@@ -1,3 +1,105 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================================
+   SISTEMA DE DISEÑO — único lugar con valores crudos.
+   Las pantallas consumen SOLO los tokens vía Tailwind (ver
+   tailwind.config.js); ningún color hardcodeado fuera de aquí.
+   ============================================================ */
+
+@font-face {
+  font-family: 'Inter';
+  /* Variable font self-hosted: la demo no depende de la red. */
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Fondos y superficies (oscuro con matiz lila) */
+  --fondo: #0d0b12;
+  --superficie-1: #17151f; /* tarjetas */
+  --superficie-2: #201d2b; /* elevados, inputs */
+  --borde-sutil: #2a2637;
+  --borde-fuerte: #3a3550;
+
+  /* Lila: marca y acción */
+  --primario: #8b5cf6;
+  --primario-hover: #a78bfa;
+  --acento-texto: #c4b5fd;
+  --tinte-primario: rgba(139, 92, 246, 0.12);
+
+  /* Texto */
+  --texto: #f4f2f8;
+  --texto-sec: #a9a4b8;
+  --texto-tenue: #6f6b80; /* solo tamaños grandes o contenido no esencial */
+
+  /* Semánticos: SOLO con significado, nunca decorativos */
+  --exito: #34d399;
+  --alerta: #fbbf24;
+  --critico: #f87171;
+  --tinte-alerta: rgba(251, 191, 36, 0.1);
+  --tinte-exito: rgba(52, 211, 153, 0.1);
+}
+
+html {
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-synthesis-weight: none;
+}
+
+/* --- Micro-interacciones (CSS puro, sobrias) --- */
+
+/* Pulso lila suave del micrófono mientras escucha/graba */
+@keyframes pulso-mic {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 24px rgba(139, 92, 246, 0);
+  }
+}
+
+.animar-pulso-mic {
+  animation: pulso-mic 1.6s ease-out infinite;
+}
+
+/* Entrada suave de tarjetas (confirmación, pregunta) */
+@keyframes entrada-tarjeta {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animar-entrada {
+  animation: entrada-tarjeta 180ms ease-out;
+}
+
+/* Transición estándar de estados en controles */
+.transicion-estado {
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    opacity 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animar-pulso-mic,
+  .animar-entrada {
+    animation: none;
+  }
+  .transicion-estado,
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}

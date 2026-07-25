@@ -212,22 +212,22 @@ export default function PantallaConteo() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-slate-900 p-6 text-white">
-      <header className="flex items-start justify-between gap-3 rounded-2xl bg-slate-800 px-4 py-3 shadow-md">
+    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col bg-fondo p-4 text-texto">
+      <header className="flex items-center justify-between gap-3 rounded-tarjeta border border-borde-sutil bg-superficie1 px-3 py-2">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
             onClick={volverASeleccionarBodega}
             aria-label="Volver a selección de bodega"
-            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-700 active:bg-slate-600"
+            className="transicion-estado flex h-16 w-16 shrink-0 items-center justify-center rounded-control bg-superficie2 active:bg-tinte"
           >
-            <ArrowLeft className="h-7 w-7" />
+            <ArrowLeft className="h-6 w-6 text-texto-sec" />
           </button>
-          <span className="line-clamp-2 text-2xl font-bold capitalize leading-tight">{bodega!.nombre}</span>
+          <span className="line-clamp-2 text-lg font-semibold capitalize leading-tight">{bodega!.nombre}</span>
         </div>
         <div className="flex shrink-0 items-center gap-3">
           {pendientes > 0 && (
-            <span className="rounded-full bg-amber-600 px-3 py-1 text-xs font-semibold" aria-live="polite">
+            <span className="rounded-full bg-tinte-alerta px-3 py-1 text-xs font-semibold text-alerta" aria-live="polite">
               {pendientes} pendiente{pendientes > 1 ? 's' : ''}
             </span>
           )}
@@ -235,7 +235,7 @@ export default function PantallaConteo() {
             type="button"
             onClick={cerrarSesion}
             aria-label="Cerrar sesión"
-            className="flex items-center gap-2 rounded-xl px-3 py-3 text-sm font-medium text-slate-300 active:bg-slate-700"
+            className="transicion-estado flex h-16 items-center gap-2 rounded-control px-3 text-sm font-medium text-texto-sec active:bg-superficie2"
           >
             <LogOut className="h-5 w-5" />
             <span className="hidden sm:inline">Cerrar sesión</span>
@@ -243,23 +243,23 @@ export default function PantallaConteo() {
         </div>
       </header>
 
-      {/* C8: barra de progreso de la guía (siempre) + selector de modo. */}
-      <section className="mt-4 rounded-2xl bg-slate-800 px-4 py-3">
-        <div className="flex items-center justify-between text-lg font-medium">
+      {/* C8: barra de progreso de la guía (subordinada) + selector de modo. */}
+      <section className="mt-3 rounded-tarjeta border border-borde-sutil bg-superficie1 px-4 py-3">
+        <div className="flex items-center justify-between text-sm font-medium text-texto-sec">
           <span>Progreso de la guía</span>
-          <span className="tabular-nums text-slate-300">
+          <span className="tabular-nums">
             {progresoGuia.hechos} / {progresoGuia.total}
           </span>
         </div>
         <div
-          className="mt-2 h-3 w-full overflow-hidden rounded-full bg-slate-700"
+          className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-superficie2"
           role="progressbar"
           aria-valuenow={progresoGuia.porcentaje}
           aria-valuemin={0}
           aria-valuemax={100}
         >
           <div
-            className="h-full rounded-full bg-emerald-500 transition-all"
+            className="h-full rounded-full bg-primario transition-all"
             style={{ width: `${progresoGuia.porcentaje}%` }}
           />
         </div>
@@ -273,8 +273,10 @@ export default function PantallaConteo() {
                 role="tab"
                 aria-selected={modo === m}
                 onClick={() => setModo(m)}
-                className={`h-14 rounded-xl text-lg font-semibold capitalize transition-colors ${
-                  modo === m ? 'bg-white text-slate-900' : 'bg-slate-700 text-slate-200 active:bg-slate-600'
+                className={`transicion-estado h-16 rounded-control text-base font-semibold capitalize ${
+                  modo === m
+                    ? 'bg-tinte text-acento'
+                    : 'bg-superficie2 text-texto-sec active:bg-tinte'
                 }`}
               >
                 {m === 'libre' ? 'Modo libre' : 'Modo guiado'}
@@ -307,7 +309,7 @@ export default function PantallaConteo() {
 
         {toast && (
           <div
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-slate-700 px-6 py-3 text-lg shadow-lg"
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 rounded-control border border-borde-fuerte bg-superficie2 px-6 py-3 text-base"
             role="status"
             aria-live="polite"
           >
@@ -316,19 +318,19 @@ export default function PantallaConteo() {
         )}
 
         {estadoVoz === 'escuchando' && pantalla.tipo === 'lista' && modo === 'libre' && (
-          <p className="text-2xl text-slate-300">Escuchando…</p>
+          <p className="text-lg text-acento">Escuchando…</p>
         )}
 
         {estadoVoz === 'grabando' && pantalla.tipo === 'lista' && modo === 'libre' && (
-          <p className="text-2xl text-red-300">🔴 Grabando… toca de nuevo para enviar</p>
+          <p className="text-lg font-semibold text-alerta">● Grabando… toca de nuevo para enviar</p>
         )}
 
         {pantalla.tipo === 'procesando' && (
-          <div className="max-w-lg text-center">
+          <div className="animar-entrada max-w-lg text-center">
             {pantalla.transcripcion && (
-              <p className="text-3xl font-medium text-white">"{pantalla.transcripcion}"</p>
+              <p className="text-xl font-semibold text-texto">"{pantalla.transcripcion}"</p>
             )}
-            <p className="mt-3 animate-pulse text-2xl text-slate-300">
+            <p className="mt-3 animate-pulse text-lg text-texto-sec">
               {intentoActual
                 ? `Sin conexión, reintentando… (intento ${intentoActual})`
                 : 'Procesando…'}
@@ -351,12 +353,12 @@ export default function PantallaConteo() {
         )}
 
         {pantalla.tipo === 'no_catalogado' && (
-          <div className="max-w-lg rounded-2xl bg-slate-800 p-6 text-center">
-            <p className="text-3xl font-semibold">No encontré "{pantalla.textoCapturado}" en el catálogo.</p>
+          <div className="animar-entrada w-full max-w-lg rounded-tarjeta border border-borde-sutil bg-superficie1 p-6 text-center">
+            <p className="text-lg font-semibold">No encontré "{pantalla.textoCapturado}" en el catálogo.</p>
             <button
               type="button"
               onClick={volverAEscuchar}
-              className="mt-4 h-16 rounded-2xl bg-white px-8 text-xl font-semibold text-slate-900 active:bg-slate-200"
+              className="transicion-estado mt-6 h-[72px] w-full rounded-control bg-primario px-8 text-lg font-semibold text-texto active:bg-primario-hover"
             >
               Volver a intentar
             </button>
@@ -364,12 +366,12 @@ export default function PantallaConteo() {
         )}
 
         {pantalla.tipo === 'error' && (
-          <div className="max-w-lg rounded-2xl bg-red-950 p-6 text-center">
-            <p className="text-2xl font-semibold text-red-200">{pantalla.mensaje}</p>
+          <div className="animar-entrada w-full max-w-lg rounded-tarjeta border border-critico bg-superficie1 p-6 text-center">
+            <p className="text-lg font-semibold text-critico">{pantalla.mensaje}</p>
             <button
               type="button"
               onClick={volverAEscuchar}
-              className="mt-4 h-16 rounded-2xl bg-white px-8 text-xl font-semibold text-slate-900 active:bg-slate-200"
+              className="transicion-estado mt-6 h-[72px] w-full rounded-control bg-primario px-8 text-lg font-semibold text-texto active:bg-primario-hover"
             >
               Reintentar
             </button>
@@ -377,7 +379,7 @@ export default function PantallaConteo() {
         )}
 
         {usarAudio && estadoVoz !== 'grabando' && pantalla.tipo === 'lista' && modo === 'libre' && (
-          <p className="max-w-sm text-center text-lg text-amber-300">
+          <p className="max-w-sm text-center text-sm text-alerta">
             {estadoVoz === 'no_soportado'
               ? 'Este navegador no transcribe voz en vivo: el micrófono ahora graba audio.'
               : 'El reconocimiento de voz está fallando: el micrófono ahora graba audio.'}
@@ -417,12 +419,12 @@ function DictadoPorTexto({ onEnviar }: { onEnviar: (texto: string) => void }) {
         onChange={(e) => setTexto(e.target.value)}
         placeholder='Escribe el dictado: "noventa cajas de cazuelas"…'
         aria-label="Dictado por texto"
-        className="h-14 flex-1 rounded-xl bg-slate-800 px-4 text-base text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-white"
+        className="transicion-estado h-16 flex-1 rounded-control border border-borde-sutil bg-superficie2 px-4 text-base text-texto placeholder:text-texto-tenue focus:border-primario focus:outline-none"
       />
       <button
         type="submit"
         disabled={!texto.trim()}
-        className="h-14 rounded-xl bg-slate-700 px-5 text-base font-semibold active:bg-slate-600 disabled:opacity-40"
+        className="transicion-estado h-16 rounded-control border border-borde-sutil bg-superficie2 px-5 text-base font-semibold text-texto-sec active:bg-tinte disabled:opacity-40"
       >
         Enviar
       </button>
@@ -447,16 +449,16 @@ function BotonMicrofono({
       onClick={onTocar}
       disabled={escuchando}
       aria-label={grabando ? 'Detener grabación y enviar' : 'Hablar para registrar un conteo'}
-      className={`flex h-40 w-40 items-center justify-center rounded-full shadow-lg transition-all ${
+      className={`transicion-estado flex h-44 w-44 items-center justify-center rounded-full ${
         activo
-          ? 'animate-pulse bg-red-600 ring-4 ring-red-400/60'
-          : 'bg-emerald-600 active:bg-emerald-500'
+          ? 'animar-pulso-mic border-2 border-acento bg-primario'
+          : 'bg-primario active:bg-primario-hover'
       }`}
     >
       {grabando ? (
-        <Square className="h-16 w-16 text-white" fill="white" strokeWidth={1.5} />
+        <Square className="h-16 w-16 text-texto" fill="currentColor" strokeWidth={1.5} />
       ) : (
-        <Mic className="h-16 w-16 text-white" strokeWidth={1.75} />
+        <Mic className="h-16 w-16 text-texto" strokeWidth={1.75} />
       )}
     </button>
   )
@@ -464,25 +466,29 @@ function BotonMicrofono({
 
 function TarjetaConfirmacion({ conteo, onCerrar }: { conteo: Conteo; onCerrar: () => void }) {
   return (
-    <div className="w-full max-w-lg rounded-3xl bg-slate-800 p-8 text-center">
-      <p className="text-5xl font-bold">{conteo.cantidad}</p>
-      <p className="mt-1 text-3xl font-medium text-slate-200">{conteo.unidad}</p>
-      <p className="mt-4 text-4xl font-semibold">{conteo.articulo_nombre}</p>
+    <div className="animar-entrada w-full max-w-lg rounded-tarjeta border border-borde-sutil bg-superficie1 p-8 text-center">
+      {/* Jerarquía: cantidad+unidad 56px, artículo 32px — legible a 3 metros. */}
+      <p className="text-2xl font-semibold tabular-nums text-texto">
+        {conteo.cantidad} <span className="text-xl font-normal text-texto-sec">{conteo.unidad}</span>
+      </p>
+      <p className="mt-4 text-xl font-semibold capitalize text-acento">
+        {conteo.articulo_nombre.toLowerCase()}
+      </p>
 
-      <div className="mt-8 flex justify-center gap-6">
+      <div className="mt-8 flex justify-center gap-4">
         <button
           type="button"
           onClick={onCerrar}
           aria-label="Confirmar"
-          className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-600 text-4xl active:bg-emerald-500"
+          className="transicion-estado h-[72px] flex-1 rounded-control bg-exito text-lg font-semibold text-fondo active:opacity-80"
         >
-          ✓
+          ✓ Correcto
         </button>
         <button
           type="button"
           onClick={onCerrar}
           aria-label="Rechazar"
-          className="flex h-20 w-20 items-center justify-center rounded-full bg-red-600 text-4xl active:bg-red-500"
+          className="transicion-estado h-[72px] w-32 rounded-control border border-borde-fuerte bg-superficie2 text-lg font-semibold text-texto-sec active:border-critico active:text-critico"
         >
           ✗
         </button>

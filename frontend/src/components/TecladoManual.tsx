@@ -62,8 +62,8 @@ export default function TecladoManual({ bodegaId, onEnviar }: Props) {
   }
 
   return (
-    <div className="w-full max-w-md rounded-2xl bg-slate-800 p-4">
-      <p className="text-base font-medium text-slate-300">⌨️ ¿Falla el micrófono? Usa el teclado.</p>
+    <div className="w-full max-w-md rounded-tarjeta border border-borde-sutil bg-superficie1 p-4">
+      <p className="text-sm font-medium text-texto-sec">⌨️ ¿Falla el micrófono? Usa el teclado.</p>
 
       <div className="relative mt-2">
         <input
@@ -71,16 +71,16 @@ export default function TecladoManual({ bodegaId, onEnviar }: Props) {
           value={busqueda}
           onChange={(e) => cambiarBusqueda(e.target.value)}
           placeholder="Buscar artículo…"
-          className="h-16 w-full rounded-xl bg-slate-700 px-4 text-lg text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white"
+          className="transicion-estado h-16 w-full rounded-control border border-borde-sutil bg-superficie2 px-4 text-base text-texto placeholder:text-texto-tenue focus:border-primario focus:outline-none"
         />
         {sugerencias.length > 0 && (
-          <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl bg-slate-700 shadow-lg">
+          <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-control border border-borde-fuerte bg-superficie2">
             {sugerencias.map((a) => (
               <li key={a.articulo_id}>
                 <button
                   type="button"
                   onClick={() => elegirArticulo(a)}
-                  className="block min-h-16 w-full px-4 py-3 text-left text-base active:bg-slate-600"
+                  className="transicion-estado block min-h-16 w-full px-4 py-3 text-left text-base active:bg-tinte"
                 >
                   {a.articulo_nombre}
                 </button>
@@ -92,8 +92,8 @@ export default function TecladoManual({ bodegaId, onEnviar }: Props) {
 
       {seleccionado && (
         <div className="mt-4">
-          <p className="text-2xl font-semibold">
-            {cantidad || '0'} <span className="text-lg font-normal text-slate-300">{seleccionado.unidad}</span>
+          <p className="text-lg font-semibold tabular-nums">
+            {cantidad || '0'} <span className="text-base font-normal text-texto-sec">{seleccionado.unidad}</span>
           </p>
 
           <div className="mt-2 grid grid-cols-3 gap-2">
@@ -102,7 +102,7 @@ export default function TecladoManual({ bodegaId, onEnviar }: Props) {
                 key={t}
                 type="button"
                 onClick={() => (t === '⌫' ? borrar() : agregarTecla(t))}
-                className="h-16 rounded-xl bg-slate-700 text-xl font-semibold active:bg-slate-600"
+                className="transicion-estado h-16 rounded-control bg-superficie2 text-lg font-semibold active:bg-tinte"
               >
                 {t}
               </button>
@@ -113,7 +113,7 @@ export default function TecladoManual({ bodegaId, onEnviar }: Props) {
             type="button"
             disabled={!cantidad}
             onClick={registrar}
-            className="mt-3 h-16 w-full rounded-xl bg-white text-lg font-semibold text-slate-900 disabled:opacity-50"
+            className="transicion-estado mt-3 h-[72px] w-full rounded-control bg-primario text-lg font-semibold text-texto active:bg-primario-hover disabled:opacity-50"
           >
             Registrar
           </button>
