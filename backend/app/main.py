@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.catalogo import router as catalogo_router
+from app.api.config import router as config_router
 from app.api.conteos import router as conteos_router
 from app.api.demo import router as demo_router
 from app.api.evidencia import router as evidencia_router
@@ -66,6 +67,7 @@ app.include_router(ws_router)
 app.include_router(reportes_router)  # A9/I3: reporte de diferencias + export Excel
 app.include_router(demo_router)  # C9-C11 reales: cierre del líder, dashboard, seed
 app.include_router(tts_router)  # voz del agente (ElevenLabs + caché en disco)
+app.include_router(config_router)  # E2: umbrales y sinónimos editables por el líder
 
 
 @app.get("/health")
