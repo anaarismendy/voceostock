@@ -4,6 +4,7 @@ import ConfirmacionPendiente from '../components/ConfirmacionPendiente'
 import ModoGuiado from '../components/ModoGuiado'
 import TecladoManual from '../components/TecladoManual'
 import type { ArticuloResumen } from '../lib/articulos'
+import { indicadorConfianza, type NivelConfianza } from '../lib/confianza'
 import {
   ApiError,
   mensajeConfirmacion,
@@ -28,7 +29,7 @@ type Modo = 'libre' | 'guiado'
 type EstadoPantalla =
   | { tipo: 'lista' }
   | { tipo: 'procesando'; transcripcion?: string }
-  | { tipo: 'confirmando'; conteo: Conteo }
+  | { tipo: 'confirmando'; conteo: Conteo; viaAclaracion: boolean }
   | {
       tipo: 'requiere_confirmacion'
       tokenPendiente: string
@@ -119,14 +120,16 @@ export default function PantallaConteo() {
     }
   }
 
-  function aplicarRespuesta(respuesta: ConteoResponse) {
+  function aplicarRespuesta(respuesta: ConteoResponse, viaAclaracion = false) {
     if (respuesta.status === 'confirmado') {
       // Progreso de la guía: se marca por NOMBRE porque el checklist habla en
       // nr_articulo (mock) y el backend real responde con ids de BD.
       const item = CHECKLIST_DEMO.find((a) => a.articulo_nombre === respuesta.conteo.articulo_nombre)
       const id = item?.articulo_id ?? respuesta.conteo.articulo_id
       setContados((prev) => (prev.has(id) ? prev : new Set(prev).add(id)))
-      setPantalla({ tipo: 'confirmando', conteo: respuesta.conteo })
+      // F1: `viaAclaracion` distingue el auto-confirmado del que pasó por una
+      // pregunta, para el indicador de confianza (sin revelar nunca el SD).
+      setPantalla({ tipo: 'confirmando', conteo: respuesta.conteo, viaAclaracion })
       hablar(mensajeConfirmacion(respuesta.conteo))
       return
     }
@@ -170,7 +173,7 @@ export default function PantallaConteo() {
       const resultado = await conReintento(() => resolverConteo(tokenPendiente, respuesta), {
         onReintento: (intento) => setIntentoActual(intento),
       })
-      aplicarRespuesta(resultado)
+      aplicarRespuesta(resultado, true) // F1: vino tras una aclaración del operario
     } catch (error) {
       // 410/404/409 del token: mensajes honestos y volver a escuchar —
       // reintentar el mismo token nunca va a funcionar.
@@ -422,7 +425,11 @@ export default function PantallaConteo() {
         )}
 
         {pantalla.tipo === 'confirmando' && (
-          <TarjetaConfirmacion conteo={pantalla.conteo} onCerrar={volverAEscuchar} />
+          <TarjetaConfirmacion
+            conteo={pantalla.conteo}
+            viaAclaracion={pantalla.viaAclaracion}
+            onCerrar={volverAEscuchar}
+          />
         )}
 
         {pantalla.tipo === 'requiere_confirmacion' && (
@@ -575,12 +582,39 @@ function BotonMicrofono({
   )
 }
 
-function TarjetaConfirmacion({ conteo, onCerrar }: { conteo: Conteo; onCerrar: () => void }) {
+// F1: color del punto por nivel. Sutil y no invasivo; nunca rojo (no es error).
+const PUNTO_CONFIANZA: Record<NivelConfianza, string> = {
+  alta: 'bg-exito',
+  media: 'bg-azul-texto',
+  revisar: 'bg-texto-tenue',
+}
+
+function TarjetaConfirmacion({
+  conteo,
+  viaAclaracion,
+  onCerrar,
+}: {
+  conteo: Conteo
+  viaAclaracion: boolean
+  onCerrar: () => void
+}) {
+  // F1: indicador de confianza — auto-confirmado vs. revisado. Usa solo la
+  // confianza del pipeline; jamás el SD (conteo ciego intacto).
+  const indicador = indicadorConfianza(conteo.confianza, viaAclaracion)
   return (
     <div className="animar-entrada flex w-full max-w-2xl flex-col gap-5">
       {/* C4: cantidad y unidad a 56/32px, lo primero que se lee a un brazo. */}
       <div className="clay flex w-full flex-col gap-4 rounded-tarjeta bg-superficie1 px-10 py-9">
-        <div className="text-sm tracking-widest text-texto-tenue">ANOTÉ ESTO</div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm tracking-widest text-texto-tenue">ANOTÉ ESTO</div>
+          <div
+            className="flex items-center gap-2 text-sm text-texto-tenue"
+            aria-label={`Confianza: ${indicador.etiqueta}`}
+          >
+            <span className={`h-2 w-2 rounded-full ${PUNTO_CONFIANZA[indicador.nivel]}`} />
+            {indicador.etiqueta}
+          </div>
+        </div>
         <div className="flex items-baseline gap-4">
           <div className="text-2xl font-semibold leading-none tabular-nums">{conteo.cantidad}</div>
           <div className="text-xl font-semibold text-texto-sec">{conteo.unidad}</div>
