@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { blobABase64 } from './audioBase64'
+import { reproducirTTSBackend } from './tts'
 import { elegirVozEspanol } from './vozEspanol'
 
 export type EstadoVoz = 'inactivo' | 'escuchando' | 'no_soportado' | 'error' | 'grabando'
@@ -92,7 +93,7 @@ export function useVoz(
     setEstado('inactivo')
   }, [])
 
-  const hablar = useCallback((texto: string) => {
+  const hablarNavegador = useCallback((texto: string) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return
     const utterance = new SpeechSynthesisUtterance(texto)
     utterance.lang = 'es-CO'
@@ -105,6 +106,15 @@ export function useVoz(
 
     window.speechSynthesis.speak(utterance)
   }, [])
+
+  // Cascada de voz: ElevenLabs (backend + caché en disco) → si la red o el
+  // TTS fallan, speechSynthesis del navegador. Nunca silencio ni error visible.
+  const hablar = useCallback(
+    (texto: string) => {
+      reproducirTTSBackend(texto).catch(() => hablarNavegador(texto))
+    },
+    [hablarNavegador],
+  )
 
   const grabarAudio = useCallback(async () => {
     try {
