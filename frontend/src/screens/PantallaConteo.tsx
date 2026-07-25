@@ -1,9 +1,10 @@
 import { ArrowLeft, LogOut, Mic, Square } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ConfirmacionPendiente from '../components/ConfirmacionPendiente'
 import ModoGuiado from '../components/ModoGuiado'
 import TecladoManual from '../components/TecladoManual'
-import type { ArticuloResumen } from '../lib/articulos'
+import { getArticulos, type ArticuloResumen } from '../lib/articulos'
+import { AVISO_RIESGO_TEXTO, debeAvisar, type NivelRiesgo } from '../lib/avisoRiesgo'
 import { indicadorConfianza, type NivelConfianza } from '../lib/confianza'
 import {
   ApiError,
@@ -56,6 +57,27 @@ export default function PantallaConteo() {
   const [contados, setContados] = useState<Set<number>>(new Set())
   const [saltados, setSaltados] = useState<Set<number>>(new Set())
   const { progreso: progresoBodega, enVivo } = useProgreso(bodega!.id, sesionId!)
+  // F4: nivel de riesgo por artículo (del catálogo, sin request extra en captura)
+  // y los ya avisados en esta sesión. Refs: no necesitan re-render.
+  const riesgosRef = useRef<Map<number, NivelRiesgo>>(new Map())
+  const avisadosRiesgoRef = useRef<Set<number>>(new Set())
+
+  useEffect(() => {
+    let vivo = true
+    getArticulos(bodega!.id)
+      .then((arts) => {
+        if (!vivo) return
+        riesgosRef.current = new Map(
+          arts.filter((a) => a.riesgo).map((a) => [a.articulo_id, a.riesgo as NivelRiesgo]),
+        )
+      })
+      .catch(() => {
+        /* sin catálogo de riesgo: simplemente no se avisa (degradación silenciosa) */
+      })
+    return () => {
+      vivo = false
+    }
+  }, [bodega])
 
   const progresoGuia = useMemo(() => resumenProgreso(CHECKLIST_DEMO, contados), [contados])
   const objetivoGuiado = useMemo(
@@ -131,6 +153,13 @@ export default function PantallaConteo() {
       // pregunta, para el indicador de confianza (sin revelar nunca el SD).
       setPantalla({ tipo: 'confirmando', conteo: respuesta.conteo, viaAclaracion })
       hablar(mensajeConfirmacion(respuesta.conteo))
+      // F4: aviso preventivo si el artículo es de riesgo alto. Una sola vez por
+      // sesión por artículo; genérico, sin revelar el SD ni el histórico exacto.
+      const riesgo = riesgosRef.current.get(respuesta.conteo.articulo_id)
+      if (debeAvisar(respuesta.conteo.articulo_id, riesgo, avisadosRiesgoRef.current)) {
+        avisadosRiesgoRef.current.add(respuesta.conteo.articulo_id)
+        hablar(AVISO_RIESGO_TEXTO)
+      }
       return
     }
 

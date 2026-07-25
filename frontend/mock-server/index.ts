@@ -253,7 +253,10 @@ export function mockApiPlugin(): Plugin {
           }
 
           if (req.method === 'GET' && url.pathname === '/api/v1/articulos') {
-            // Conteo ciego: nunca se expone `sd` en este endpoint.
+            // Conteo ciego: nunca se expone `sd` en este endpoint. F4/E5: sí el
+            // nivel de riesgo (no revela el histórico exacto). Demo: un par de
+            // artículos del checklist quedan en riesgo alto para disparar el aviso.
+            const RIESGO_ALTO_DEMO = new Set(['95026919', '3022']) // CAZUELA 16 ONZ, POLLO ENTERO
             const vistos = new Set<string>()
             const articulos = catalogo
               .filter((a) => {
@@ -265,6 +268,7 @@ export function mockApiPlugin(): Plugin {
                 articulo_id: Number(a.nr_articulo),
                 articulo_nombre: a.articulo,
                 unidad: a.unidad,
+                riesgo: RIESGO_ALTO_DEMO.has(a.nr_articulo) ? 'alto' : 'bajo',
               }))
             enviarJson(res, 200, articulos)
             return
