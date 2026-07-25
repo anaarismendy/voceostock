@@ -1,0 +1,49 @@
+frontend/src/index.css
+  s_db654ea9d24c98::t_2d41b0fcbae154 4-105
+frontend/src/screens/SeleccionBodega.tsx
+  s_db654ea9d24c98::t_38715ec882a65b 38-39,46,50,55-58,60,71,84,92
+frontend/src/screens/PantallaConteo.tsx
+  s_db654ea9d24c98::t_1b87f84c9a6e0f 452,454-455,459,461
+  s_db654ea9d24c98::t_9663e01e7576c2 469-476,478,483,485,491
+  s_db654ea9d24c98::t_01397e590a160d 312,321,325,329,331,333
+  s_db654ea9d24c98::t_1bc4a23d0fb2d5 422,427
+  s_db654ea9d24c98::t_30de7ad16460a2 356-357,361,369-370,374,382
+  s_db654ea9d24c98::t_a2e55588bb7dee 215-216,222,224,226,230,238,246-248,250,255,262,276-279,477
+frontend/src/components/ConfirmacionPendiente.tsx
+  s_db654ea9d24c98::t_2765be43039868 20-22,38-39,41-51,54,61,63,71,76,84,91,103,108,121-124,129
+frontend/tailwind.config.js
+  s_db654ea9d24c98::t_8a614622f08c34 2,5-43
+frontend/src/components/TecladoManual.tsx
+  s_db654ea9d24c98::t_b136894daf8640 65-66,74,77,83,95-96,105,116
+frontend/src/screens/VistaCierre.tsx
+  s_db654ea9d24c98::t_a8ab0475626fc0 85-88
+  s_db654ea9d24c98::t_eb188ea311c40c 8-11,45,51,59,74-75,92-93,95,99-100,112,122,138-140
+frontend/src/screens/Dashboard.tsx
+  s_db654ea9d24c98::t_eb188ea311c40c 45,47-48,55-57,59-61,66-67,69,75,79,82
+frontend/src/screens/PanelLider.tsx
+  s_db654ea9d24c98::t_eb188ea311c40c 17,24,29-30,37,51-52
+frontend/src/screens/LoginPin.tsx
+  s_db654ea9d24c98::t_cba4dfc831a178 33,35-36,39,41,49-50,62-64,69,78,89
+frontend/tsconfig.tsbuildinfo
+  s_db654ea9d24c98::t_75cb636966b0f6 1
+frontend/src/components/ModoGuiado.tsx
+  s_db654ea9d24c98::t_b136894daf8640 34-36,42,68-71,73-74,83,97,100,106,116,121
+frontend/src/components/PanelProgreso.tsx
+  s_db654ea9d24c98::t_b136894daf8640 9,11,15,20-21,32,38-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "fd63b019915bb164ac19ec1b779b4a825064f837",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
