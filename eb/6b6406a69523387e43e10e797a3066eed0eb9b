@@ -1,0 +1,21 @@
+backend/app/services/tts.py
+  s_db654ea9d24c98::t_bbc75050653c7b 26-28
+docs/I2_hallazgos.md
+  s_db654ea9d24c98::t_7761f909031a89 237-242
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "eb6b6406a69523387e43e10e797a3066eed0eb9b",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
