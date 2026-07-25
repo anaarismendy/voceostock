@@ -2,9 +2,12 @@ import { ArrowLeft, LogOut } from 'lucide-react'
 import { useState } from 'react'
 import { useOperario } from '../state/OperarioContext'
 import Dashboard from './Dashboard'
+import PanelConfig from './PanelConfig'
 import VistaCierre from './VistaCierre'
 
-type Tab = 'vivo' | 'cierre'
+type Tab = 'vivo' | 'cierre' | 'ajustes'
+
+const ETIQUETA_TAB: Record<Tab, string> = { vivo: 'En vivo', cierre: 'Cierre', ajustes: 'Ajustes' }
 
 // Shell del líder (C10): header compartido + pestañas En vivo / Cierre. El
 // operario cuenta; el líder monitorea y cierra. No hay pantallas de captura
@@ -40,8 +43,8 @@ export default function PanelLider() {
         </button>
       </header>
 
-      <div className="mt-4 grid grid-cols-2 gap-2" role="tablist" aria-label="Vista del líder">
-        {(['vivo', 'cierre'] as const).map((t) => (
+      <div className="mt-4 grid grid-cols-3 gap-2" role="tablist" aria-label="Vista del líder">
+        {(['vivo', 'cierre', 'ajustes'] as const).map((t) => (
           <button
             key={t}
             type="button"
@@ -52,13 +55,15 @@ export default function PanelLider() {
               tab === t ? 'clay-tecla bg-superficie2 font-semibold text-texto' : 'bg-superficie1 text-texto-sec active:bg-superficie2'
             }`}
           >
-            {t === 'vivo' ? 'En vivo' : 'Cierre'}
+            {ETIQUETA_TAB[t]}
           </button>
         ))}
       </div>
 
       <section className="mt-4 flex-1 overflow-y-auto">
-        {tab === 'vivo' ? <Dashboard /> : <VistaCierre />}
+        {tab === 'vivo' && <Dashboard />}
+        {tab === 'cierre' && <VistaCierre />}
+        {tab === 'ajustes' && <PanelConfig />}
       </section>
     </main>
   )

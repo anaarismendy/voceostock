@@ -53,6 +53,13 @@ function enviarJson(res: ServerResponse, status: number, body: unknown) {
  * hablan con rutas relativas /api/v1/... igual que hablarían con el backend
  * real (ver src/lib/conteos.ts).
  */
+// F3/E2: config editable en memoria (el backend real la persiste en BD).
+const umbralesMock = { auto: 0.95, rapida: 0.9, aclaracion: 0.7 }
+const sinonimosMock = [
+  { id: 1, sede_id: null, articulo_id: 95026919, texto_sinonimo: 'olla honda', origen: 'aprendido' },
+  { id: 2, sede_id: null, articulo_id: 3022, texto_sinonimo: 'pollo entero grande', origen: 'manual' },
+]
+
 export function mockApiPlugin(): Plugin {
   return {
     name: 'voceostock-mock-api',
@@ -235,6 +242,26 @@ export function mockApiPlugin(): Plugin {
           // Dashboard en vivo (C10): actividad de captura, sin SD.
           if (req.method === 'GET' && url.pathname === '/api/v1/dashboard') {
             enviarJson(res, 200, resumenDashboard(listarConteos()))
+            return
+          }
+
+          // Config del líder (E2/F3): umbrales editables + sinónimos.
+          if (url.pathname === '/api/v1/config/umbrales') {
+            if (req.method === 'GET') {
+              enviarJson(res, 200, umbralesMock)
+              return
+            }
+            if (req.method === 'PUT') {
+              const body = await leerCuerpoJson(req)
+              for (const k of ['auto', 'rapida', 'aclaracion'] as const) {
+                if (typeof body[k] === 'number') umbralesMock[k] = body[k] as number
+              }
+              enviarJson(res, 200, umbralesMock)
+              return
+            }
+          }
+          if (req.method === 'GET' && url.pathname === '/api/v1/config/sinonimos') {
+            enviarJson(res, 200, sinonimosMock)
             return
           }
 
