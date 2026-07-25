@@ -4,15 +4,16 @@ import { estadoFila, getCierre, totalesCierre, type EstadoFila, type FilaCierre 
 import { CHECKLIST_DEMO } from '../lib/listaGuiada'
 import { useOperario } from '../state/OperarioContext'
 
-const ESTILO_ESTADO: Record<EstadoFila, { etiqueta: string; clase: string }> = {
-  cuadra: { etiqueta: 'Cuadra', clase: 'text-emerald-400' },
-  sobrante: { etiqueta: 'Sobra', clase: 'text-sky-400' },
-  faltante: { etiqueta: 'Falta', clase: 'text-amber-400' },
-  sin_contar: { etiqueta: 'Sin contar', clase: 'text-slate-500' },
+// Semáforo con icono + palabra: funciona en blanco y negro (design doc H).
+const ESTILO_ESTADO: Record<EstadoFila, { etiqueta: string; icono: string; clase: string }> = {
+  cuadra: { etiqueta: 'Cuadra', icono: '✓', clase: 'text-exito-claro' },
+  sobrante: { etiqueta: 'Sobra', icono: '▲', clase: 'text-marca' },
+  faltante: { etiqueta: 'Falta', icono: '▼', clase: 'text-critico-claro' },
+  sin_contar: { etiqueta: 'Sin contar', icono: '—', clase: 'text-texto-tenue' },
 }
 
-// Contenido del reporte de cierre (C9). El header (bodega/volver/salir) lo pone
-// PanelLider; aquí solo la tabla de diferencias. Único lugar que muestra el SD.
+// Contenido del reporte de cierre (C9 / pantalla H). Único lugar del frontend
+// que muestra el SD (reporte del líder, sancionado por CLAUDE.md).
 export default function VistaCierre() {
   const { bodega } = useOperario()
   const [filas, setFilas] = useState<FilaCierre[] | null>(null)
@@ -40,30 +41,42 @@ export default function VistaCierre() {
   )
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-slate-400">Contado vs. teórico</p>
-        <div className="flex gap-2">
+    <div className="flex flex-col gap-5">
+      <div className="flex items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <p className="text-sm text-texto-tenue">Contado vs. teórico</p>
+          <p className="text-xl font-semibold">Diferencias del conteo</p>
+        </div>
+        <div className="flex gap-3">
           <a
             href={`/api/v1/reportes/bodegas/${bodega!.id}/export`}
             download
             aria-label="Descargar Excel de cierre"
-            className="flex h-12 items-center gap-2 rounded-xl bg-slate-800 px-4 text-sm font-semibold active:bg-slate-700"
+            className="clay-azul transicion-estado flex h-16 items-center gap-2.5 rounded-control bg-accion px-6 text-base font-semibold text-white active:bg-accion-claro"
           >
-            <Download className="h-5 w-5" /> Excel
+            <Download className="h-5 w-5" /> Exportar Excel
           </a>
           <button
             type="button"
             onClick={cargar}
             aria-label="Actualizar cierre"
-            className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-800 active:bg-slate-700"
+            className="clay-tecla transicion-estado flex h-16 w-16 items-center justify-center rounded-control bg-superficie2 active:bg-grafito"
           >
             <RefreshCw className="h-5 w-5" />
           </button>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Filtro de estado">
+      {totales && (
+        <div className="grid grid-cols-4 gap-3">
+          <TarjetaTotal valor={totales.cuadran} etiqueta="Cuadran" clase="text-exito-claro" />
+          <TarjetaTotal valor={totales.sobrantes} etiqueta="Sobran" clase="text-marca" />
+          <TarjetaTotal valor={totales.faltantes} etiqueta="Faltan" clase="text-critico-claro" />
+          <TarjetaTotal valor={totales.sinContar} etiqueta="Sin contar" clase="text-texto-sec" />
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-3" role="radiogroup" aria-label="Filtro de estado">
         {(['todos', 'cuadra', 'sobrante', 'faltante', 'sin_contar'] as const).map((f) => (
           <button
             key={f}
@@ -71,73 +84,75 @@ export default function VistaCierre() {
             role="radio"
             aria-checked={filtro === f}
             onClick={() => setFiltro(f)}
-            className={`h-10 rounded-full px-4 text-sm font-semibold capitalize ${
-              filtro === f ? 'bg-white text-slate-900' : 'bg-slate-800 text-slate-300 active:bg-slate-700'
+            className={`transicion-estado h-14 rounded-chip px-5 text-sm capitalize ${
+              filtro === f
+                ? 'clay-tecla bg-superficie2 font-semibold text-texto'
+                : 'bg-superficie1 text-texto-sec active:bg-superficie2'
             }`}
           >
-            {f === 'todos' ? 'Todos' : ESTILO_ESTADO[f].etiqueta}
+            {f === 'todos' ? `Todos${filas ? ` · ${filas.length}` : ''}` : ESTILO_ESTADO[f].etiqueta}
           </button>
         ))}
       </div>
 
-      {totales && (
-        <div className="grid grid-cols-4 gap-2 text-center">
-          <Tarjeta valor={totales.cuadran} etiqueta="Cuadran" clase="text-emerald-400" />
-          <Tarjeta valor={totales.sobrantes} etiqueta="Sobran" clase="text-sky-400" />
-          <Tarjeta valor={totales.faltantes} etiqueta="Faltan" clase="text-amber-400" />
-          <Tarjeta valor={totales.sinContar} etiqueta="Sin contar" clase="text-slate-400" />
-        </div>
-      )}
-
-      {error && <p className="text-lg text-red-400">No se pudo cargar el reporte de cierre.</p>}
-      {!error && filas === null && <p className="text-lg text-slate-300">Cargando cierre…</p>}
+      {error && <p className="text-base text-critico-claro">No se pudo cargar el reporte de cierre.</p>}
+      {!error && filas === null && <p className="text-base text-texto-sec">Cargando cierre…</p>}
       {filas && filas.length === 0 && (
-        <p className="text-lg text-slate-300">Todavía no hay conteos en esta sesión.</p>
+        <p className="text-base text-texto-sec">Todavía no hay conteos en esta sesión.</p>
       )}
 
       {filas && visibles.length > 0 && (
-        <table className="w-full border-collapse text-left">
-          <thead className="text-sm text-slate-400">
-            <tr>
-              <th className="py-2 pr-2">Artículo</th>
-              <th className="px-2 text-right">Contado</th>
-              <th className="px-2 text-right">Teórico</th>
-              <th className="px-2 text-right">Dif.</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibles.map((fila) => {
-              const estilo = ESTILO_ESTADO[estadoFila(fila)]
-              return (
-                <tr key={fila.articulo_id} className="border-t border-slate-800">
-                  <td className="py-3 pr-2">
-                    <span className="font-medium capitalize">{fila.articulo_nombre.toLowerCase()}</span>
-                    <span className={`ml-2 text-xs font-semibold uppercase ${estilo.clase}`}>{estilo.etiqueta}</span>
-                    {fila.evidencia_url && (
-                      // Evidencia de voz (C9): reproducible directo en la fila.
-                      <audio controls preload="none" src={fila.evidencia_url} className="mt-1 h-8 w-48" />
-                    )}
-                  </td>
-                  <td className="px-2 text-right tabular-nums">{fila.contado}</td>
-                  <td className="px-2 text-right tabular-nums text-slate-400">{fila.sd}</td>
-                  <td className={`px-2 text-right font-semibold tabular-nums ${estilo.clase}`}>
-                    {fila.diferencia > 0 ? `+${fila.diferencia}` : fila.diferencia}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+        <div className="clay rounded-tarjeta bg-superficie1 px-5 pb-5 pt-2">
+          <table className="w-full border-collapse text-left">
+            <thead className="text-xs tracking-widest text-texto-tenue">
+              <tr>
+                <th className="py-3.5 pr-2 font-normal">PRODUCTO</th>
+                <th className="px-2 text-right font-normal">FÍSICO</th>
+                <th className="px-2 text-right font-normal">SISTEMA</th>
+                <th className="px-2 text-right font-normal">DIFERENCIA</th>
+                <th className="px-2 text-right font-normal">%</th>
+                <th className="pl-2 font-normal">ESTADO</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibles.map((fila) => {
+                const estilo = ESTILO_ESTADO[estadoFila(fila)]
+                const pct = fila.sd > 0 ? `${Math.round((Math.abs(fila.diferencia) / fila.sd) * 100)}%` : '—'
+                return (
+                  <tr key={fila.articulo_id} className="border-t border-borde">
+                    <td className="py-3.5 pr-2">
+                      <span className="text-sm font-semibold capitalize">{fila.articulo_nombre.toLowerCase()}</span>
+                      {fila.evidencia_url && (
+                        // Evidencia de voz (C9): reproducible directo en la fila.
+                        <audio controls preload="none" src={fila.evidencia_url} className="mt-1.5 h-8 w-48" />
+                      )}
+                    </td>
+                    <td className="px-2 text-right text-sm tabular-nums">{fila.contado}</td>
+                    <td className="px-2 text-right text-sm tabular-nums text-texto-sec">{fila.sd}</td>
+                    <td className={`px-2 text-right text-sm font-semibold tabular-nums ${estilo.clase}`}>
+                      {fila.diferencia > 0 ? `+${fila.diferencia}` : fila.diferencia}
+                    </td>
+                    <td className="px-2 text-right text-sm tabular-nums text-texto-sec">{pct}</td>
+                    <td className={`pl-2 text-xs font-semibold ${estilo.clase}`}>
+                      <span className="mr-1.5">{estilo.icono}</span>
+                      {estilo.etiqueta}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )
 }
 
-function Tarjeta({ valor, etiqueta, clase }: { valor: number; etiqueta: string; clase: string }) {
+function TarjetaTotal({ valor, etiqueta, clase }: { valor: number; etiqueta: string; clase: string }) {
   return (
-    <div className="rounded-2xl bg-slate-800 py-3">
-      <p className={`text-3xl font-bold tabular-nums ${clase}`}>{valor}</p>
-      <p className="text-xs text-slate-400">{etiqueta}</p>
+    <div className="clay rounded-tarjeta bg-superficie1 px-5 py-4">
+      <p className={`text-xl font-semibold tabular-nums ${clase}`}>{valor}</p>
+      <p className="text-xs text-texto-tenue">{etiqueta}</p>
     </div>
   )
 }

@@ -14,27 +14,27 @@ export default function PanelLider() {
   const [tab, setTab] = useState<Tab>('vivo')
 
   return (
-    <main className="flex min-h-screen flex-col bg-slate-900 p-6 text-white">
+    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col bg-pantalla p-7 text-texto">
       <header className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
             onClick={volverASeleccionarBodega}
             aria-label="Cambiar de bodega"
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-800 active:bg-slate-700"
+            className="transicion-estado flex h-16 w-16 shrink-0 items-center justify-center clay-tecla rounded-control bg-superficie2 active:bg-grafito"
           >
             <ArrowLeft className="h-6 w-6" />
           </button>
           <div className="min-w-0">
-            <p className="text-sm text-slate-400">Panel del líder</p>
-            <h1 className="truncate text-2xl font-bold capitalize leading-tight">{bodega!.nombre}</h1>
+            <p className="text-xs tracking-widest text-texto-tenue">PANEL DEL LÍDER</p>
+            <h1 className="truncate text-xl font-semibold capitalize leading-tight">{bodega!.nombre}</h1>
           </div>
         </div>
         <button
           type="button"
           onClick={cerrarSesion}
           aria-label="Cerrar sesión"
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-800 active:bg-slate-700"
+          className="transicion-estado flex h-16 w-16 shrink-0 items-center justify-center clay-tecla rounded-control bg-superficie2 active:bg-grafito"
         >
           <LogOut className="h-6 w-6" />
         </button>
@@ -48,8 +48,8 @@ export default function PanelLider() {
             role="tab"
             aria-selected={tab === t}
             onClick={() => setTab(t)}
-            className={`h-14 rounded-xl text-lg font-semibold transition-colors ${
-              tab === t ? 'bg-white text-slate-900' : 'bg-slate-800 text-slate-200 active:bg-slate-700'
+            className={`transicion-estado h-16 rounded-control text-base font-semibold ${
+              tab === t ? 'clay-tecla bg-superficie2 font-semibold text-texto' : 'bg-superficie1 text-texto-sec active:bg-superficie2'
             }`}
           >
             {t === 'vivo' ? 'En vivo' : 'Cierre'}

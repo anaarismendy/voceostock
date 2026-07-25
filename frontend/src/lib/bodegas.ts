@@ -1,6 +1,9 @@
 export interface Bodega {
   id: number
   nombre: string
+  /** Rediseño (pantalla B): tamaño y estado para la tarjeta. */
+  total_articulos?: number
+  en_conteo?: boolean
 }
 
 export async function getBodegas(): Promise<Bodega[]> {

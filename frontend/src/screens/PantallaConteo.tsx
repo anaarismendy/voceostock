@@ -2,7 +2,6 @@ import { ArrowLeft, LogOut, Mic, Square } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import ConfirmacionPendiente from '../components/ConfirmacionPendiente'
 import ModoGuiado from '../components/ModoGuiado'
-import PanelProgreso from '../components/PanelProgreso'
 import TecladoManual from '../components/TecladoManual'
 import type { ArticuloResumen } from '../lib/articulos'
 import {
@@ -49,8 +48,10 @@ export default function PantallaConteo() {
   const [toast, setToast] = useState<string | null>(null)
   // C8: modo guiado/libre. `contados` = artículos del checklist ya confirmados
   // (guía de P3); `saltados` = omitidos en el recorrido guiado. El progreso de
-  // la BODEGA completa llega del WebSocket real (PanelProgreso).
+  // la BODEGA completa llega del WebSocket real (barra superior).
   const [modo, setModo] = useState<Modo>('libre')
+  // Pantalla G: el teclado manual vive detrás de "Escribir a mano".
+  const [tecladoVisible, setTecladoVisible] = useState(false)
   const [contados, setContados] = useState<Set<number>>(new Set())
   const [saltados, setSaltados] = useState<Set<number>>(new Set())
   const { progreso: progresoBodega, enVivo } = useProgreso(bodega!.id, sesionId!)
@@ -211,103 +212,171 @@ export default function PantallaConteo() {
     setSaltados(new Set())
   }
 
+  // Pantalla D: la anomalía toma TODO el lienzo (sin chrome de conteo).
+  const anomaliaTotal = pantalla.tipo === 'requiere_confirmacion' && !pantalla.candidatos
+
   return (
-    <main className="flex min-h-screen flex-col bg-slate-900 p-6 text-white">
-      <header className="flex items-start justify-between gap-3 rounded-2xl bg-slate-800 px-4 py-3 shadow-md">
-        <div className="flex min-w-0 items-center gap-3">
-          <button
-            type="button"
-            onClick={volverASeleccionarBodega}
-            aria-label="Volver a selección de bodega"
-            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-700 active:bg-slate-600"
-          >
-            <ArrowLeft className="h-7 w-7" />
-          </button>
-          <span className="line-clamp-2 text-2xl font-bold capitalize leading-tight">{bodega!.nombre}</span>
-        </div>
-        <div className="flex shrink-0 items-center gap-3">
-          {pendientes > 0 && (
-            <span className="rounded-full bg-amber-600 px-3 py-1 text-xs font-semibold" aria-live="polite">
-              {pendientes} pendiente{pendientes > 1 ? 's' : ''}
-            </span>
-          )}
-          <button
-            type="button"
-            onClick={cerrarSesion}
-            aria-label="Cerrar sesión"
-            className="flex items-center gap-2 rounded-xl px-3 py-3 text-sm font-medium text-slate-300 active:bg-slate-700"
-          >
-            <LogOut className="h-5 w-5" />
-            <span className="hidden sm:inline">Cerrar sesión</span>
-          </button>
-        </div>
-      </header>
-
-      {/* C8: barra de progreso de la guía (siempre) + selector de modo. */}
-      <section className="mt-4 rounded-2xl bg-slate-800 px-4 py-3">
-        <div className="flex items-center justify-between text-lg font-medium">
-          <span>Progreso de la guía</span>
-          <span className="tabular-nums text-slate-300">
-            {progresoGuia.hechos} / {progresoGuia.total}
-          </span>
-        </div>
-        <div
-          className="mt-2 h-3 w-full overflow-hidden rounded-full bg-slate-700"
-          role="progressbar"
-          aria-valuenow={progresoGuia.porcentaje}
-          aria-valuemin={0}
-          aria-valuemax={100}
-        >
-          <div
-            className="h-full rounded-full bg-emerald-500 transition-all"
-            style={{ width: `${progresoGuia.porcentaje}%` }}
-          />
-        </div>
-
-        {pantalla.tipo === 'lista' && (
-          <div className="mt-3 grid grid-cols-2 gap-2" role="tablist" aria-label="Modo de conteo">
-            {(['libre', 'guiado'] as const).map((m) => (
+    <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-5 bg-pantalla p-7 text-texto">
+      {!anomaliaTotal && (
+        <>
+          <header className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <button
-                key={m}
                 type="button"
-                role="tab"
-                aria-selected={modo === m}
-                onClick={() => setModo(m)}
-                className={`h-14 rounded-xl text-lg font-semibold capitalize transition-colors ${
-                  modo === m ? 'bg-white text-slate-900' : 'bg-slate-700 text-slate-200 active:bg-slate-600'
-                }`}
+                onClick={volverASeleccionarBodega}
+                aria-label="Volver a selección de bodega"
+                className="transicion-estado flex h-16 w-16 shrink-0 items-center justify-center rounded-control bg-superficie1 active:bg-superficie2"
               >
-                {m === 'libre' ? 'Modo libre' : 'Modo guiado'}
+                <ArrowLeft className="h-6 w-6 text-texto-sec" />
               </button>
-            ))}
-          </div>
-        )}
-      </section>
+              <div className="h-[26px] w-2 shrink-0 rounded-full bg-marca" />
+              <span className="line-clamp-1 text-base capitalize text-texto-sec">{bodega!.nombre}</span>
+            </div>
+            <div className="flex shrink-0 items-center gap-3">
+              {pendientes > 0 && (
+                <span
+                  className="flex h-10 items-center gap-2 rounded-full bg-superficie2 px-4 text-sm text-texto-sec"
+                  aria-live="polite"
+                >
+                  <span className="h-2 w-2 rounded-full bg-texto-tenue" />
+                  {pendientes} sin sincronizar
+                </span>
+              )}
+              {estadoVoz === 'escuchando' && (
+                <span className="flex h-10 items-center gap-2 rounded-full bg-tinte-azul px-4 text-sm text-azul-suave">
+                  <span className="h-2 w-2 rounded-full bg-azul-texto" />
+                  Te escucho
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={cerrarSesion}
+                aria-label="Cerrar sesión"
+                className="transicion-estado flex h-16 items-center gap-2 rounded-control px-3 text-sm text-texto-sec active:bg-superficie1"
+              >
+                <LogOut className="h-5 w-5" />
+                <span className="hidden sm:inline">Cerrar sesión</span>
+              </button>
+            </div>
+          </header>
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-8">
+          <div className="flex flex-col gap-2.5">
+            <div className="flex justify-between text-sm text-texto-sec">
+              <span>
+                {progresoBodega
+                  ? `Artículo ${progresoBodega.contados} de ${progresoBodega.total}`
+                  : 'Cargando progreso…'}
+              </span>
+              <span className="flex items-center gap-2">
+                Guía {progresoGuia.hechos}/{progresoGuia.total}
+                <span
+                  className={`h-2 w-2 rounded-full ${enVivo ? 'bg-exito' : 'bg-texto-tenue'}`}
+                  title={enVivo ? 'En vivo' : 'Actualización periódica'}
+                />
+              </span>
+            </div>
+            <div
+              className="clay-hundido h-3 overflow-hidden rounded-full bg-superficie1"
+              role="progressbar"
+              aria-valuenow={progresoBodega ? Math.round((progresoBodega.contados / Math.max(1, progresoBodega.total)) * 100) : 0}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div
+                className="h-full rounded-full bg-accion transition-all"
+                style={{
+                  width: `${progresoBodega ? (progresoBodega.contados / Math.max(1, progresoBodega.total)) * 100 : 0}%`,
+                }}
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      <div className={`flex flex-1 flex-col items-center gap-6 ${anomaliaTotal ? 'justify-stretch' : 'justify-center'}`}>
         {pantalla.tipo === 'lista' && modo === 'libre' && (
           <>
-            <BotonMicrofono estadoVoz={estadoVoz} onTocar={alTocarMicrofono} />
+            <div className="flex flex-1 flex-col items-center justify-center gap-3.5">
+              <div className="text-center text-xl font-semibold">Toca y dime qué cuentas</div>
+              <div className="max-w-xl text-center text-lg text-texto-tenue">
+                Ejemplo: “treinta y tres litros de aceite de oliva”
+              </div>
+            </div>
+            <div className="flex flex-col items-center gap-4">
+              <BotonMicrofono estadoVoz={estadoVoz} onTocar={alTocarMicrofono} />
+              <div className="text-base text-texto-tenue">
+                {estadoVoz === 'escuchando'
+                  ? 'Suelta cuando termines'
+                  : estadoVoz === 'grabando'
+                    ? 'Toca de nuevo para enviar'
+                    : 'Mantén pulsado o toca una vez'}
+              </div>
+            </div>
             <DictadoPorTexto onEnviar={(texto) => enviarCaptura({ texto }, 'voz-tablet')} />
-            <TecladoManual bodegaId={bodega!.id} onEnviar={(texto) => enviarCaptura({ texto }, 'manual')} />
-            <PanelProgreso progreso={progresoBodega} enVivo={enVivo} />
+            <div className="flex w-full items-center justify-between gap-4">
+              <div className="clay-hundido flex h-16 rounded-control bg-superficie1 p-1.5" role="tablist" aria-label="Modo de conteo">
+                {(['libre', 'guiado'] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    role="tab"
+                    aria-selected={modo === m}
+                    onClick={() => setModo(m)}
+                    className={`transicion-estado w-32 rounded-chip text-base ${
+                      modo === m ? 'clay-tecla bg-superficie2 font-semibold text-texto' : 'text-texto-tenue'
+                    }`}
+                  >
+                    {m === 'libre' ? 'Modo libre' : 'Modo guiado'}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setTecladoVisible((v) => !v)}
+                aria-expanded={tecladoVisible}
+                className="clay-tecla transicion-estado flex h-16 items-center gap-3 rounded-control bg-superficie2 px-7 text-base font-semibold active:bg-grafito"
+              >
+                ⌨ Escribir a mano
+              </button>
+            </div>
+            {tecladoVisible && (
+              <TecladoManual bodegaId={bodega!.id} onEnviar={(texto) => enviarCaptura({ texto }, 'manual')} />
+            )}
           </>
         )}
 
         {pantalla.tipo === 'lista' && modo === 'guiado' && (
-          <ModoGuiado
-            objetivo={objetivoGuiado}
-            progreso={progresoGuia}
-            enviando={pendientes > 0}
-            onRegistrar={registrarGuiado}
-            onSaltar={saltarGuiado}
-            onReiniciar={reiniciarGuiado}
-          />
+          <>
+            <div className="clay-hundido flex h-16 self-start rounded-control bg-superficie1 p-1.5" role="tablist" aria-label="Modo de conteo">
+              {(['libre', 'guiado'] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={modo === m}
+                  onClick={() => setModo(m)}
+                  className={`transicion-estado w-32 rounded-chip text-base ${
+                    modo === m ? 'clay-tecla bg-superficie2 font-semibold text-texto' : 'text-texto-tenue'
+                  }`}
+                >
+                  {m === 'libre' ? 'Modo libre' : 'Modo guiado'}
+                </button>
+              ))}
+            </div>
+            <ModoGuiado
+              objetivo={objetivoGuiado}
+              progreso={progresoGuia}
+              enviando={pendientes > 0}
+              onRegistrar={registrarGuiado}
+              onSaltar={saltarGuiado}
+              onReiniciar={reiniciarGuiado}
+            />
+          </>
         )}
 
         {toast && (
           <div
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-slate-700 px-6 py-3 text-lg shadow-lg"
+            className="clay-tecla fixed bottom-6 left-1/2 -translate-x-1/2 rounded-control bg-superficie2 px-6 py-3 text-base"
             role="status"
             aria-live="polite"
           >
@@ -315,24 +384,40 @@ export default function PantallaConteo() {
           </div>
         )}
 
-        {estadoVoz === 'escuchando' && pantalla.tipo === 'lista' && modo === 'libre' && (
-          <p className="text-2xl text-slate-300">Escuchando…</p>
-        )}
-
-        {estadoVoz === 'grabando' && pantalla.tipo === 'lista' && modo === 'libre' && (
-          <p className="text-2xl text-red-300">🔴 Grabando… toca de nuevo para enviar</p>
-        )}
-
         {pantalla.tipo === 'procesando' && (
-          <div className="max-w-lg text-center">
-            {pantalla.transcripcion && (
-              <p className="text-3xl font-medium text-white">"{pantalla.transcripcion}"</p>
+          <div className="animar-entrada flex w-full max-w-2xl flex-col items-center gap-7">
+            {intentoActual ? (
+              // J1: sin conexión — informar sin alarmar, nunca rojo.
+              <>
+                <div className="clay-hundido flex h-[72px] w-full items-center gap-3.5 rounded-control bg-superficie2 px-6">
+                  <span className="h-3 w-3 rounded-full bg-texto-tenue" />
+                  <span className="text-lg">Sin señal · sigue contando, yo guardo todo aquí</span>
+                </div>
+                <div className="clay flex h-[200px] w-[200px] flex-col items-center justify-center rounded-full bg-superficie1">
+                  <div className="text-2xl font-semibold">{pendientes}</div>
+                  <div className="text-sm text-texto-tenue">pendiente{pendientes === 1 ? '' : 's'}</div>
+                </div>
+                <div className="text-center text-xl font-semibold">Reintentando… (intento {intentoActual})</div>
+                <div className="max-w-xl text-center text-lg text-texto-sec">
+                  No se pierde nada. Cuando vuelva la señal se sube solo.
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="clay flex w-full flex-col gap-3 rounded-tarjeta bg-superficie1 p-8">
+                  <div className="text-sm tracking-widest text-texto-tenue">TE ESCUCHÉ</div>
+                  <div className="text-xl font-normal leading-snug">“{pantalla.transcripcion}”</div>
+                </div>
+                <div className="flex items-center gap-3.5">
+                  <div className="flex gap-2">
+                    <span className="animar-bob h-3.5 w-3.5 rounded-full bg-azul-texto" />
+                    <span className="animar-bob h-3.5 w-3.5 rounded-full bg-azul-texto [animation-delay:150ms]" />
+                    <span className="animar-bob h-3.5 w-3.5 rounded-full bg-azul-texto [animation-delay:300ms]" />
+                  </div>
+                  <span className="text-lg text-texto-sec">Buscando el producto…</span>
+                </div>
+              </>
             )}
-            <p className="mt-3 animate-pulse text-2xl text-slate-300">
-              {intentoActual
-                ? `Sin conexión, reintentando… (intento ${intentoActual})`
-                : 'Procesando…'}
-            </p>
           </div>
         )}
 
@@ -351,25 +436,43 @@ export default function PantallaConteo() {
         )}
 
         {pantalla.tipo === 'no_catalogado' && (
-          <div className="max-w-lg rounded-2xl bg-slate-800 p-6 text-center">
-            <p className="text-3xl font-semibold">No encontré "{pantalla.textoCapturado}" en el catálogo.</p>
+          // Pantalla F: no es un error del operario — nada de rojo.
+          <div className="animar-entrada flex w-full max-w-2xl flex-col gap-6">
+            <div className="clay-hundido flex h-[72px] w-[72px] items-center justify-center rounded-full bg-superficie2 text-xl text-texto-sec">
+              ?
+            </div>
+            <div className="text-xl font-semibold">No tengo ese producto en esta bodega</div>
+            <div className="clay flex flex-col gap-2.5 rounded-tarjeta bg-superficie1 p-7">
+              <div className="text-sm tracking-widest text-texto-tenue">TE ESCUCHÉ</div>
+              <div className="text-xl leading-snug">“{pantalla.textoCapturado}”</div>
+            </div>
+            <div className="text-lg text-texto-sec">
+              Quedó guardado para que el líder lo revise al cierre.
+            </div>
             <button
               type="button"
               onClick={volverAEscuchar}
-              className="mt-4 h-16 rounded-2xl bg-white px-8 text-xl font-semibold text-slate-900 active:bg-slate-200"
+              aria-label="Volver a intentar"
+              className="clay-azul transicion-estado h-[104px] w-full rounded-control bg-accion text-xl font-semibold text-white active:bg-accion-claro"
             >
-              Volver a intentar
+              Seguir contando
             </button>
           </div>
         )}
 
         {pantalla.tipo === 'error' && (
-          <div className="max-w-lg rounded-2xl bg-red-950 p-6 text-center">
-            <p className="text-2xl font-semibold text-red-200">{pantalla.mensaje}</p>
+          // J2/J3: el rojo vive en la franja, nunca en un botón.
+          <div className="animar-entrada flex w-full max-w-2xl flex-col gap-6">
+            <div className="flex h-[72px] items-center gap-3.5 rounded-control bg-tinte-critico px-6">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-critico text-base font-semibold text-white">
+                !
+              </span>
+              <span className="text-lg">{pantalla.mensaje}</span>
+            </div>
             <button
               type="button"
               onClick={volverAEscuchar}
-              className="mt-4 h-16 rounded-2xl bg-white px-8 text-xl font-semibold text-slate-900 active:bg-slate-200"
+              className="clay-azul transicion-estado h-[104px] w-full rounded-control bg-accion text-xl font-semibold text-white active:bg-accion-claro"
             >
               Reintentar
             </button>
@@ -377,7 +480,7 @@ export default function PantallaConteo() {
         )}
 
         {usarAudio && estadoVoz !== 'grabando' && pantalla.tipo === 'lista' && modo === 'libre' && (
-          <p className="max-w-sm text-center text-lg text-amber-300">
+          <p className="max-w-md text-center text-sm text-texto-tenue">
             {estadoVoz === 'no_soportado'
               ? 'Este navegador no transcribe voz en vivo: el micrófono ahora graba audio.'
               : 'El reconocimiento de voz está fallando: el micrófono ahora graba audio.'}
@@ -402,7 +505,7 @@ function DictadoPorTexto({ onEnviar }: { onEnviar: (texto: string) => void }) {
   const [texto, setTexto] = useState('')
   return (
     <form
-      className="flex w-full max-w-md gap-2"
+      className="flex w-full max-w-xl gap-2"
       onSubmit={(e) => {
         e.preventDefault()
         const limpio = texto.trim()
@@ -417,12 +520,12 @@ function DictadoPorTexto({ onEnviar }: { onEnviar: (texto: string) => void }) {
         onChange={(e) => setTexto(e.target.value)}
         placeholder='Escribe el dictado: "noventa cajas de cazuelas"…'
         aria-label="Dictado por texto"
-        className="h-14 flex-1 rounded-xl bg-slate-800 px-4 text-base text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-white"
+        className="clay-hundido transicion-estado h-16 flex-1 rounded-control bg-superficie2 px-5 text-base text-texto placeholder:text-texto-tenue focus:outline-none"
       />
       <button
         type="submit"
         disabled={!texto.trim()}
-        className="h-14 rounded-xl bg-slate-700 px-5 text-base font-semibold active:bg-slate-600 disabled:opacity-40"
+        className="clay-tecla transicion-estado h-16 rounded-control bg-superficie2 px-6 text-base font-semibold text-texto-sec active:bg-grafito disabled:opacity-40"
       >
         Enviar
       </button>
@@ -442,49 +545,64 @@ function BotonMicrofono({
   const activo = escuchando || grabando
 
   return (
-    <button
-      type="button"
-      onClick={onTocar}
-      disabled={escuchando}
-      aria-label={grabando ? 'Detener grabación y enviar' : 'Hablar para registrar un conteo'}
-      className={`flex h-40 w-40 items-center justify-center rounded-full shadow-lg transition-all ${
-        activo
-          ? 'animate-pulse bg-red-600 ring-4 ring-red-400/60'
-          : 'bg-emerald-600 active:bg-emerald-500'
-      }`}
-    >
-      {grabando ? (
-        <Square className="h-16 w-16 text-white" fill="white" strokeWidth={1.5} />
-      ) : (
-        <Mic className="h-16 w-16 text-white" strokeWidth={1.75} />
+    <div className="relative flex h-56 w-56 items-center justify-center">
+      {activo && (
+        <>
+          <span className="animar-anillo absolute inset-0 rounded-full border-[3px] border-accion" />
+          <span className="animar-anillo-tarde absolute inset-0 rounded-full border-[3px] border-accion" />
+        </>
       )}
-    </button>
+      <button
+        type="button"
+        onClick={onTocar}
+        disabled={escuchando}
+        aria-label={grabando ? 'Detener grabación y enviar' : 'Hablar para registrar un conteo'}
+        className={`transicion-estado flex h-56 w-56 items-center justify-center rounded-full bg-accion ${
+          activo ? 'animar-respira' : 'active:bg-accion-claro'
+        }`}
+        style={{
+          boxShadow:
+            '0 30px 56px -20px rgba(0,70,125,.95), inset 0 3px 0 rgba(255,255,255,.22), inset 0 -6px 14px rgba(0,0,0,.35)',
+        }}
+      >
+        {grabando ? (
+          <Square className="h-20 w-20 text-white" fill="currentColor" strokeWidth={1.5} />
+        ) : (
+          <Mic className="h-24 w-24 text-white" strokeWidth={1.75} />
+        )}
+      </button>
+    </div>
   )
 }
 
 function TarjetaConfirmacion({ conteo, onCerrar }: { conteo: Conteo; onCerrar: () => void }) {
   return (
-    <div className="w-full max-w-lg rounded-3xl bg-slate-800 p-8 text-center">
-      <p className="text-5xl font-bold">{conteo.cantidad}</p>
-      <p className="mt-1 text-3xl font-medium text-slate-200">{conteo.unidad}</p>
-      <p className="mt-4 text-4xl font-semibold">{conteo.articulo_nombre}</p>
-
-      <div className="mt-8 flex justify-center gap-6">
+    <div className="animar-entrada flex w-full max-w-2xl flex-col gap-5">
+      {/* C4: cantidad y unidad a 56/32px, lo primero que se lee a un brazo. */}
+      <div className="clay flex w-full flex-col gap-4 rounded-tarjeta bg-superficie1 px-10 py-9">
+        <div className="text-sm tracking-widest text-texto-tenue">ANOTÉ ESTO</div>
+        <div className="flex items-baseline gap-4">
+          <div className="text-2xl font-semibold leading-none tabular-nums">{conteo.cantidad}</div>
+          <div className="text-xl font-semibold text-texto-sec">{conteo.unidad}</div>
+        </div>
+        <div className="text-xl font-semibold leading-tight">{conteo.articulo_nombre}</div>
+      </div>
+      <div className="flex gap-5">
         <button
           type="button"
           onClick={onCerrar}
           aria-label="Confirmar"
-          className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-600 text-4xl active:bg-emerald-500"
+          className="clay-azul transicion-estado h-[104px] flex-[1.4] rounded-control bg-accion text-xl font-semibold text-white active:bg-accion-claro"
         >
-          ✓
+          ✓ Correcto
         </button>
         <button
           type="button"
           onClick={onCerrar}
           aria-label="Rechazar"
-          className="flex h-20 w-20 items-center justify-center rounded-full bg-red-600 text-4xl active:bg-red-500"
+          className="clay-tecla transicion-estado h-[104px] flex-1 rounded-control bg-superficie2 text-xl font-semibold active:bg-grafito"
         >
-          ✗
+          ✗ Corregir
         </button>
       </div>
     </div>

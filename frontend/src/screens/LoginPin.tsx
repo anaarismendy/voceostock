@@ -30,15 +30,21 @@ export default function LoginPin() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-10 bg-slate-900 p-6 text-white">
-      <div>
-        <h1 className="text-center text-3xl font-bold">VoceoStock</h1>
-        <p className="mt-2 text-center text-lg text-slate-300">Ingresa tu PIN</p>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-pantalla p-6 text-texto">
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="h-6 w-2 rounded-full bg-marca" />
+          <div className="text-lg font-semibold tracking-wide">VOCEOSTOCK</div>
+        </div>
+        <div className="text-xl font-semibold">Ingresa tu PIN</div>
+        <div className="text-base text-texto-sec">Cuatro dígitos, los mismos del carné</div>
       </div>
 
-      {error && <p className="text-lg text-red-400">No se pudo iniciar sesión. Intenta de nuevo.</p>}
-
-      <div className="flex gap-3" role="radiogroup" aria-label="Rol">
+      <div
+        className="clay-hundido flex gap-1 rounded-control bg-superficie2 p-1"
+        role="radiogroup"
+        aria-label="Rol"
+      >
         {(['operario', 'lider'] as const).map((r) => (
           <button
             key={r}
@@ -46,8 +52,8 @@ export default function LoginPin() {
             role="radio"
             aria-checked={rol === r}
             onClick={() => setRol(r)}
-            className={`h-14 w-36 rounded-2xl text-lg font-semibold capitalize transition-colors ${
-              rol === r ? 'bg-white text-slate-900' : 'bg-slate-800 text-slate-200 active:bg-slate-700'
+            className={`transicion-estado h-16 w-36 rounded-chip text-base font-semibold capitalize ${
+              rol === r ? 'clay-tecla bg-accion text-white' : 'text-texto-tenue'
             }`}
           >
             {r === 'operario' ? 'Operario' : 'Líder'}
@@ -55,28 +61,40 @@ export default function LoginPin() {
         ))}
       </div>
 
-      <div className="flex gap-4" aria-label={`PIN, ${pin.length} de 4 dígitos ingresados`}>
+      <div className="flex gap-5" aria-label={`PIN, ${pin.length} de 4 dígitos ingresados`}>
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className={`h-6 w-6 rounded-full border-2 border-white ${i < pin.length ? 'bg-white' : 'bg-transparent'}`}
-          />
+            className={`clay-hundido flex h-16 w-16 items-center justify-center rounded-control bg-superficie2 ${
+              i === pin.length ? 'outline outline-[3px] outline-offset-[3px] outline-azul-texto' : ''
+            }`}
+          >
+            {i < pin.length && <div className="h-4 w-4 rounded-full bg-texto" />}
+          </div>
         ))}
+      </div>
+
+      <div className="flex h-6 items-center gap-2 text-base text-critico" aria-live="polite">
+        {error && (
+          <>
+            <span>✕</span> No se pudo iniciar sesión. Intenta de nuevo.
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         {TECLAS.map((tecla, i) => {
-          if (tecla === '') return <div key={`vacio-${i}`} className="h-20 w-20" />
+          if (tecla === '') return <div key={`vacio-${i}`} className="h-[84px] w-[132px]" />
           if (tecla === 'borrar')
             return (
               <button
                 key={tecla}
                 type="button"
                 onClick={borrar}
-                className="h-20 w-20 rounded-2xl bg-slate-800 text-xl font-semibold active:bg-slate-700"
+                className="transicion-estado h-[84px] w-[132px] rounded-control bg-superficie1 text-base text-texto-tenue active:bg-superficie2"
                 aria-label="Borrar"
               >
-                ⌫
+                Borrar
               </button>
             )
           return (
@@ -84,7 +102,7 @@ export default function LoginPin() {
               key={tecla}
               type="button"
               onClick={() => agregarDigito(tecla)}
-              className="h-20 w-20 rounded-2xl bg-slate-800 text-3xl font-semibold active:bg-slate-700"
+              className="clay-tecla transicion-estado h-[84px] w-[132px] rounded-control bg-superficie2 text-xl font-semibold active:bg-grafito"
             >
               {tecla}
             </button>

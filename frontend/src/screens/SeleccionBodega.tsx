@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { getBodegas, type Bodega } from '../lib/bodegas'
 import { useOperario } from '../state/OperarioContext'
 
-const POR_PAGINA = 10
+const POR_PAGINA = 9
 
 export default function SeleccionBodega() {
-  const { seleccionarBodega } = useOperario()
+  const { operario, seleccionarBodega } = useOperario()
   const [bodegas, setBodegas] = useState<Bodega[] | null>(null)
   const [error, setError] = useState(false)
   const [errorSesion, setErrorSesion] = useState(false)
@@ -35,30 +35,35 @@ export default function SeleccionBodega() {
   const visibles = filtradas.slice(paginaActual * POR_PAGINA, (paginaActual + 1) * POR_PAGINA)
 
   return (
-    <main className="flex min-h-screen flex-col bg-slate-900 p-6 text-white">
-      <h1 className="text-center text-2xl font-bold">¿En qué bodega estás?</h1>
+    <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 bg-pantalla p-8 text-texto">
+      <div className="flex items-end justify-between">
+        <h1 className="text-xl font-semibold">¿En qué bodega estás?</h1>
+        <div className="text-sm text-texto-tenue">
+          Hola, {operario?.nombre ?? 'operario'} · {bodegas?.length ?? '…'} bodegas
+        </div>
+      </div>
 
-      <input
-        type="text"
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-        placeholder="Buscar bodega…"
-        className="mt-6 h-16 rounded-2xl bg-slate-800 px-4 text-xl text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white"
-      />
+      <div className="clay-hundido flex h-[72px] items-center gap-4 rounded-control bg-superficie2 px-6">
+        <span className="text-lg text-texto-tenue">⌕</span>
+        <input
+          type="text"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder="Busca por nombre o código…"
+          className="h-full flex-1 bg-transparent text-lg text-texto placeholder:text-texto-tenue focus:outline-none"
+        />
+      </div>
 
-      {totalPaginas > 1 && (
-        <p className="mt-3 text-center text-sm text-slate-400">
-          Página {paginaActual + 1} de {totalPaginas} ({filtradas.length} bodegas)
-        </p>
+      {error && <p className="text-base text-critico">No se pudo cargar la lista de bodegas.</p>}
+      {errorSesion && (
+        <p className="text-base text-critico">No se pudo abrir la sesión de conteo. Toca la bodega de nuevo.</p>
+      )}
+      {!error && bodegas === null && <p className="text-base text-texto-sec">Cargando bodegas…</p>}
+      {!error && bodegas !== null && filtradas.length === 0 && (
+        <p className="text-base text-texto-sec">Sin resultados para "{busqueda}".</p>
       )}
 
-      <div className="mt-4 flex-1 space-y-3 overflow-y-auto pb-6">
-        {error && <p className="text-lg text-red-400">No se pudo cargar la lista de bodegas.</p>}
-        {errorSesion && <p className="text-lg text-red-400">No se pudo abrir la sesión de conteo. Toca la bodega de nuevo.</p>}
-        {!error && bodegas === null && <p className="text-lg text-slate-300">Cargando bodegas…</p>}
-        {!error && bodegas !== null && filtradas.length === 0 && (
-          <p className="text-lg text-slate-300">Sin resultados para "{busqueda}".</p>
-        )}
+      <div className="grid flex-1 grid-cols-3 content-start gap-5">
         {visibles.map((bodega) => (
           <button
             key={bodega.id}
@@ -68,28 +73,46 @@ export default function SeleccionBodega() {
               // I2: al elegir bodega se abre la sesión REAL en BD.
               seleccionarBodega(bodega).catch(() => setErrorSesion(true))
             }}
-            className="block min-h-16 w-full rounded-2xl bg-slate-800 px-5 py-4 text-left text-xl font-medium capitalize active:bg-slate-700"
+            className="clay transicion-estado flex min-h-[158px] flex-col justify-between rounded-tarjeta bg-superficie1 p-6 text-left active:bg-superficie2"
           >
-            {bodega.nombre}
+            <div className="flex flex-col gap-1.5">
+              <div className="text-lg font-semibold capitalize leading-tight">{bodega.nombre}</div>
+              <div className="text-sm text-texto-tenue">
+                {bodega.total_articulos != null ? `${bodega.total_articulos} artículos` : ''}
+              </div>
+            </div>
+            <div
+              className={`flex items-center gap-2.5 self-start rounded-full px-3.5 py-2 text-sm ${
+                bodega.en_conteo ? 'bg-tinte-azul text-azul-suave' : 'bg-superficie2 text-texto-sec'
+              }`}
+            >
+              <span
+                className={`h-2.5 w-2.5 rounded-full ${bodega.en_conteo ? 'bg-azul-texto' : 'bg-texto-tenue'}`}
+              />
+              {bodega.en_conteo ? 'En conteo' : 'Sin empezar'}
+            </div>
           </button>
         ))}
       </div>
 
       {totalPaginas > 1 && (
-        <div className="flex gap-3 pt-2">
+        <div className="flex items-center gap-4">
           <button
             type="button"
             disabled={paginaActual === 0}
             onClick={() => setPagina((p) => p - 1)}
-            className="h-16 flex-1 rounded-2xl bg-slate-800 text-lg font-semibold active:bg-slate-700 disabled:opacity-40"
+            className="clay-tecla transicion-estado h-16 flex-1 rounded-control bg-superficie2 text-base font-semibold active:bg-grafito disabled:opacity-40"
           >
             ← Anterior
           </button>
+          <span className="text-sm text-texto-tenue">
+            Página {paginaActual + 1} de {totalPaginas}
+          </span>
           <button
             type="button"
             disabled={paginaActual >= totalPaginas - 1}
             onClick={() => setPagina((p) => p + 1)}
-            className="h-16 flex-1 rounded-2xl bg-slate-800 text-lg font-semibold active:bg-slate-700 disabled:opacity-40"
+            className="clay-tecla transicion-estado h-16 flex-1 rounded-control bg-superficie2 text-base font-semibold active:bg-grafito disabled:opacity-40"
           >
             Siguiente →
           </button>

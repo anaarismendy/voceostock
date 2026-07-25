@@ -7,11 +7,14 @@ export interface ConteoReciente {
   cantidad: number
   unidad: string
   creado_en?: number
+  /** Rediseño (pantalla I): el feed destaca anomalías en amarillo. */
+  es_anomalia?: boolean
 }
 
 export interface ResumenDashboard {
   total_conteos: number
   articulos_unicos: number
+  anomalias?: number
   recientes: ConteoReciente[]
 }
 
