@@ -34,7 +34,9 @@
   /* Texto */
   --texto: #f4f2f8;
   --texto-sec: #a9a4b8;
-  --texto-tenue: #6f6b80; /* solo tamaños grandes o contenido no esencial */
+  /* Ajustado del #6F6B80 del brief: ese valor daba 3.2:1 sobre superficie-2
+     y se usa en texto real (timestamps, "Sin contar") → AA exigía subirlo. */
+  --texto-tenue: #8a859c;
 
   /* Semánticos: SOLO con significado, nunca decorativos */
   --exito: #34d399;
