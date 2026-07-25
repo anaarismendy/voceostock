@@ -169,7 +169,7 @@ export function mockApiPlugin(): Plugin {
             const body = await leerCuerpoJson(req)
             const texto = String(body.texto ?? '')
             const hash = createHash('sha1')
-              .update(`eleven_flash_v2_5:hpp4J3VqNfWAUOO0d1Us:${texto}`)
+              .update(`eleven_flash_v2_5:cgSgspJ2msm6clMCkdW9:${texto}`)
               .digest('hex')
             const ruta = resolverRuta(
               dirnameRuta(aRuta(import.meta.url)), '../../data/tts_cache', `${hash}.mp3`,
