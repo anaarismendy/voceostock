@@ -1,0 +1,19 @@
+frontend/src/index.css
+  s_db654ea9d24c98::t_a868643ada36b6 37-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "9413b130e2a409acd38a5b2d1ddd10d9238e5a4b",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
