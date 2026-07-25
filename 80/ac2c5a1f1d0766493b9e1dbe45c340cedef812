@@ -1,0 +1,20 @@
+README.md
+  s_db654ea9d24c98::t_8bd03451394449 58
+  s_db654ea9d24c98::t_2793bb0849cd21 3-30,33,35-40,42,44-46,48,50-54,56,59-67,72-74,76-78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "80ac2c5a1f1d0766493b9e1dbe45c340cedef812",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
