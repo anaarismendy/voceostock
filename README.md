@@ -1,63 +1,78 @@
 # VoceoStock
 
-Captura de inventario por voz con validación conversacional. Stack: FastAPI +
-Postgres 16/pgvector + React PWA + Gemini. Ver `CLAUDE.md` para las reglas de
-dominio (conteo ciego, unidades canónicas, conteos append-only).
+Captura de inventario por voz con **validación conversacional en el punto de
+captura**: el operario dicta ("noventa cajas de cazuelas"), el sistema
+entiende (Gemini), matchea contra el catálogo real (pgvector) y, si algo no
+cuadra contra el histórico, **pregunta antes de guardar** — con voz natural
+(ElevenLabs). Al cierre, el líder ve diferencias con semáforo y exporta el
+Excel idéntico al del ERP.
 
-## Arranque
+Stack: **FastAPI + Postgres 16/pgvector + React 18 PWA + Gemini
+(2.5 Flash NLU multimodal, gemini-embedding-001) + ElevenLabs TTS**.
+Las reglas de dominio inviolables (conteo ciego, unidades canónicas,
+conteos append-only, contrato congelado) viven en `CLAUDE.md`.
 
-```bash
-docker compose up -d            # db en host:5433, api en host:8010
-cd backend
-uv run alembic upgrade head     # migraciones (DATABASE_URL apunta a localhost:5433)
-uv run python ../data/ingest.py # carga el Excel real
-uv run uvicorn app.main:app --reload  # API local en :8000 (o usa el contenedor :8010)
+## Cómo correrlo
+
+Guía paso a paso (Windows/PowerShell, verificada): **[docs/COMO_CORRER.md](docs/COMO_CORRER.md)**
+
+TL;DR:
+
+```powershell
+docker compose up -d db                # Postgres en :5433
+cd backend; uv sync
+$env:DATABASE_URL='postgresql+psycopg://voceo:voceo@localhost:5433/voceostock'
+uv run alembic upgrade head
+uv run python ..\data\ingest.py        # Excel real → BD (idempotente)
+uv run uvicorn app.main:app --port 8020
+# en otra terminal:
+cd frontend; npm install
+$env:VITE_API='real'; $env:VITE_API_PROXY='http://localhost:8020'; npm run dev
 ```
 
-## Secuencia de demo con httpie (B4–B5)
+Abrir http://localhost:5173 · PIN de 4 dígitos · bodega **"almacen general"**.
 
-Necesitas un operario (la ingesta no crea ninguno):
+- **Live vs replay**: con `GEMINI_API_KEY` la NLU es Gemini real; sin key (o
+  `PIPELINE_MODE='replay'`) todo corre offline con respuestas grabadas.
+- **Mock vs real**: `npm run dev` a secas levanta el frontend con un mock del
+  contrato — sin backend ni BD.
+- La voz del agente sale de una caché en disco (`data/tts_cache/`): habla con
+  ElevenLabs aunque no haya red ni keys.
 
-```sql
-INSERT INTO operarios (nombre, pin, rol) VALUES ('Ana', 'hash-pin', 'operario');
+## Guion de demo
+
+**[docs/DEMO.md](docs/DEMO.md)** — el guion de 5 minutos con plan B por paso,
+el estado sembrado (`POST /api/v1/demo/seed?bodega_id=3`) y el checklist de
+arranque. Ensayado de punta a punta en live y en replay.
+
+## El contrato (congelado)
+
+Toda captura entra por `POST /api/v1/conteos` (el campo `fuente` identifica el
+adaptador: voz-tablet hoy; WhatsApp, RFID o báscula mañana). Respuestas:
+`confirmado` / `requiere_confirmacion` (+ `/resolver`) / `no_catalogado`.
+Detalle y ejemplos: **[docs/contrato/contrato.md](docs/contrato/contrato.md)**
+— cambiarlo requiere acuerdo de las 3 personas.
+
+## Estructura
+
 ```
-
-```bash
-API=http://localhost:8000
-OP=$(psql ... -c "SELECT id FROM operarios LIMIT 1")   # uuid del operario
-
-# 1. Crear sesión (idempotente: repetirla devuelve la misma sesión abierta)
-http POST $API/api/v1/sesiones bodega_id:=1 operario_id=$OP tipo=primario
-# → { "sesion_id": "...", "bodega": {...}, "total_articulos": N }
-
-# 2. Conteo confirmado
-http POST $API/api/v1/conteos sesion_id=$SESION bodega_id:=1 operario_id=$OP \
-    fuente=voz-tablet payload_texto="treinta litros de aceite"
-# → { "status": "confirmado", "conteo": {...} }
-
-# 3. Conteo con anomalía → requiere confirmación
-http POST $API/api/v1/conteos sesion_id=$SESION bodega_id:=1 operario_id=$OP \
-    fuente=voz-tablet payload_texto="noventa cajas de cazuelas"
-# → { "status": "requiere_confirmacion", "token_pendiente": "...", ... }
-
-# 4. Resolver con "si"
-http POST $API/api/v1/conteos/$TOKEN/resolver respuesta=si
-# ("no" → { "status": "descartado" }; también articulo_id:<int> / cantidad:<float>)
-
-# 5. Progreso — muestra 2 contados y NUNCA el SD (conteo ciego)
-http GET $API/api/v1/sesiones/$SESION/progreso
-
-# 6. Audio como evidencia: la respuesta trae evidencia_url firmada (60 min)
-http POST $API/api/v1/conteos sesion_id=$SESION bodega_id:=1 operario_id=$OP \
-    fuente=voz-tablet payload_audio_b64="$(base64 -w0 audio.webm)"
-http GET "$API<evidencia_url>"       # 200 con firma; sin firma → 403
-
-# 7. Eventos en vivo (conteo_nuevo / anomalia / progreso / colision)
-npx wscat -c ws://localhost:8000/ws/bodegas/1
+backend/
+  app/pipeline/    NLU + matching + anomalías (P1)
+  app/reportes/    diferencias y export Excel 1:1 (P1)
+  app/api/         sesiones, conteos, catálogo, cierre, WS, TTS (P2)
+  app/models/      SQLAlchemy + alembic (P2)
+  scripts/         embeddings, familia, fixtures de audio, caché TTS
+data/              ingest del Excel real, replay de NLU, caché de voz
+frontend/          PWA (P3): conteo por voz, modo guiado, panel del líder
+docs/              COMO_CORRER, DEMO y el contrato congelado
 ```
 
 ## Pruebas
 
-```bash
-cd backend && uv run pytest      # usa la BD voceostock_test en localhost:5433
+```powershell
+cd backend; uv run pytest -q          # unitarias + API (BD de prueba en :5433)
+cd frontend; npm test; npm run lint   # vitest + eslint
 ```
+
+Las pruebas contra Gemini real llevan el marker `integration` (CI las salta;
+localmente corren con `GEMINI_API_KEY` en el entorno).
