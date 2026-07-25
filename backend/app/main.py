@@ -2,10 +2,12 @@ import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 from uuid import uuid4
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.catalogo import router as catalogo_router
 from app.api.conteos import router as conteos_router
@@ -71,3 +73,11 @@ app.include_router(tts_router)  # voz del agente (ElevenLabs + caché en disco)
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+# Producción (Railway): el Dockerfile deja la PWA compilada en /app/static y la
+# servimos desde aquí, después de los routers para que /api, /ws y /health ganen
+# la ruta. En local no existe el directorio y esto simplemente no se monta.
+_STATIC = Path(__file__).resolve().parents[1] / "static"
+if _STATIC.is_dir():
+    app.mount("/", StaticFiles(directory=_STATIC, html=True), name="static")

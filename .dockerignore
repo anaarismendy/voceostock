@@ -1,0 +1,15 @@
+.git
+.github
+.claude
+**/node_modules
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/dist
+**/*.tsbuildinfo
+backend/tests
+storage
+docs
+*.md
+.env
