@@ -1,4 +1,7 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
+import { existsSync, readFileSync as leerArchivo } from 'node:fs'
+import { resolve as resolverRuta, dirname as dirnameRuta } from 'node:path'
+import { fileURLToPath as aRuta } from 'node:url'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
 import { cargarCatalogo, buscarPorNombre, buscarMejorMatch } from './catalogo.ts'
@@ -155,6 +158,30 @@ export function mockApiPlugin(): Plugin {
 
           if (req.method === 'GET' && url.pathname === '/api/v1/bodegas') {
             enviarJson(res, 200, cargarBodegas())
+            return
+          }
+
+          // Voz del agente (p2/tts): sirve la caché commiteada de ElevenLabs.
+          // Mismo hash que backend/app/services/tts.py (modelo:voz:texto);
+          // si la voz se cambia por .env en el backend, aquí hay miss → 503 →
+          // el frontend cae a speechSynthesis (la cascada absorbe todo).
+          if (req.method === 'POST' && url.pathname === '/api/v1/tts') {
+            const body = await leerCuerpoJson(req)
+            const texto = String(body.texto ?? '')
+            const hash = createHash('sha1')
+              .update(`eleven_flash_v2_5:cgSgspJ2msm6clMCkdW9:${texto}`)
+              .digest('hex')
+            const ruta = resolverRuta(
+              dirnameRuta(aRuta(import.meta.url)), '../../data/tts_cache', `${hash}.mp3`,
+            )
+            if (!existsSync(ruta)) {
+              enviarJson(res, 503, { detail: 'sin audio cacheado para esa frase' })
+              return
+            }
+            res.statusCode = 200
+            res.setHeader('Content-Type', 'audio/mpeg')
+            res.setHeader('X-TTS-Cache', 'hit')
+            res.end(leerArchivo(ruta))
             return
           }
 

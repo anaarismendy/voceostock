@@ -216,3 +216,38 @@ proxy) actualizando el progreso con cada conteo.
 - Key AIzaSy… permanente de la cuenta con créditos (Ana). La AQ caduca.
 - Ciclo live ~2,2–2,8 s vs objetivo 2 s (P1: modelo/prompt congelados).
 - Umbral 0.72 quedó verde; si P1 quiere otro corte, tiene las mediciones.
+
+# TTS con ElevenLabs (rama p2/tts)
+
+## T1 — Arquitectura
+- POST /api/v1/tts {texto} → mp3. La key vive SOLO en el backend
+  (ELEVENLABS_API_KEY en .env). Caché en disco `data/tts_cache/` indexada
+  por sha1(modelo:voz:texto) — mismo patrón que los embeddings; cambiar la
+  voz invalida la caché sola. Modelo eleven_flash_v2_5 (baja latencia),
+  voz por ELEVENLABS_VOICE_ID.
+- Cascada en el frontend (useVoz.hablar): backend/caché → si falla
+  cualquier cosa, speechSynthesis del navegador. Nunca silencio ni error.
+- El mock sirve la misma caché commiteada (hash idéntico); miss → 503 →
+  fallback. La demo en mock también habla con ElevenLabs.
+- `scripts/warm_tts_cache.py` pre-genera las 18 frases del guion
+  (confirmaciones, las 5 preguntas de anomalía con valores del guion,
+  ambigüedad y plantillas). Los .mp3 (~0.5 MB) SÍ están commiteados.
+
+## T2 — La voz de la cuenta free (hallazgo)
+- Las voces en español de la cuenta son de BIBLIOTECA: el plan free de
+  ElevenLabs devuelve 402 paid_plan_required por API. Solo las premade
+  (en inglés) funcionan gratis.
+- Voz elegida por el equipo: "Jessica" (premade, multilingüe — habla
+  español por el modelo Flash). Para otra voz con plan Starter+:
+  ELEVENLABS_VOICE_ID en .env + warm_tts_cache (la caché se regenera sola).
+
+## T3 — Verificaciones (ejecutadas)
+- Segunda reproducción: X-TTS-Cache: hit, 0 llamadas a la API, **1 ms**
+  estable con conexión persistente (la primera medición daba 2,4 s por el
+  penalti localhost→IPv6 de Windows: medir contra 127.0.0.1).
+- Guion completo en PIPELINE_MODE=replay, backend SIN ninguna key:
+  **11/11 frases habladas vía /tts desde la caché** (un 200 sin key solo
+  puede salir del disco), 0 fallbacks, 0 errores en pantalla.
+- Caché vacía + sin key: /tts 503 → **fallback a speechSynthesis**
+  verificado en navegador (spy: 1 speak), tarjeta OK, sin errores.
+- Suites: backend 94 passed + ruff OK; frontend 46 + eslint + tsc OK.

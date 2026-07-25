@@ -12,6 +12,7 @@ from app.api.conteos import router as conteos_router
 from app.api.demo import router as demo_router
 from app.api.evidencia import router as evidencia_router
 from app.api.sesiones import router as sesiones_router
+from app.api.tts import router as tts_router
 from app.api.ws import router as ws_router
 from app.reportes.router import router as reportes_router
 
@@ -64,6 +65,7 @@ app.include_router(evidencia_router)
 app.include_router(ws_router)
 app.include_router(reportes_router)  # A9/I3: reporte de diferencias + export Excel
 app.include_router(demo_router)  # C9-C11 reales: cierre del líder, dashboard, seed
+app.include_router(tts_router)  # voz del agente (ElevenLabs + caché en disco)
 
 
 @app.get("/health")
