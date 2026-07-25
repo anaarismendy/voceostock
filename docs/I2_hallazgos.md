@@ -234,13 +234,12 @@ proxy) actualizando el progreso con cada conteo.
   ambigüedad y plantillas). Los .mp3 (~0.5 MB) SÍ están commiteados.
 
 ## T2 — La voz de la cuenta free (hallazgo)
-- La voz elegida ("Marcela - Colombian Girl", 86V9x9hrQds83qf7zaGn) es de
-  BIBLIOTECA: el plan free de ElevenLabs devuelve 402 paid_plan_required
-  por API (igual "Ana Sofía" es-MX). Solo las voces premade funcionan.
-- Default actual: "Bella" (premade, multilingüe — habla español por el
-  modelo Flash). Con plan Starter+, poner la Marcela en
-  ELEVENLABS_VOICE_ID y re-correr warm_tts_cache (la caché se regenera
-  sola). PENDIENTE de decisión/presupuesto del equipo.
+- Las voces en español de la cuenta son de BIBLIOTECA: el plan free de
+  ElevenLabs devuelve 402 paid_plan_required por API. Solo las premade
+  (en inglés) funcionan gratis.
+- Voz elegida por el equipo: "Jessica" (premade, multilingüe — habla
+  español por el modelo Flash). Para otra voz con plan Starter+:
+  ELEVENLABS_VOICE_ID en .env + warm_tts_cache (la caché se regenera sola).
 
 ## T3 — Verificaciones (ejecutadas)
 - Segunda reproducción: X-TTS-Cache: hit, 0 llamadas a la API, **1 ms**

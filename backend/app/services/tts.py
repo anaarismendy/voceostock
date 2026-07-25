@@ -23,10 +23,9 @@ import httpx
 logger = logging.getLogger(__name__)
 
 MODELO_TTS = "eleven_flash_v2_5"  # Flash: baja latencia, multilingüe
-# Voz default: "Jessica" (premade, elegida por el equipo entre las que el
-# plan FREE permite por API — las de biblioteca en español como "Marcela"
-# 86V9x9hrQds83qf7zaGn devuelven 402 paid_plan_required). Con plan Starter+,
-# fijar esa voz en ELEVENLABS_VOICE_ID y correr scripts.warm_tts_cache: el
+# Voz default: "Jessica" (premade, elegida por el equipo — el plan free de
+# ElevenLabs solo permite voces premade por API; las de biblioteca dan 402).
+# Para otra voz: ELEVENLABS_VOICE_ID en .env + scripts.warm_tts_cache — el
 # hash de caché incluye la voz y regenera todo solo.
 VOZ_DEFECTO = "cgSgspJ2msm6clMCkdW9"
 
