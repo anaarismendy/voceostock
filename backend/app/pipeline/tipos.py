@@ -49,9 +49,14 @@ class ArticuloCtx(BaseModel):
     sd: float
     factor_empaque: float | None = None
     embedding: list[float] | None = None
+    # Fase 2 (D4): señales de frecuencia/comportamiento para el motor de anomalías.
+    # Opcionales: si no vienen (modo offline/CSV o sin histórico), las reglas
+    # nuevas no disparan y el comportamiento previo queda intacto.
+    veces_en_sesion: int = 0  # conteos activos ya hechos de este art. en la sesión
+    frecuencia_historica: float | None = None  # fracción de cortes en que suele aparecer (0..1)
 
 
-MetodoMatch = Literal["exacto", "fuzzy", "embedding", "ninguno"]
+MetodoMatch = Literal["sinonimo", "exacto", "fuzzy", "embedding", "ninguno"]
 TipoMatch = Literal["match", "ambiguedad", "no_catalogado"]
 
 
@@ -72,6 +77,8 @@ TipoAnomalia = Literal[
     "unidad_incoherente",
     "decimal_en_entero",
     "cero_sospechoso",
+    "recuento_repetido",  # D4: mismo artículo contado otra vez en la sesión
+    "articulo_infrecuente",  # D4: artículo que casi nunca aparece en el inventario
     "baja_confianza",
 ]
 

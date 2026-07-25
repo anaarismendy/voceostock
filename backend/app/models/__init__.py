@@ -27,6 +27,18 @@ class Base(DeclarativeBase):
     pass
 
 
+class Sede(Base):
+    """Agrupa varias bodegas de un mismo sitio físico (Fase 2 — punto 0). El
+    aprendizaje de sinónimos se llavea por sede, no por bodega, para compartir
+    entre bodegas del mismo lugar."""
+
+    __tablename__ = "sedes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nombre: Mapped[str] = mapped_column(Text)
+    nombre_normalizado: Mapped[str] = mapped_column(Text, unique=True)
+
+
 class Bodega(Base):
     __tablename__ = "bodegas"
 
@@ -34,6 +46,8 @@ class Bodega(Base):
     nombre: Mapped[str] = mapped_column(Text)
     nombre_normalizado: Mapped[str] = mapped_column(Text, unique=True)
     alias: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
+    # Fase 2: a qué sede pertenece (nullable; se asigna en E1/ingesta).
+    sede_id: Mapped[int | None] = mapped_column(ForeignKey("sedes.id"))
 
 
 class Articulo(Base):
@@ -180,3 +194,70 @@ class AliasArticulo(Base):
 
     articulo_id: Mapped[int] = mapped_column(ForeignKey("articulos.id"), primary_key=True)
     alias: Mapped[str] = mapped_column(Text, primary_key=True)
+
+
+class UmbralConfianza(Base):
+    """Umbrales de confianza configurables (Fase 2 — D1).
+
+    Reemplaza el `0.8` hardcodeado del motor de anomalías. La fila con
+    `sede_id IS NULL` es la config global; `sede_id` (nullable, sin FK todavía)
+    queda para el scope por sede que introduce E1/D3."""
+
+    __tablename__ = "umbrales_confianza"
+    __table_args__ = (
+        CheckConstraint(
+            "aclaracion >= 0 AND aclaracion <= rapida AND rapida <= auto AND auto <= 1",
+            name="ck_umbrales_orden",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    sede_id: Mapped[int | None] = mapped_column(BigInteger)
+    auto: Mapped[Decimal] = mapped_column(Numeric)
+    rapida: Mapped[Decimal] = mapped_column(Numeric)
+    aclaracion: Mapped[Decimal] = mapped_column(Numeric)
+    actualizado_en: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=text("now()")
+    )
+
+
+class EstadisticaOperario(Base):
+    """Estadísticas agregadas por operario (Fase 2 — D5). La precisión histórica
+    (`correctas/totales`) ajusta la sensibilidad de confirmación: un operario muy
+    acertado recibe menos confirmaciones. Se actualiza por job/evento (capa E)."""
+
+    __tablename__ = "estadisticas_operario"
+
+    operario_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("operarios.id"), primary_key=True
+    )
+    capturas_totales: Mapped[int] = mapped_column(server_default=text("0"))
+    capturas_correctas: Mapped[int] = mapped_column(server_default=text("0"))
+    actualizado_en: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=text("now()")
+    )
+
+
+class SinonimoArticulo(Base):
+    """Sinónimo aprendido/manual de un artículo, por sede (Fase 2 — D3).
+
+    NUNCA modifica `articulos` (catálogo oficial): es una capa aparte que el
+    matching consulta ANTES de la cascada. `sede_id` NULL = sinónimo global.
+    Registrar 'garrafa'→X en la sede A no afecta a la sede B."""
+
+    __tablename__ = "sinonimos_articulo"
+    __table_args__ = (
+        CheckConstraint("origen IN ('aprendido','manual')", name="ck_sinonimos_origen"),
+        # Un sinónimo por (sede, texto): re-registrar actualiza (upsert), no duplica.
+        Index("ux_sinonimos_sede_texto", "sede_id", "texto_normalizado", unique=True),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    sede_id: Mapped[int | None] = mapped_column(ForeignKey("sedes.id"))
+    articulo_id: Mapped[int] = mapped_column(ForeignKey("articulos.id"))
+    texto_sinonimo: Mapped[str] = mapped_column(Text)
+    texto_normalizado: Mapped[str] = mapped_column(Text)
+    origen: Mapped[str] = mapped_column(Text)
+    creado_en: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=text("now()")
+    )

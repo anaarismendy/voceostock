@@ -17,12 +17,21 @@ from pathlib import Path
 
 from app.pipeline.anomalias.reglas import evaluar
 from app.pipeline.core import Candidato, ContextoBodega, PayloadConteo, ResultadoPipeline
-from app.pipeline.datos.repos import RepoCatalogo, RepoCSV
+from app.pipeline.datos.repos import (
+    RepoCatalogo,
+    RepoCSV,
+    RepoPerfil,
+    RepoPerfilVacio,
+    RepoSinonimos,
+    RepoSinonimosVacio,
+)
 from app.pipeline.matching.embeddings import Embedder, EmbedderLexico
 from app.pipeline.matching.matcher import match
+from app.pipeline.matching.sinonimos import resolver_sinonimo
 from app.pipeline.nlu.cliente import ClienteNLU, ClienteReplay
 from app.pipeline.nlu.parser import parse_conteo
-from app.pipeline.tipos import ConteoParseado
+from app.pipeline.perfil import AjusteConfianza, ajustar_confianza
+from app.pipeline.tipos import ArticuloCtx, ConteoParseado, ResultadoMatch
 
 RAIZ = Path(__file__).resolve().parents[3]
 REPLAY_DIR_DEFECTO = RAIZ / "data" / "replay" / "nlu"
@@ -32,19 +41,57 @@ CACHE_EMB_DEFECTO = RAIZ / "data" / "fixtures" / "embeddings.pkl"
 class Pipeline:
     """Cerebro completo: NLU + matching + anomalías sobre un origen de datos."""
 
-    def __init__(self, nlu: ClienteNLU, embedder: Embedder, repo: RepoCatalogo):
+    def __init__(
+        self,
+        nlu: ClienteNLU,
+        embedder: Embedder,
+        repo: RepoCatalogo,
+        repo_sinonimos: RepoSinonimos | None = None,
+        repo_perfil: RepoPerfil | None = None,
+        ajuste_confianza: AjusteConfianza | None = None,
+    ):
         self.nlu = nlu
         self.embedder = embedder
         self.repo = repo
+        # D3: por defecto sin sinónimos (modo CSV/offline); en BD se inyecta el real.
+        self.repo_sinonimos: RepoSinonimos = repo_sinonimos or RepoSinonimosVacio()
+        # D5: por defecto sin perfiles (no ajusta la confianza); en BD, el real.
+        self.repo_perfil: RepoPerfil = repo_perfil or RepoPerfilVacio()
+        self.ajuste_confianza: AjusteConfianza = ajuste_confianza or AjusteConfianza()
 
     def _parsear(self, payload: PayloadConteo) -> ConteoParseado:
         audio = base64.b64decode(payload.payload_audio_b64) if payload.payload_audio_b64 else None
         return parse_conteo(payload.payload_texto, audio, cliente=self.nlu)
 
+    def _confianza_operario(self, confianza: float, operario_id) -> float:
+        """D5: confianza corregida por el historial del operario (menos/más
+        confirmaciones según su precisión). Sin perfil, la devuelve intacta."""
+        perfil = self.repo_perfil.para_operario(operario_id)
+        return ajustar_confianza(confianza, perfil, self.ajuste_confianza)
+
+    def _resolver(
+        self, bodega_id: int, texto: str | None, articulos: list[ArticuloCtx]
+    ) -> ResultadoMatch:
+        """D3: sinónimos de la sede PRIMERO; si no, la cascada general (A4)."""
+        mapa = self.repo_sinonimos.para_bodega(bodega_id)
+        art_id = resolver_sinonimo(texto, mapa)
+        if art_id is not None:
+            art = next((a for a in articulos if a.articulo_id == art_id), None)
+            if art is not None:  # el sinónimo apunta a un artículo de esta bodega
+                return ResultadoMatch(
+                    tipo="match", articulo=art, candidatos=[art], score=1.0, metodo="sinonimo"
+                )
+        return match(texto, articulos, embedder=self.embedder)
+
     def procesar(self, payload: PayloadConteo, contexto: ContextoBodega) -> ResultadoPipeline:
         parse = self._parsear(payload)
+        # D5: ajustar la confianza según el historial del operario ANTES de decidir
+        # anomalías/confirmación (un operario muy acertado recibe menos preguntas).
+        efectiva = self._confianza_operario(parse.confianza, payload.operario_id)
+        if efectiva != parse.confianza:
+            parse = parse.model_copy(update={"confianza": efectiva})
         articulos = self.repo.catalogo(contexto.bodega_id)
-        resultado = match(parse.articulo_texto, articulos, embedder=self.embedder)
+        resultado = self._resolver(contexto.bodega_id, parse.articulo_texto, articulos)
 
         if resultado.tipo == "no_catalogado":
             return ResultadoPipeline(
@@ -146,16 +193,29 @@ def construir_pipeline() -> Pipeline:
         nlu = ClienteReplay(replay_dir)
         embedder = EmbedderLexico()
 
+    from app.pipeline.confianza import configurar
+    from app.pipeline.config import cargar_umbrales
+
+    repo_sinonimos: RepoSinonimos = RepoSinonimosVacio()
+    repo_perfil: RepoPerfil = RepoPerfilVacio()
     if _data() == "db":
         from sqlalchemy import create_engine
 
-        from app.pipeline.datos.repos import RepoDB
+        from app.pipeline.datos.repos import RepoDB, RepoPerfilDB, RepoSinonimosDB
 
-        repo: RepoCatalogo = RepoDB(create_engine(os.environ["DATABASE_URL"]))
+        engine = create_engine(os.environ["DATABASE_URL"])
+        repo: RepoCatalogo = RepoDB(engine)
+        repo_sinonimos = RepoSinonimosDB(engine)  # D3
+        repo_perfil = RepoPerfilDB(engine)  # D5
+        # D1: umbrales de confianza desde la tabla (o entorno/defaults si falla).
+        configurar(cargar_umbrales(engine))
     else:
         repo = RepoCSV()
+        configurar(cargar_umbrales())
 
-    return Pipeline(nlu, embedder, repo)
+    return Pipeline(
+        nlu, embedder, repo, repo_sinonimos, repo_perfil, AjusteConfianza.desde_entorno()
+    )
 
 
 def get_pipeline() -> Pipeline:

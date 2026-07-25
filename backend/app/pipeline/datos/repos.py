@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Protocol
 
 from app.pipeline.normalizacion import normalizar
+from app.pipeline.perfil import PerfilOperario
 from app.pipeline.tipos import ArticuloCtx
 
 RAIZ = Path(__file__).resolve().parents[4]
@@ -26,6 +27,108 @@ _SUFIJOS = (" suministros", " piscilago", " ayb", " sumin", " sumi")
 class RepoCatalogo(Protocol):
     def nombre_bodega(self, bodega_id: int) -> str | None: ...
     def catalogo(self, bodega_id: int) -> list[ArticuloCtx]: ...
+
+
+class RepoSinonimos(Protocol):
+    """Sinónimos de artículo por sede (D3). `para_bodega` devuelve el mapa
+    {texto_normalizado -> articulo_id} de la SEDE a la que pertenece la bodega."""
+
+    def para_bodega(self, bodega_id: int) -> dict[str, int]: ...
+
+
+class RepoSinonimosVacio:
+    """Sin sinónimos (modo CSV/offline por defecto): todo cae a la cascada."""
+
+    def para_bodega(self, bodega_id: int) -> dict[str, int]:
+        return {}
+
+
+class RepoSinonimosMem:
+    """Sinónimos en memoria para pruebas. Modela el scope por sede: cada bodega
+    pertenece a una sede, y los sinónimos viven por sede."""
+
+    def __init__(
+        self, sede_de_bodega: dict[int, int], sinonimos_por_sede: dict[int, dict[str, int]]
+    ):
+        self._sede_de_bodega = sede_de_bodega
+        self._por_sede = sinonimos_por_sede
+
+    def para_bodega(self, bodega_id: int) -> dict[str, int]:
+        sede = self._sede_de_bodega.get(bodega_id)
+        if sede is None:
+            return {}
+        return dict(self._por_sede.get(sede, {}))
+
+
+class RepoSinonimosDB:
+    """Sinónimos desde Postgres (D3). Devuelve los de la sede de la bodega más
+    los globales (sede_id NULL). Import perezoso de modelos/SQLAlchemy."""
+
+    def __init__(self, engine):
+        self._engine = engine
+
+    def para_bodega(self, bodega_id: int) -> dict[str, int]:
+        from sqlalchemy import or_, select
+        from sqlalchemy.orm import Session
+
+        from app.models import Bodega, SinonimoArticulo
+
+        with Session(self._engine) as s:
+            sede_id = s.scalar(select(Bodega.sede_id).where(Bodega.id == bodega_id))
+            filas = s.execute(
+                select(SinonimoArticulo.texto_normalizado, SinonimoArticulo.articulo_id).where(
+                    or_(
+                        SinonimoArticulo.sede_id == sede_id,
+                        SinonimoArticulo.sede_id.is_(None),
+                    )
+                )
+            ).all()
+        return {texto: art_id for texto, art_id in filas}
+
+
+class RepoPerfil(Protocol):
+    """Perfil de confianza por operario (D5)."""
+
+    def para_operario(self, operario_id) -> PerfilOperario | None: ...
+
+
+class RepoPerfilVacio:
+    """Sin perfiles (modo CSV/offline): nunca ajusta la confianza."""
+
+    def para_operario(self, operario_id) -> PerfilOperario | None:
+        return None
+
+
+class RepoPerfilMem:
+    """Perfiles en memoria para pruebas. `perfiles`: {operario_id: PerfilOperario}."""
+
+    def __init__(self, perfiles: dict):
+        self._perfiles = perfiles
+
+    def para_operario(self, operario_id) -> PerfilOperario | None:
+        return self._perfiles.get(operario_id)
+
+
+class RepoPerfilDB:
+    """Perfil desde Postgres (D5). None si el operario no tiene historial."""
+
+    def __init__(self, engine):
+        self._engine = engine
+
+    def para_operario(self, operario_id) -> PerfilOperario | None:
+        from sqlalchemy.orm import Session
+
+        from app.models import EstadisticaOperario
+
+        with Session(self._engine) as s:
+            fila = s.get(EstadisticaOperario, operario_id)
+        if fila is None or fila.capturas_totales == 0:
+            return None
+        return PerfilOperario(
+            operario_id=str(operario_id),
+            precision=fila.capturas_correctas / fila.capturas_totales,
+            total_capturas=fila.capturas_totales,
+        )
 
 
 def _clave_bodega(nombre: str) -> str:
