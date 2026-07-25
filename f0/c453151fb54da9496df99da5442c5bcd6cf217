@@ -1,0 +1,54 @@
+frontend/src/lib/dashboard.ts
+  s_db654ea9d24c98::t_9ce2f6a861b2ca 10-11,17
+frontend/tsconfig.tsbuildinfo
+  s_db654ea9d24c98::t_e26dfed3535da4 1
+frontend/src/screens/PanelLider.tsx
+  s_db654ea9d24c98::t_e26dfed3535da4 17,24,29,37,52
+frontend/src/lib/bodegas.ts
+  s_db654ea9d24c98::t_9ce2f6a861b2ca 4-6
+frontend/src/screens/VistaCierre.tsx
+  s_db654ea9d24c98::t_2867d1eff570c7 7-12,15-16,44-50,55,57,63,70-79,87-90,93,98,105-145,151,153,155
+frontend/src/screens/PantallaConteo.tsx
+  s_db654ea9d24c98::t_ba1837485765e1 333-340,342-344
+  s_db654ea9d24c98::t_ada35470755099 51,215-216,218-250,253-255,257-258,260-291,293-294,296,299-314,316-332,341,349-374,379,388-419,439-451,455-456,458,464-471,475,483,508,523,528,548-553,555-574,580-590,595,603,605
+  s_db654ea9d24c98::t_9ff910d88ce794 53-54
+frontend/src/screens/LoginPin.tsx
+  s_db654ea9d24c98::t_db7bc2faebc5dc 33-40,43-47,55-56,64,68-69,71-73,77-85,87,94,97,105
+frontend/src/index.css
+  s_db654ea9d24c98::t_403accb2b96a1c 6-9,13,15-16,22-29,31-42,45-47,49-54,60,64-87,89-90,93,96-117,121-131,157-160
+frontend/src/screens/Dashboard.tsx
+  s_db654ea9d24c98::t_783bc443b03b80 8-13,41,44,47,49,56-59,61-67,72,77,81-84,88,90-93
+frontend/tailwind.config.js
+  s_db654ea9d24c98::t_5a4d5207ac6c72 9,12-23,28,30-31,33,42,44-47,50
+frontend/src/components/ConfirmacionPendiente.tsx
+  s_db654ea9d24c98::t_3d8426d8cc3e5d 15-17,19-21,37-45,51,53,55-58,62-73,75-77,79-117,119-124,126-142,146-173
+  s_db654ea9d24c98::t_0334871a9777d3 174-175
+backend/app/api/demo.py
+  s_db654ea9d24c98::t_ed5f5227682aa6 138,143,145-146
+  s_db654ea9d24c98::t_a036367a23c358 43-45,51
+frontend/src/screens/SeleccionBodega.tsx
+  s_db654ea9d24c98::t_450593a88c177a 5,8,38-44,46-55,57-63,66,76,78-93,99,104,108-110,115
+backend/app/api/catalogo.py
+  s_db654ea9d24c98::t_eeb7dd470b2ad1 41-42,44-65
+  s_db654ea9d24c98::t_3b7b012521a8cf 19-21
+frontend/src/components/ModoGuiado.tsx
+  s_db654ea9d24c98::t_15044d6fa1ad9d 34-35,42,68-70,83,97,100,106
+frontend/src/components/TecladoManual.tsx
+  s_db654ea9d24c98::t_267420f4b060d6 65-66,74,77,83,95-96,105,116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "f0c453151fb54da9496df99da5442c5bcd6cf217",
+  "prompts": {},
+  "sessions": {
+    "s_db654ea9d24c98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217f726b-d422-4cad-a19b-b3e8ccb57064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
