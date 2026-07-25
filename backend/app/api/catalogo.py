@@ -25,6 +25,9 @@ class ArticuloResumen(BaseModel):
     articulo_id: int
     articulo_nombre: str
     unidad: str
+    # E5: nivel de riesgo histórico (alto/medio/bajo) en el MISMO payload del
+    # catálogo → el frontend lo tiene offline sin request extra. None = sin dato.
+    riesgo: str | None = None
 
 
 class LoginRequest(BaseModel):
@@ -67,14 +70,32 @@ def listar_bodegas(s: Db) -> list[BodegaResumen]:
 
 @router.get("/articulos", response_model=list[ArticuloResumen])
 def listar_articulos(s: Db, bodega_id: int | None = None) -> list[ArticuloResumen]:
-    q = select(models.Articulo.id, models.Articulo.nombre, models.Articulo.unidad_base)
+    # E5: outerjoin al riesgo global (sede_id NULL) para traerlo en el mismo payload.
+    q = (
+        select(
+            models.Articulo.id,
+            models.Articulo.nombre,
+            models.Articulo.unidad_base,
+            models.RiesgoArticulo.nivel,
+        )
+        .outerjoin(
+            models.RiesgoArticulo,
+            (models.RiesgoArticulo.articulo_id == models.Articulo.id)
+            & (models.RiesgoArticulo.sede_id.is_(None)),
+        )
+    )
     if bodega_id is not None:
         q = q.join(
             models.StockTeorico, models.StockTeorico.articulo_id == models.Articulo.id
         ).where(models.StockTeorico.bodega_id == bodega_id).distinct()
     filas = s.execute(q.order_by(models.Articulo.nombre)).all()
     return [
-        ArticuloResumen(articulo_id=f.id, articulo_nombre=f.nombre, unidad=f.unidad_base or "Unidad")
+        ArticuloResumen(
+            articulo_id=f.id,
+            articulo_nombre=f.nombre,
+            unidad=f.unidad_base or "Unidad",
+            riesgo=f.nivel,
+        )
         for f in filas
     ]
 

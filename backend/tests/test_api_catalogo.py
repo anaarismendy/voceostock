@@ -15,7 +15,8 @@ def test_bodegas_y_articulos_sin_sd(client, seed):
 
     articulos = client.get(f"/api/v1/articulos?bodega_id={seed.bodega_id}").json()
     assert len(articulos) == 4
-    assert {"articulo_id", "articulo_nombre", "unidad"} == set(articulos[0])
+    # E5 añadió `riesgo` al payload (nivel histórico, no SD).
+    assert {"articulo_id", "articulo_nombre", "unidad", "riesgo"} == set(articulos[0])
     # conteo ciego: ni claves ni valores de SD en el buscador de artículos
     for a in articulos:
         assert "sd" not in {k.lower() for k in a}

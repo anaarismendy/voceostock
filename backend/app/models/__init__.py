@@ -238,6 +238,27 @@ class EstadisticaOperario(Base):
     )
 
 
+class RiesgoArticulo(Base):
+    """Nivel de riesgo histórico por artículo (Fase 2 — E5), recalculado por un
+    job a partir de D6 (frecuencia de inconsistencia en los últimos N ciclos).
+    Se expone en el payload del catálogo; NO usa ni revela el SD del ciclo
+    actual. `sede_id` NULL = global; queda espacio para riesgo por sede."""
+
+    __tablename__ = "riesgo_articulo"
+    __table_args__ = (
+        CheckConstraint("nivel IN ('alto','medio','bajo')", name="ck_riesgo_nivel"),
+        Index("ux_riesgo_articulo_sede", "articulo_id", "sede_id", unique=True),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    articulo_id: Mapped[int] = mapped_column(ForeignKey("articulos.id"))
+    sede_id: Mapped[int | None] = mapped_column(ForeignKey("sedes.id"))
+    nivel: Mapped[str] = mapped_column(Text)
+    actualizado_en: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=text("now()")
+    )
+
+
 class SinonimoArticulo(Base):
     """Sinónimo aprendido/manual de un artículo, por sede (Fase 2 — D3).
 
