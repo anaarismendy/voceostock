@@ -1,0 +1,24 @@
+backend/tests/test_api_config.py
+  s_fb5c1448f584df::t_22a5aa9e4039be 59-66
+backend/alembic/versions/0008_sinonimos_nulls_not_distinct.py
+  s_fb5c1448f584df::t_a30b519690a776 24-26
+  s_fb5c1448f584df::t_e323878b1a93c6 1-23,27-34
+backend/app/models/__init__.py
+  s_fb5c1448f584df::t_c8fd1da416a080 272-278
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "03c389da54a11b857c97b262b5a15ca078792736",
+  "prompts": {},
+  "sessions": {
+    "s_fb5c1448f584df": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "22dc3114-2f2d-4d97-b859-2b3cd20a1b64",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
