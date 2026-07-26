@@ -1,6 +1,7 @@
 import { ArrowLeft, LogOut, Mic, Square } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ConfirmacionPendiente from '../components/ConfirmacionPendiente'
+import ListaInventario from '../components/ListaInventario'
 import ModoGuiado from '../components/ModoGuiado'
 import TecladoManual from '../components/TecladoManual'
 import { getArticulos, type ArticuloResumen } from '../lib/articulos'
@@ -56,6 +57,9 @@ export default function PantallaConteo() {
   const [tecladoVisible, setTecladoVisible] = useState(false)
   const [contados, setContados] = useState<Set<number>>(new Set())
   const [saltados, setSaltados] = useState<Set<number>>(new Set())
+  // Inventario real de la bodega: sin él el operario no sabe qué se cuenta aquí.
+  const [articulos, setArticulos] = useState<ArticuloResumen[]>([])
+  const [inventarioVisible, setInventarioVisible] = useState(false)
   const { progreso: progresoBodega, enVivo } = useProgreso(bodega!.id, sesionId!)
   // F4: nivel de riesgo por artículo (del catálogo, sin request extra en captura)
   // y los ya avisados en esta sesión. Refs: no necesitan re-render.
@@ -67,22 +71,26 @@ export default function PantallaConteo() {
     getArticulos(bodega!.id)
       .then((arts) => {
         if (!vivo) return
+        setArticulos(arts)
         riesgosRef.current = new Map(
           arts.filter((a) => a.riesgo).map((a) => [a.articulo_id, a.riesgo as NivelRiesgo]),
         )
       })
       .catch(() => {
-        /* sin catálogo de riesgo: simplemente no se avisa (degradación silenciosa) */
+        /* sin catálogo: no se avisa riesgo y la guía cae al checklist de demo */
       })
     return () => {
       vivo = false
     }
   }, [bodega])
 
-  const progresoGuia = useMemo(() => resumenProgreso(CHECKLIST_DEMO, contados), [contados])
+  // La guía recorre el inventario REAL de la bodega. Fallback al checklist de
+  // demo solo si el catálogo no cargó (mock sin backend, red caída).
+  const guia = articulos.length > 0 ? articulos : CHECKLIST_DEMO
+  const progresoGuia = useMemo(() => resumenProgreso(guia, contados), [guia, contados])
   const objetivoGuiado = useMemo(
-    () => siguientePendiente(CHECKLIST_DEMO, new Set([...contados, ...saltados])),
-    [contados, saltados],
+    () => siguientePendiente(guia, new Set([...contados, ...saltados])),
+    [guia, contados, saltados],
   )
 
   function mostrarToast(mensaje: string) {
@@ -144,9 +152,9 @@ export default function PantallaConteo() {
 
   function aplicarRespuesta(respuesta: ConteoResponse, viaAclaracion = false) {
     if (respuesta.status === 'confirmado') {
-      // Progreso de la guía: se marca por NOMBRE porque el checklist habla en
-      // nr_articulo (mock) y el backend real responde con ids de BD.
-      const item = CHECKLIST_DEMO.find((a) => a.articulo_nombre === respuesta.conteo.articulo_nombre)
+      // Progreso de la guía: se marca por NOMBRE porque el checklist de demo
+      // habla en nr_articulo (mock) y el backend real responde con ids de BD.
+      const item = guia.find((a) => a.articulo_nombre === respuesta.conteo.articulo_nombre)
       const id = item?.articulo_id ?? respuesta.conteo.articulo_id
       setContados((prev) => (prev.has(id) ? prev : new Set(prev).add(id)))
       // F1: `viaAclaracion` distingue el auto-confirmado del que pasó por una
@@ -248,7 +256,7 @@ export default function PantallaConteo() {
   const anomaliaTotal = pantalla.tipo === 'requiere_confirmacion' && !pantalla.candidatos
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-5 bg-pantalla p-7 text-texto">
+    <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-4 bg-pantalla p-4 text-texto sm:gap-5 sm:p-7">
       {!anomaliaTotal && (
         <>
           <header className="flex items-center justify-between gap-3">
@@ -345,7 +353,7 @@ export default function PantallaConteo() {
               </div>
             </div>
             <DictadoPorTexto onEnviar={(texto) => enviarCaptura({ texto }, 'voz-tablet')} />
-            <div className="flex w-full items-center justify-between gap-4">
+            <div className="flex w-full flex-wrap items-center justify-between gap-3">
               <div className="clay-hundido flex h-16 rounded-control bg-superficie1 p-1.5" role="tablist" aria-label="Modo de conteo">
                 {(['libre', 'guiado'] as const).map((m) => (
                   <button
@@ -354,7 +362,7 @@ export default function PantallaConteo() {
                     role="tab"
                     aria-selected={modo === m}
                     onClick={() => setModo(m)}
-                    className={`transicion-estado w-32 rounded-chip text-base ${
+                    className={`transicion-estado w-28 rounded-chip text-sm sm:w-32 sm:text-base ${
                       modo === m ? 'clay-tecla bg-superficie2 font-semibold text-texto' : 'text-texto-tenue'
                     }`}
                   >
@@ -362,15 +370,32 @@ export default function PantallaConteo() {
                   </button>
                 ))}
               </div>
-              <button
-                type="button"
-                onClick={() => setTecladoVisible((v) => !v)}
-                aria-expanded={tecladoVisible}
-                className="clay-tecla transicion-estado flex h-16 items-center gap-3 rounded-control bg-superficie2 px-7 text-base font-semibold active:bg-grafito"
-              >
-                ⌨ Escribir a mano
-              </button>
+              <div className="flex flex-1 flex-wrap justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setInventarioVisible((v) => !v)}
+                  aria-expanded={inventarioVisible}
+                  className="clay-tecla transicion-estado flex h-16 items-center gap-2 rounded-control bg-superficie2 px-5 text-sm font-semibold active:bg-grafito sm:px-7 sm:text-base"
+                >
+                  ☰ Inventario
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTecladoVisible((v) => !v)}
+                  aria-expanded={tecladoVisible}
+                  className="clay-tecla transicion-estado flex h-16 items-center gap-2 rounded-control bg-superficie2 px-5 text-sm font-semibold active:bg-grafito sm:px-7 sm:text-base"
+                >
+                  ⌨ Escribir a mano
+                </button>
+              </div>
             </div>
+            {inventarioVisible && (
+              <ListaInventario
+                articulos={articulos}
+                contados={contados}
+                onCerrar={() => setInventarioVisible(false)}
+              />
+            )}
             {tecladoVisible && (
               <TecladoManual bodegaId={bodega!.id} onEnviar={(texto) => enviarCaptura({ texto }, 'manual')} />
             )}
@@ -387,7 +412,7 @@ export default function PantallaConteo() {
                   role="tab"
                   aria-selected={modo === m}
                   onClick={() => setModo(m)}
-                  className={`transicion-estado w-32 rounded-chip text-base ${
+                  className={`transicion-estado w-28 rounded-chip text-sm sm:w-32 sm:text-base ${
                     modo === m ? 'clay-tecla bg-superficie2 font-semibold text-texto' : 'text-texto-tenue'
                   }`}
                 >
@@ -425,7 +450,7 @@ export default function PantallaConteo() {
                   <span className="h-3 w-3 rounded-full bg-texto-tenue" />
                   <span className="text-lg">Sin señal · sigue contando, yo guardo todo aquí</span>
                 </div>
-                <div className="clay flex h-[200px] w-[200px] flex-col items-center justify-center rounded-full bg-superficie1">
+                <div className="clay flex h-40 w-40 flex-col items-center justify-center rounded-full bg-superficie1 sm:h-[200px] sm:w-[200px]">
                   <div className="text-2xl font-semibold">{pendientes}</div>
                   <div className="text-sm text-texto-tenue">pendiente{pendientes === 1 ? '' : 's'}</div>
                 </div>
@@ -436,7 +461,7 @@ export default function PantallaConteo() {
               </>
             ) : (
               <>
-                <div className="clay flex w-full flex-col gap-3 rounded-tarjeta bg-superficie1 p-8">
+                <div className="clay flex w-full flex-col gap-3 rounded-tarjeta bg-superficie1 p-5 sm:p-8">
                   <div className="text-sm tracking-widest text-texto-tenue">TE ESCUCHÉ</div>
                   <div className="text-xl font-normal leading-snug">“{pantalla.transcripcion}”</div>
                 </div>
@@ -478,7 +503,7 @@ export default function PantallaConteo() {
               ?
             </div>
             <div className="text-xl font-semibold">No tengo ese producto en esta bodega</div>
-            <div className="clay flex flex-col gap-2.5 rounded-tarjeta bg-superficie1 p-7">
+            <div className="clay flex flex-col gap-2.5 rounded-tarjeta bg-superficie1 p-5 sm:p-7">
               <div className="text-sm tracking-widest text-texto-tenue">TE ESCUCHÉ</div>
               <div className="text-xl leading-snug">“{pantalla.textoCapturado}”</div>
             </div>
@@ -489,7 +514,7 @@ export default function PantallaConteo() {
               type="button"
               onClick={volverAEscuchar}
               aria-label="Volver a intentar"
-              className="clay-azul transicion-estado h-[104px] w-full rounded-control bg-accion text-xl font-semibold text-white active:bg-accion-claro"
+              className="clay-azul transicion-estado h-20 sm:h-[104px] w-full rounded-control bg-accion text-xl font-semibold text-white active:bg-accion-claro"
             >
               Seguir contando
             </button>
@@ -508,7 +533,7 @@ export default function PantallaConteo() {
             <button
               type="button"
               onClick={volverAEscuchar}
-              className="clay-azul transicion-estado h-[104px] w-full rounded-control bg-accion text-xl font-semibold text-white active:bg-accion-claro"
+              className="clay-azul transicion-estado h-20 sm:h-[104px] w-full rounded-control bg-accion text-xl font-semibold text-white active:bg-accion-claro"
             >
               Reintentar
             </button>
@@ -581,7 +606,7 @@ function BotonMicrofono({
   const activo = escuchando || grabando
 
   return (
-    <div className="relative flex h-56 w-56 items-center justify-center">
+    <div className="relative flex h-44 w-44 items-center justify-center sm:h-56 sm:w-56">
       {activo && (
         <>
           <span className="animar-anillo absolute inset-0 rounded-full border-[3px] border-accion" />
@@ -593,7 +618,7 @@ function BotonMicrofono({
         onClick={onTocar}
         disabled={escuchando}
         aria-label={grabando ? 'Detener grabación y enviar' : 'Hablar para registrar un conteo'}
-        className={`transicion-estado flex h-56 w-56 items-center justify-center rounded-full bg-accion ${
+        className={`transicion-estado flex h-44 w-44 items-center justify-center rounded-full bg-accion sm:h-56 sm:w-56 ${
           activo ? 'animar-respira' : 'active:bg-accion-claro'
         }`}
         style={{
@@ -602,9 +627,9 @@ function BotonMicrofono({
         }}
       >
         {grabando ? (
-          <Square className="h-20 w-20 text-white" fill="currentColor" strokeWidth={1.5} />
+          <Square className="h-16 w-16 text-white sm:h-20 sm:w-20" fill="currentColor" strokeWidth={1.5} />
         ) : (
-          <Mic className="h-24 w-24 text-white" strokeWidth={1.75} />
+          <Mic className="h-20 w-20 text-white sm:h-24 sm:w-24" strokeWidth={1.75} />
         )}
       </button>
     </div>
@@ -655,7 +680,7 @@ function TarjetaConfirmacion({
           type="button"
           onClick={onCerrar}
           aria-label="Confirmar"
-          className="clay-azul transicion-estado h-[104px] flex-[1.4] rounded-control bg-accion text-xl font-semibold text-white active:bg-accion-claro"
+          className="clay-azul transicion-estado h-20 sm:h-[104px] flex-[1.4] rounded-control bg-accion text-xl font-semibold text-white active:bg-accion-claro"
         >
           ✓ Correcto
         </button>
@@ -663,7 +688,7 @@ function TarjetaConfirmacion({
           type="button"
           onClick={onCerrar}
           aria-label="Rechazar"
-          className="clay-tecla transicion-estado h-[104px] flex-1 rounded-control bg-superficie2 text-xl font-semibold active:bg-grafito"
+          className="clay-tecla transicion-estado h-20 sm:h-[104px] flex-1 rounded-control bg-superficie2 text-xl font-semibold active:bg-grafito"
         >
           ✗ Corregir
         </button>
