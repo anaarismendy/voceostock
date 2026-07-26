@@ -167,47 +167,49 @@ corresponde a un tramo del recorrido de arriba; los `[tiempo]` son referencia
 para sincronizar en la edición, **no se pegan** en el sintetizador. Voz
 sugerida: español latino, tono conversacional, velocidad normal.
 
-> **[0:00 — pantalla de login]**
-> En las bodegas de Colsubsidio, el inventario todavía se cuenta con papel y
-> lápiz, y después alguien lo transcribe a mano al Excel del ERP. Es lento,
-> se digita mal, y los errores se descubren días después. VoceoStock lo
-> resuelve dejando contar con la voz, y validando cada captura en el momento,
-> antes de guardarla. Está construido con FastAPI y Postgres con pgvector,
-> una PWA en React para la tablet, Gemini dos punto cinco Flash que entiende
-> el dictado en texto o audio, embeddings de Gemini para matchear contra el
-> catálogo real de cuarenta y ocho bodegas, y ElevenLabs para que el agente
-> responda con voz natural.
->
-> **[0:20 — login y bodega]**
-> El operario entra con su PIN. El sistema decide su rol, y elige la bodega
-> donde va a contar.
->
-> **[0:35 — conteo por voz]**
-> Ahora, simplemente habla: "treinta y tres litros de aceite de oliva". El
-> sistema entiende, matchea el artículo, y confirma en voz alta. Un toque, y
-> queda guardado. Si el micrófono falla, el teclado de abajo hace exactamente
-> lo mismo.
->
-> **[0:50 — validación conversacional]**
-> Y aquí está el diferenciador. "Noventa cajas de cazuelas". En vez de guardar
-> a ciegas, el sistema detecta que ese número no cuadra con el histórico, y
-> pregunta antes de guardar. Si el dictado es ambiguo, como "una cazuela",
-> ofrece los candidatos para elegir con un toque. El error se atrapa en el
-> punto de captura, no días después.
->
-> **[1:15 — modo guiado]**
-> En modo guiado, el sistema le dicta al operario qué contar ahora. Él solo
-> pone la cantidad, y la barra de progreso garantiza que nada se quede sin
-> contar. Y ojo: durante toda la captura, el operario nunca ve el stock
-> teórico. Conteo ciego, siempre.
->
-> **[1:30 — panel del líder]**
-> Del otro lado, el líder abre el ciclo de inventario y lo ve todo en vivo:
-> cada conteo entrando, las anomalías, el avance. Y en el cierre, la tabla de
-> diferencias con semáforo: qué cuadra, qué sobra, qué falta. De ahí exporta
-> un Excel idéntico al del ERP.
->
-> **[1:50 — cierre]**
-> Todo entró por un único contrato de ingesta. Hoy es voz en una tablet;
-> mañana, WhatsApp, RFID o básculas se enchufan sin cambiar nada más. Con
-> VoceoStock, contar deja de ser el cuello de botella.
+**[0:00 — pantalla de login]**
+En las bodegas de Colsubsidio, el inventario todavía se cuenta con papel y
+lápiz, y después alguien lo transcribe a mano al Excel del ERP. Es lento,
+se digita mal, y los errores se descubren días después. VoceoStock lo
+resuelve dejando contar con la voz, y validando cada captura en el momento,
+antes de guardarla. Está construido con FastAPI y Postgres con pgvector,
+una PWA en React para la tablet, Gemini dos punto cinco Flash que entiende
+el dictado en texto o audio, embeddings de Gemini para matchear contra el
+catálogo real de cuarenta y ocho bodegas, y ElevenLabs para que el agente
+responda con voz natural.
+
+**[0:20 — login y bodega]**
+El operario entra con su PIN. El sistema decide su rol, y elige la bodega
+donde va a contar.
+
+**[0:35 — conteo por voz]**
+Ahora, simplemente habla: "treinta y tres litros de aceite de oliva". El
+sistema entiende, matchea el artículo, y confirma en voz alta. Un toque, y
+queda guardado. Si el micrófono falla, el teclado de abajo hace exactamente
+lo mismo.
+
+**[0:50 — validación conversacional]**
+Y aquí está el diferenciador. "Noventa cajas de cazuelas". En vez de guardar
+a ciegas, el sistema detecta que ese número no cuadra con el histórico, y
+pregunta antes de guardar. Si el dictado es ambiguo, como "una cazuela",
+ofrece los candidatos para elegir con un toque. El error se atrapa en el
+punto de captura, no días después.
+
+**[1:15 — modo guiado]**
+En modo guiado, el sistema le dicta al operario qué contar ahora. Él solo
+pone la cantidad, y la barra de progreso garantiza que nada se quede sin
+contar. Y ojo: durante toda la captura, el operario nunca ve el stock
+teórico. Conteo ciego, siempre.
+
+**[1:30 — panel del líder]**
+Del otro lado, el líder abre el ciclo de inventario y lo ve todo en vivo:
+cada conteo entrando, las anomalías, el avance. Y en el cierre, la tabla de
+diferencias con semáforo: qué cuadra, qué sobra, qué falta. De ahí exporta
+un Excel idéntico al del ERP. Y en ajustes, afina los umbrales de confianza,
+revisa los sinónimos aprendidos y gestiona a sus operarios con su precisión
+histórica, todo sin tocar código.
+
+**[1:50 — cierre]**
+Todo entró por un único contrato de ingesta. Hoy es voz en una tablet;
+mañana, WhatsApp, RFID o básculas se enchufan sin cambiar nada más. Con
+VoceoStock, contar deja de ser el cuello de botella.
