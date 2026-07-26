@@ -19,5 +19,16 @@ test('recientes: los más nuevos primero, acotado al límite', () => {
 })
 
 test('lista vacía', () => {
-  expect(resumenDashboard([])).toEqual({ total_conteos: 0, articulos_unicos: 0, recientes: [] })
+  const r = resumenDashboard([])
+  expect(r.total_conteos).toBe(0)
+  expect(r.articulos_unicos).toBe(0)
+  expect(r.recientes).toEqual([])
+})
+
+test('incluye KPIs de demo (F2)', () => {
+  const r = resumenDashboard([conteo(1), conteo(2)])
+  expect(r.kpis.precision_reconocimiento).toBeGreaterThan(0)
+  expect(r.kpis.precision_reconocimiento).toBeLessThanOrEqual(1)
+  expect(r.kpis.pct_correcciones).toBeLessThanOrEqual(0.08)
+  expect(r.kpis.dispositivos_offline).toBe(0)
 })

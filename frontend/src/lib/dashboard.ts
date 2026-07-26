@@ -11,10 +11,19 @@ export interface ConteoReciente {
   es_anomalia?: boolean
 }
 
+/** F2: KPIs que agrega el backend (E-stats). Opcionales: si no vienen (mock o
+ * backend viejo), el widget muestra "—". No incluyen SD (conteo ciego). */
+export interface KpisDashboard {
+  dispositivos_offline?: number
+  precision_reconocimiento?: number // 0..1
+  pct_correcciones?: number // 0..1
+}
+
 export interface ResumenDashboard {
   total_conteos: number
   articulos_unicos: number
   anomalias?: number
+  kpis?: KpisDashboard
   recientes: ConteoReciente[]
 }
 

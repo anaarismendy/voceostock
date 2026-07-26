@@ -11,14 +11,27 @@ porque ocurre después de que el operario ya comprometió su número. Las otras
 cuatro reglas siguen sin revelar el SD.
 """
 
+import os
+
+from app.pipeline.confianza import umbrales_actuales
 from app.pipeline.nlu.unidades import es_unidad_entera
 from app.pipeline.tipos import Anomalia, ArticuloCtx, ConteoParseado
 
-# Umbrales
+# Umbrales estructurales (propios de estas reglas). El de confianza NO vive aquí:
+# es configurable (D1) y se lee de `umbrales_actuales()` en cada evaluación.
 RATIO_ALTO = 5.0
 RATIO_BAJO = 0.2
 SD_ALTO = 20.0  # "hay bastante de esto normalmente"
-CONFIANZA_MINIMA = 0.8
+
+# D4: umbrales de frecuencia/comportamiento. Van a configuración (regla global):
+# se leen del entorno en cada evaluación, con default. `_umbral` respeta el tipo.
+RECUENTO_SESION_DEFECTO = 1  # a partir de cuántos conteos previos se pregunta
+FRECUENCIA_INFRECUENTE_DEFECTO = 0.1  # < 10% de los cortes → "casi nunca aparece"
+
+
+def _umbral(nombre_env: str, defecto):
+    crudo = os.environ.get(nombre_env)
+    return type(defecto)(crudo) if crudo else defecto
 
 _UNIDAD_ES = {"Unidad": "unidades", "Kilogram": "kilos", "Liter": "litros", "Portion": "porciones"}
 
@@ -89,8 +102,9 @@ def regla_cero_sospechoso(parse: ConteoParseado, art: ArticuloCtx) -> Anomalia:
 
 
 def regla_baja_confianza(parse: ConteoParseado, art: ArticuloCtx) -> Anomalia:
-    """El parser no quedó seguro de haber entendido."""
-    if parse.confianza < CONFIANZA_MINIMA:
+    """El parser no quedó seguro de haber entendido. El umbral por debajo del
+    cual se pregunta es CONFIGURABLE (D1): `rapida` de `umbrales_actuales()`."""
+    if parse.confianza < umbrales_actuales().rapida:
         unidad = _UNIDAD_ES.get(parse.unidad_normalizada or "", "").strip()
         cola = f" {unidad}" if unidad else ""
         return Anomalia(
@@ -101,13 +115,49 @@ def regla_baja_confianza(parse: ConteoParseado, art: ArticuloCtx) -> Anomalia:
     return _sin_anomalia()
 
 
+def regla_recuento_repetido(parse: ConteoParseado, art: ArticuloCtx) -> Anomalia:
+    """D4 (frecuencia): el mismo artículo ya se contó en esta sesión. Append-only:
+    contar de nuevo suele ser una corrección, y vale la pena confirmarlo (no
+    bloquea). No revela SD."""
+    if art.veces_en_sesion >= _umbral("UMBRAL_RECUENTO_SESION", RECUENTO_SESION_DEFECTO):
+        return Anomalia(
+            flag=True, tipo="recuento_repetido",
+            pregunta=f"Ya registraste {art.nombre} en esta sesión. "
+                     f"¿Esta cuenta es una corrección?",
+        )
+    return _sin_anomalia()
+
+
+def regla_articulo_infrecuente(parse: ConteoParseado, art: ArticuloCtx) -> Anomalia:
+    """D4 (comportamiento esperado): un artículo que casi nunca aparece en el
+    inventario y ahora se cuenta con cantidad positiva. Solo pregunta si hay
+    señal histórica; no revela el valor histórico exacto (conteo ciego)."""
+    if (
+        parse.cantidad is not None
+        and parse.cantidad > 0
+        and art.frecuencia_historica is not None
+        and art.frecuencia_historica < _umbral(
+            "UMBRAL_ARTICULO_INFRECUENTE", FRECUENCIA_INFRECUENTE_DEFECTO
+        )
+    ):
+        return Anomalia(
+            flag=True, tipo="articulo_infrecuente",
+            pregunta=f"{art.nombre} casi nunca aparece en el inventario. "
+                     f"¿Confirmas que lo tienes?",
+        )
+    return _sin_anomalia()
+
+
 # Orden de evaluación: una incoherencia de unidad o un decimal imposible pesan
-# más que un ratio raro; la baja confianza es el último recurso.
+# más que un ratio raro; la frecuencia/comportamiento van después; la baja
+# confianza es el último recurso.
 REGLAS = (
     regla_unidad_incoherente,
     regla_decimal_en_entero,
     regla_cero_sospechoso,
     regla_ratio_sd,
+    regla_recuento_repetido,
+    regla_articulo_infrecuente,
     regla_baja_confianza,
 )
 

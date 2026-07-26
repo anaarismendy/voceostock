@@ -13,6 +13,7 @@ el embedder evita el bug de aplicar el número de un modelo al otro.
 """
 
 import hashlib
+import os
 import pickle
 import time
 from pathlib import Path
@@ -24,6 +25,18 @@ from app.pipeline.normalizacion import normalizar
 
 MODELO_EMBEDDING = "gemini-embedding-001"
 DIM_GEMINI = 768
+
+# Umbrales de coseno por defecto (D2). Van a configuración por la regla global
+# "un umbral no se hardcodea": se pueden sobreescribir por entorno sin tocar
+# código. El default queda calibrado por embedder (el coseno no es comparable
+# entre el espacio léxico y el de Gemini).
+UMBRAL_LEXICO_DEFECTO = 0.62
+UMBRAL_GEMINI_DEFECTO = 0.72
+
+
+def _umbral_config(nombre_env: str, defecto: float) -> float:
+    crudo = os.environ.get(nombre_env)
+    return float(crudo) if crudo else defecto
 
 
 class Embedder(Protocol):
@@ -48,9 +61,12 @@ class EmbedderLexico:
     suficiente para 'cazuelas'→'cazuela 16 onz' pero no para sinónimos
     semánticos ('pegante'→'sellamiento'): para eso está EmbedderGemini."""
 
-    def __init__(self, dim: int = 256, umbral: float = 0.62, margen: float = 0.05):
+    def __init__(self, dim: int = 256, umbral: float | None = None, margen: float = 0.05):
         self.dim = dim
-        self.umbral = umbral
+        # umbral explícito manda; si no, entorno (UMBRAL_MATCH_LEXICO) o default.
+        self.umbral = umbral if umbral is not None else _umbral_config(
+            "UMBRAL_MATCH_LEXICO", UMBRAL_LEXICO_DEFECTO
+        )
         self.margen = margen
 
     def _vector(self, texto: str) -> np.ndarray:
@@ -86,7 +102,8 @@ class EmbedderGemini:
         # sinónimo legítimo "cinta pegante"→"cinta sellamiento" = 0.734 (debe
         # pasar); falso positivo "destornillador"→"pasta en tornillos" = 0.704
         # (debe morir). 0.72 corta justo en medio; 0.80 mataba al legítimo.
-        umbral: float = 0.72,
+        # Sobreescribible por entorno (UMBRAL_MATCH_GEMINI) para re-afinar (D2).
+        umbral: float | None = None,
         margen: float = 0.05,
         lote: int = 100,
         reintentos: int = 3,
@@ -101,7 +118,9 @@ class EmbedderGemini:
         self._cliente = cliente
         self.ruta_cache = ruta_cache
         self.dim = dim
-        self.umbral = umbral
+        self.umbral = umbral if umbral is not None else _umbral_config(
+            "UMBRAL_MATCH_GEMINI", UMBRAL_GEMINI_DEFECTO
+        )
         self.margen = margen
         self.lote = lote
         self.reintentos = reintentos

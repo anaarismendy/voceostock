@@ -53,6 +53,13 @@ function enviarJson(res: ServerResponse, status: number, body: unknown) {
  * hablan con rutas relativas /api/v1/... igual que hablarían con el backend
  * real (ver src/lib/conteos.ts).
  */
+// F3/E2: config editable en memoria (el backend real la persiste en BD).
+const umbralesMock = { auto: 0.95, rapida: 0.9, aclaracion: 0.7 }
+const sinonimosMock = [
+  { id: 1, sede_id: null, articulo_id: 95026919, texto_sinonimo: 'olla honda', origen: 'aprendido' },
+  { id: 2, sede_id: null, articulo_id: 3022, texto_sinonimo: 'pollo entero grande', origen: 'manual' },
+]
+
 export function mockApiPlugin(): Plugin {
   return {
     name: 'voceostock-mock-api',
@@ -238,6 +245,26 @@ export function mockApiPlugin(): Plugin {
             return
           }
 
+          // Config del líder (E2/F3): umbrales editables + sinónimos.
+          if (url.pathname === '/api/v1/config/umbrales') {
+            if (req.method === 'GET') {
+              enviarJson(res, 200, umbralesMock)
+              return
+            }
+            if (req.method === 'PUT') {
+              const body = await leerCuerpoJson(req)
+              for (const k of ['auto', 'rapida', 'aclaracion'] as const) {
+                if (typeof body[k] === 'number') umbralesMock[k] = body[k] as number
+              }
+              enviarJson(res, 200, umbralesMock)
+              return
+            }
+          }
+          if (req.method === 'GET' && url.pathname === '/api/v1/config/sinonimos') {
+            enviarJson(res, 200, sinonimosMock)
+            return
+          }
+
           // Control de demo (C11): re-correr la demo sin reiniciar el server.
           if (req.method === 'POST' && url.pathname === '/api/v1/demo/reset') {
             reiniciarConteos()
@@ -253,7 +280,10 @@ export function mockApiPlugin(): Plugin {
           }
 
           if (req.method === 'GET' && url.pathname === '/api/v1/articulos') {
-            // Conteo ciego: nunca se expone `sd` en este endpoint.
+            // Conteo ciego: nunca se expone `sd` en este endpoint. F4/E5: sí el
+            // nivel de riesgo (no revela el histórico exacto). Demo: un par de
+            // artículos del checklist quedan en riesgo alto para disparar el aviso.
+            const RIESGO_ALTO_DEMO = new Set(['95026919', '3022']) // CAZUELA 16 ONZ, POLLO ENTERO
             const vistos = new Set<string>()
             const articulos = catalogo
               .filter((a) => {
@@ -265,6 +295,7 @@ export function mockApiPlugin(): Plugin {
                 articulo_id: Number(a.nr_articulo),
                 articulo_nombre: a.articulo,
                 unidad: a.unidad,
+                riesgo: RIESGO_ALTO_DEMO.has(a.nr_articulo) ? 'alto' : 'bajo',
               }))
             enviarJson(res, 200, articulos)
             return

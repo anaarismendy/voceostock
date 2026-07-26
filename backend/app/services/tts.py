@@ -9,6 +9,10 @@ Env:
 - ELEVENLABS_API_KEY   sin ella, los misses fallan (TTSNoDisponible) y el
                        frontend cae a speechSynthesis; los hits siguen.
 - ELEVENLABS_VOICE_ID  configurable; default una voz multilingüe premade.
+- ELEVENLABS_TIMEOUT   segundos antes de degradar (E3). Default 2.5: la
+                       confirmación en vivo va <2 s, así que un ElevenLabs lento
+                       debe caer RÁPIDO al fallback nativo, no bloquear. El warm
+                       de caché puede subirlo por env (no es camino en vivo).
 - TTS_CACHE_DIR        default data/tts_cache (los audios del guion se
                        commitean para que la demo hable sin red).
 """
@@ -32,6 +36,10 @@ VOZ_DEFECTO = "cgSgspJ2msm6clMCkdW9"
 RAIZ = Path(__file__).resolve().parents[3]
 DIR_CACHE_DEFECTO = RAIZ / "data" / "tts_cache"
 
+# E3: timeout corto para el camino en vivo — un ElevenLabs lento degrada rápido
+# al fallback nativo en vez de bloquear la confirmación (meta de latencia <2 s).
+TIMEOUT_DEFECTO = 2.5
+
 # Contador de llamadas reales a la API (verificación: un hit no suma).
 llamadas_api = 0
 
@@ -46,6 +54,11 @@ def _dir_cache() -> Path:
 
 def voice_id() -> str:
     return os.environ.get("ELEVENLABS_VOICE_ID", VOZ_DEFECTO)
+
+
+def _timeout() -> float:
+    crudo = os.environ.get("ELEVENLABS_TIMEOUT")
+    return float(crudo) if crudo else TIMEOUT_DEFECTO
 
 
 def clave(texto: str) -> str:
@@ -68,7 +81,7 @@ def _llamar_elevenlabs(texto: str) -> bytes:
         params={"output_format": "mp3_44100_64"},
         headers={"xi-api-key": api_key},
         json={"text": texto, "model_id": MODELO_TTS},
-        timeout=15.0,
+        timeout=_timeout(),
     )
     r.raise_for_status()
     return r.content

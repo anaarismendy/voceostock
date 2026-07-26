@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { getDashboard, tiempoRelativo, type ResumenDashboard } from '../lib/dashboard'
+import { capturasPorMinuto, tiempoPromedioCapturaS } from '../lib/kpis'
 import { useOperario } from '../state/OperarioContext'
 
 const INTERVALO_MS = 2500
@@ -68,6 +69,16 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* F2: KPIs operativos. Los dos primeros se calculan del feed (reales);
+          los tres del backend (E-stats) llegan en `kpis` o muestran "—". */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <Kpi rotulo="CAPTURAS / MIN" valor={fmtNum(datos && capturasPorMinuto(datos.recientes))} />
+        <Kpi rotulo="SEG / CAPTURA" valor={fmtNum(datos && tiempoPromedioCapturaS(datos.recientes))} />
+        <Kpi rotulo="DISPOSITIVOS OFFLINE" valor={fmtNum(datos?.kpis?.dispositivos_offline)} />
+        <Kpi rotulo="PRECISIÓN VOZ" valor={fmtPct(datos?.kpis?.precision_reconocimiento)} />
+        <Kpi rotulo="% CORRECCIONES" valor={fmtPct(datos?.kpis?.pct_correcciones)} />
+      </div>
+
       <div>
         <p className="mb-3 text-lg font-semibold text-texto-sec">Lo que está pasando</p>
         {datos === null && <p className="text-texto-sec">Cargando…</p>}
@@ -96,6 +107,24 @@ export default function Dashboard() {
           ))}
         </ul>
       </div>
+    </div>
+  )
+}
+
+// F2: "—" cuando el dato no está (mock o backend viejo), nunca 0 engañoso.
+function fmtNum(v: number | null | undefined): string {
+  return v === null || v === undefined ? '—' : String(v)
+}
+
+function fmtPct(v: number | null | undefined): string {
+  return v === null || v === undefined ? '—' : `${Math.round(v * 100)}%`
+}
+
+function Kpi({ rotulo, valor }: { rotulo: string; valor: string }) {
+  return (
+    <div className="clay rounded-tarjeta bg-superficie1 px-5 py-4">
+      <p className="text-[11px] tracking-widest text-texto-tenue">{rotulo}</p>
+      <p className="mt-1 text-xl font-semibold leading-none tabular-nums">{valor}</p>
     </div>
   )
 }
