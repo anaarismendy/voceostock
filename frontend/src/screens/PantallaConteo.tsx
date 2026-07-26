@@ -152,10 +152,12 @@ export default function PantallaConteo() {
 
   function aplicarRespuesta(respuesta: ConteoResponse, viaAclaracion = false) {
     if (respuesta.status === 'confirmado') {
-      // Progreso de la guía: se marca por NOMBRE porque el checklist de demo
-      // habla en nr_articulo (mock) y el backend real responde con ids de BD.
-      const item = guia.find((a) => a.articulo_nombre === respuesta.conteo.articulo_nombre)
-      const id = item?.articulo_id ?? respuesta.conteo.articulo_id
+      // `articulo_id` es la MISMA clave que devuelve /articulos (id de BD en el
+      // backend real, nr_articulo en el mock), así que marca directo. No buscar
+      // por nombre: `enviarCaptura` está memoizada sin `articulos` en sus deps,
+      // y ese lookup quedaba congelado sobre el checklist de demo, traduciendo
+      // el id bueno a uno que el inventario no conoce (nada se marcaba).
+      const id = respuesta.conteo.articulo_id
       setContados((prev) => (prev.has(id) ? prev : new Set(prev).add(id)))
       // F1: `viaAclaracion` distingue el auto-confirmado del que pasó por una
       // pregunta, para el indicador de confianza (sin revelar nunca el SD).
@@ -353,49 +355,17 @@ export default function PantallaConteo() {
               </div>
             </div>
             <DictadoPorTexto onEnviar={(texto) => enviarCaptura({ texto }, 'voz-tablet')} />
-            <div className="flex w-full flex-wrap items-center justify-between gap-3">
-              <div className="clay-hundido flex h-16 rounded-control bg-superficie1 p-1.5" role="tablist" aria-label="Modo de conteo">
-                {(['libre', 'guiado'] as const).map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    role="tab"
-                    aria-selected={modo === m}
-                    onClick={() => setModo(m)}
-                    className={`transicion-estado w-28 rounded-chip text-sm sm:w-32 sm:text-base ${
-                      modo === m ? 'clay-tecla bg-superficie2 font-semibold text-texto' : 'text-texto-tenue'
-                    }`}
-                  >
-                    {m === 'libre' ? 'Modo libre' : 'Modo guiado'}
-                  </button>
-                ))}
-              </div>
-              <div className="flex flex-1 flex-wrap justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setInventarioVisible((v) => !v)}
-                  aria-expanded={inventarioVisible}
-                  className="clay-tecla transicion-estado flex h-16 items-center gap-2 rounded-control bg-superficie2 px-5 text-sm font-semibold active:bg-grafito sm:px-7 sm:text-base"
-                >
-                  ☰ Inventario
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTecladoVisible((v) => !v)}
-                  aria-expanded={tecladoVisible}
-                  className="clay-tecla transicion-estado flex h-16 items-center gap-2 rounded-control bg-superficie2 px-5 text-sm font-semibold active:bg-grafito sm:px-7 sm:text-base"
-                >
-                  ⌨ Escribir a mano
-                </button>
-              </div>
-            </div>
-            {inventarioVisible && (
-              <ListaInventario
-                articulos={articulos}
-                contados={contados}
-                onCerrar={() => setInventarioVisible(false)}
-              />
-            )}
+            <BarraModo modo={modo} onCambiarModo={setModo}>
+              <BotonInventario abierto={inventarioVisible} onClick={() => setInventarioVisible((v) => !v)} />
+              <button
+                type="button"
+                onClick={() => setTecladoVisible((v) => !v)}
+                aria-expanded={tecladoVisible}
+                className="clay-tecla transicion-estado flex h-16 items-center gap-2 rounded-control bg-superficie2 px-5 text-sm font-semibold active:bg-grafito sm:px-7 sm:text-base"
+              >
+                ⌨ Escribir a mano
+              </button>
+            </BarraModo>
             {tecladoVisible && (
               <TecladoManual bodegaId={bodega!.id} onEnviar={(texto) => enviarCaptura({ texto }, 'manual')} />
             )}
@@ -404,22 +374,9 @@ export default function PantallaConteo() {
 
         {pantalla.tipo === 'lista' && modo === 'guiado' && (
           <>
-            <div className="clay-hundido flex h-16 self-start rounded-control bg-superficie1 p-1.5" role="tablist" aria-label="Modo de conteo">
-              {(['libre', 'guiado'] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  role="tab"
-                  aria-selected={modo === m}
-                  onClick={() => setModo(m)}
-                  className={`transicion-estado w-28 rounded-chip text-sm sm:w-32 sm:text-base ${
-                    modo === m ? 'clay-tecla bg-superficie2 font-semibold text-texto' : 'text-texto-tenue'
-                  }`}
-                >
-                  {m === 'libre' ? 'Modo libre' : 'Modo guiado'}
-                </button>
-              ))}
-            </div>
+            <BarraModo modo={modo} onCambiarModo={setModo}>
+              <BotonInventario abierto={inventarioVisible} onClick={() => setInventarioVisible((v) => !v)} />
+            </BarraModo>
             <ModoGuiado
               objetivo={objetivoGuiado}
               progreso={progresoGuia}
@@ -429,6 +386,16 @@ export default function PantallaConteo() {
               onReiniciar={reiniciarGuiado}
             />
           </>
+        )}
+
+        {/* El inventario acompaña TODA la captura: en modo libre para saber qué
+            dictar, y en guiado para ver qué falta sin salirse del recorrido. */}
+        {pantalla.tipo === 'lista' && inventarioVisible && (
+          <ListaInventario
+            articulos={articulos}
+            contados={contados}
+            onCerrar={() => setInventarioVisible(false)}
+          />
         )}
 
         {toast && (
@@ -591,6 +558,53 @@ function DictadoPorTexto({ onEnviar }: { onEnviar: (texto: string) => void }) {
         Enviar
       </button>
     </form>
+  )
+}
+
+/** Selector de modo + acciones de la derecha. Los tabs estaban duplicados en
+ *  libre y guiado; ahora una sola barra sirve a los dos. */
+function BarraModo({
+  modo,
+  onCambiarModo,
+  children,
+}: {
+  modo: Modo
+  onCambiarModo: (m: Modo) => void
+  children: React.ReactNode
+}) {
+  return (
+    <div className="flex w-full flex-wrap items-center justify-between gap-3">
+      <div className="clay-hundido flex h-16 rounded-control bg-superficie1 p-1.5" role="tablist" aria-label="Modo de conteo">
+        {(['libre', 'guiado'] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            role="tab"
+            aria-selected={modo === m}
+            onClick={() => onCambiarModo(m)}
+            className={`transicion-estado w-28 rounded-chip text-sm sm:w-32 sm:text-base ${
+              modo === m ? 'clay-tecla bg-superficie2 font-semibold text-texto' : 'text-texto-tenue'
+            }`}
+          >
+            {m === 'libre' ? 'Modo libre' : 'Modo guiado'}
+          </button>
+        ))}
+      </div>
+      <div className="flex flex-1 flex-wrap justify-end gap-3">{children}</div>
+    </div>
+  )
+}
+
+function BotonInventario({ abierto, onClick }: { abierto: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={abierto}
+      className="clay-tecla transicion-estado flex h-16 items-center gap-2 rounded-control bg-superficie2 px-5 text-sm font-semibold active:bg-grafito sm:px-7 sm:text-base"
+    >
+      ☰ Inventario
+    </button>
   )
 }
 
