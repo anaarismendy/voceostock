@@ -1,7 +1,8 @@
 # Demo completa en 2 minutos — VoceoStock
 
-Recorrido cronometrado que muestra **toda la navegación y todas las
-funcionalidades** de la plataforma: captura por voz, validación conversacional
+Recorrido cronometrado que abre con **el problema que se resuelve y el stack**
+como intro, y luego muestra **toda la navegación y todas las funcionalidades**
+de la plataforma: captura por voz, validación conversacional
 (anomalía + ambigüedad), modo guiado, panel del líder (en vivo, cierre,
 ajustes) y ciclos de inventario. Pensado para correrse en **modo mock** (cero
 setup, determinista); al final está la variante contra el backend real.
@@ -31,7 +32,19 @@ Para reiniciar entre ensayos: recargar `npm run dev`, o en la consola F12:
 
 ## El recorrido (2:00)
 
-### 0:00 – 0:15 · Login y bodega
+### 0:00 – 0:20 · Intro: el problema y el stack (hablado, sobre la pantalla de login)
+
+> "Hoy el inventario en bodega se cuenta con papel y lápiz y se transcribe a
+> mano a un Excel del ERP: lento, con errores de digitación que se descubren
+> días después. **VoceoStock** deja contar hablando y valida en el momento —
+> antes de guardar — contra el catálogo y el histórico.
+>
+> El stack: **FastAPI + Postgres con pgvector** en el backend, **React PWA**
+> en tablet, **Gemini 2.5 Flash** para entender el dictado (texto o audio),
+> **embeddings de Gemini** para matchear contra el catálogo real de 48
+> bodegas, y **ElevenLabs** para que el agente responda con voz natural."
+
+### 0:20 – 0:35 · Login y bodega
 
 1. Teclear PIN **0000** → entra como **operario** (el rol lo decide el
    backend, no la pantalla; un PIN no dado de alta es rechazado).
@@ -41,7 +54,7 @@ Para reiniciar entre ensayos: recargar `npm run dev`, o en la consola F12:
 *Qué se demostró: login por PIN con rol del backend, catálogo real de bodegas
 con búsqueda.*
 
-### 0:15 – 0:35 · Contar por voz (camino feliz)
+### 0:35 – 0:50 · Contar por voz (camino feliz)
 
 3. En la **pantalla de conteo** (Modo libre), tocar el **micrófono** y decir:
 
@@ -54,7 +67,7 @@ con búsqueda.*
    (buscar artículo, teclear cantidad, Registrar) — ese fallback es una
    funcionalidad, muéstralo con una frase.
 
-### 0:35 – 1:00 · Validación conversacional (el momento estelar)
+### 0:50 – 1:15 · Validación conversacional (el momento estelar)
 
 4. Micrófono: **"noventa cajas de cazuelas"**
    → **Anomalía**: en vez de guardar a ciegas, pregunta con voz:
@@ -67,7 +80,7 @@ con búsqueda.*
 el histórico y desambiguación del catálogo, respondibles por toque o voz.
 Nótese que durante la captura nunca se ve el stock teórico (conteo ciego).*
 
-### 1:00 – 1:20 · Modo guiado + inventario de la bodega
+### 1:15 – 1:30 · Modo guiado + inventario de la bodega
 
 6. Arriba, cambiar a **Modo guiado**: el sistema dicta *qué* contar ahora
    ("Cuenta ahora: POLLO ENTERO"). Decir o teclear **12** → Registrar →
@@ -78,12 +91,12 @@ Nótese que durante la captura nunca se ve el stock teórico (conteo ciego).*
 *Qué se demostró: cobertura garantizada sin memorizar la lista, y visibilidad
 de qué falta — sin mostrar jamás cantidades teóricas.*
 
-### 1:20 – 1:30 · Cambio de rol
+### 1:30 – 1:35 · Cambio de rol
 
 8. **Cerrar sesión** → PIN **1111** → misma bodega → entra al **Panel del
    líder**.
 
-### 1:30 – 1:55 · Panel del líder
+### 1:35 – 1:55 · Panel del líder
 
 9. Arriba, la **barra de inventario**: qué ciclo se está viendo
    ("Inventario #N", fechas) y los controles para **abrir/cerrar** un ciclo —
