@@ -1,0 +1,19 @@
+docs/DEMO_2MIN.md
+  s_afae10bfc7eec1::t_3fa70e5043ef69 160-213
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "428caccc4a9345f595fcb263ac97ace05d2ffa2b",
+  "prompts": {},
+  "sessions": {
+    "s_afae10bfc7eec1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f80fcb-bd50-4ac3-8585-29df59888e49",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
