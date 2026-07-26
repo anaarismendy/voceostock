@@ -30,7 +30,7 @@ export default function LoginPin() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-pantalla p-6 text-texto">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-5 bg-pantalla p-4 text-texto sm:gap-8 sm:p-6">
       <div className="flex flex-col items-center gap-3">
         <div className="flex items-center gap-2.5">
           <div className="h-6 w-2 rounded-full bg-marca" />
@@ -52,7 +52,7 @@ export default function LoginPin() {
             role="radio"
             aria-checked={rol === r}
             onClick={() => setRol(r)}
-            className={`transicion-estado h-16 w-36 rounded-chip text-base font-semibold capitalize ${
+            className={`transicion-estado h-14 w-32 rounded-chip text-base font-semibold capitalize sm:h-16 sm:w-36 ${
               rol === r ? 'clay-tecla bg-accion text-white' : 'text-texto-tenue'
             }`}
           >
@@ -82,16 +82,17 @@ export default function LoginPin() {
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      {/* w-full + ancho tope: el teclado se adapta al móvil sin desbordar. */}
+      <div className="grid w-full max-w-[420px] grid-cols-3 gap-3 sm:gap-4">
         {TECLAS.map((tecla, i) => {
-          if (tecla === '') return <div key={`vacio-${i}`} className="h-[84px] w-[132px]" />
+          if (tecla === '') return <div key={`vacio-${i}`} className="h-[72px] w-full sm:h-[84px]" />
           if (tecla === 'borrar')
             return (
               <button
                 key={tecla}
                 type="button"
                 onClick={borrar}
-                className="transicion-estado h-[84px] w-[132px] rounded-control bg-superficie1 text-base text-texto-tenue active:bg-superficie2"
+                className="transicion-estado h-[72px] w-full sm:h-[84px] rounded-control bg-superficie1 text-base text-texto-tenue active:bg-superficie2"
                 aria-label="Borrar"
               >
                 Borrar
@@ -102,7 +103,7 @@ export default function LoginPin() {
               key={tecla}
               type="button"
               onClick={() => agregarDigito(tecla)}
-              className="clay-tecla transicion-estado h-[84px] w-[132px] rounded-control bg-superficie2 text-xl font-semibold active:bg-grafito"
+              className="clay-tecla transicion-estado h-[72px] w-full sm:h-[84px] rounded-control bg-superficie2 text-xl font-semibold active:bg-grafito"
             >
               {tecla}
             </button>

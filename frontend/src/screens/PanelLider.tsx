@@ -17,7 +17,7 @@ export default function PanelLider() {
   const [tab, setTab] = useState<Tab>('vivo')
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col bg-pantalla p-7 text-texto">
+    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col bg-pantalla p-4 text-texto sm:p-7">
       <header className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <button

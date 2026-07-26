@@ -54,7 +54,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <div className="clay rounded-tarjeta bg-superficie1 px-6 py-5">
           <p className="text-xs tracking-widest text-texto-tenue">CONTEOS REGISTRADOS</p>
           <p className="mt-1 text-2xl font-semibold leading-none tabular-nums">{datos?.total_conteos ?? '—'}</p>

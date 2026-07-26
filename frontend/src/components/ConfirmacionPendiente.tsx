@@ -50,10 +50,10 @@ export default function ConfirmacionPendiente({ tokenPendiente, pregunta, candid
               disabled={enviando}
               aria-label={c.articulo_nombre.toLowerCase()}
               onClick={() => onResponder(`articulo_id:${c.articulo_id}`)}
-              className="clay transicion-estado flex flex-1 items-center justify-between gap-6 rounded-tarjeta bg-superficie1 px-8 py-7 text-left active:bg-superficie2 disabled:opacity-50"
+              className="clay transicion-estado flex flex-1 items-center justify-between gap-4 rounded-tarjeta bg-superficie1 px-5 py-5 text-left sm:gap-6 sm:px-8 sm:py-7 active:bg-superficie2 disabled:opacity-50"
             >
-              <span className="text-xl font-semibold leading-tight">{c.articulo_nombre}</span>
-              <span className="clay-azul flex h-[72px] shrink-0 items-center rounded-control bg-accion px-8 text-lg font-semibold text-white">
+              <span className="text-base font-semibold leading-tight sm:text-xl">{c.articulo_nombre}</span>
+              <span className="clay-azul flex h-14 shrink-0 items-center rounded-control bg-accion px-5 text-base sm:h-[72px] sm:px-8 sm:text-lg font-semibold text-white">
                 Es este
               </span>
             </button>
@@ -77,47 +77,47 @@ export default function ConfirmacionPendiente({ tokenPendiente, pregunta, candid
   const motivo = restoMotivo.join('?').trim()
 
   return (
-    <div className="animar-entrada flex min-h-full w-full flex-1 flex-col gap-6 self-stretch rounded-pantalla bg-marca p-10 text-sobre-marca">
+    <div className="animar-entrada flex min-h-full w-full flex-1 flex-col gap-5 self-stretch rounded-pantalla bg-marca p-5 text-sobre-marca sm:gap-6 sm:p-10">
       <div className="flex items-center gap-3.5">
-        <span className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-sobre-marca text-xl font-semibold text-marca">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sobre-marca text-xl sm:h-[52px] sm:w-[52px] font-semibold text-marca">
           !
         </span>
-        <span className="text-lg font-semibold tracking-widest">ESPERA UN MOMENTO</span>
+        <span className="text-base font-semibold tracking-widest sm:text-lg">ESPERA UN MOMENTO</span>
       </div>
 
       <div className="flex flex-1 flex-col justify-center gap-6">
-        <div className="text-2xl font-semibold leading-tight">
+        <div className="text-xl font-semibold leading-tight sm:text-2xl">
           {preguntaPrincipal.trim()}
           {pregunta.includes('?') ? '?' : ''}
         </div>
-        {motivo && <div className="max-w-3xl text-xl leading-snug">{motivo}</div>}
+        {motivo && <div className="max-w-3xl text-base leading-snug sm:text-xl">{motivo}</div>}
       </div>
 
-      <div className="flex gap-5">
+      <div className="flex gap-3 sm:gap-5">
         <button
           type="button"
           disabled={enviando}
           aria-label="Sí"
           onClick={() => onResponder('si')}
-          className="transicion-estado flex h-[120px] flex-1 flex-col items-center justify-center gap-1 rounded-control bg-sobre-marca active:opacity-85 disabled:opacity-50"
+          className="transicion-estado flex h-24 flex-1 sm:h-[120px] flex-col items-center justify-center gap-1 rounded-control bg-sobre-marca px-2 active:opacity-85 disabled:opacity-50"
         >
-          <span className="text-xl font-semibold text-white">Sí, confirmo</span>
-          <span className="text-base text-texto-sec">Ya lo verifiqué</span>
+          <span className="text-base font-semibold text-white sm:text-xl">Sí, confirmo</span>
+          <span className="text-xs text-texto-sec sm:text-base">Ya lo verifiqué</span>
         </button>
         <button
           type="button"
           disabled={enviando}
           aria-label="No"
           onClick={() => onResponder('no')}
-          className="transicion-estado flex h-[120px] flex-1 flex-col items-center justify-center gap-1 rounded-control bg-white shadow-[inset_0_0_0_3px_#1C1C1B] active:opacity-85 disabled:opacity-50"
+          className="transicion-estado flex h-24 flex-1 sm:h-[120px] flex-col items-center justify-center gap-1 rounded-control bg-white px-2 shadow-[inset_0_0_0_3px_#1C1C1B] active:opacity-85 disabled:opacity-50"
         >
-          <span className="text-xl font-semibold text-sobre-marca">No, corrijo</span>
-          <span className="text-base text-grafito">Vuelvo a contar</span>
+          <span className="text-base font-semibold text-sobre-marca sm:text-xl">No, corrijo</span>
+          <span className="text-xs text-grafito sm:text-base">Vuelvo a contar</span>
         </button>
       </div>
 
       <form
-        className="flex justify-center gap-3"
+        className="flex flex-wrap justify-center gap-3"
         onSubmit={(e) => {
           e.preventDefault()
           if (cantidadManual.trim()) onResponder(`cantidad:${cantidadManual.trim()}`)
@@ -129,7 +129,7 @@ export default function ConfirmacionPendiente({ tokenPendiente, pregunta, candid
           value={cantidadManual}
           onChange={(e) => setCantidadManual(e.target.value)}
           placeholder="Otra cantidad"
-          className="h-16 w-48 rounded-control bg-sobre-marca-suave px-5 text-lg text-sobre-marca placeholder:text-sobre-marca placeholder:opacity-60 focus:outline-none"
+          className="h-16 w-full min-w-0 rounded-control bg-sobre-marca-suave px-5 text-lg text-sobre-marca placeholder:text-sobre-marca placeholder:opacity-60 focus:outline-none sm:w-48"
         />
         <button
           type="submit"
