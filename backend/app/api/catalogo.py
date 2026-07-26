@@ -3,7 +3,7 @@
 Conteo ciego: /articulos jamás incluye SD ni nada que huela a stock teórico.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
@@ -37,6 +37,7 @@ class LoginRequest(BaseModel):
 class OperarioResumen(BaseModel):
     id: str
     nombre: str
+    rol: str  # lo decide el backend, no el cliente: define a qué panel entra
 
 
 @router.get("/bodegas", response_model=list[BodegaResumen])
@@ -102,11 +103,13 @@ def listar_articulos(s: Db, bodega_id: int | None = None) -> list[ArticuloResume
 
 @router.post("/operarios/login", response_model=OperarioResumen)
 def login_operario(req: LoginRequest, s: Db) -> OperarioResumen:
-    # ponytail: find-or-create por PIN en texto plano — auth real (hash + roles)
-    # queda fuera del alcance del hackathon; el PIN solo identifica al operario.
+    """El PIN identifica a un operario YA registrado. Antes esto hacía
+    find-or-create: un dígito mal tecleado no fallaba, creaba un operario nuevo
+    y el de verdad perdía su historial de precisión (D5). Ahora el alta la hace
+    el líder desde su panel; aquí solo se entra."""
     operario = s.scalar(select(models.Operario).where(models.Operario.pin == req.pin))
     if operario is None:
-        operario = models.Operario(nombre=f"Operario {req.pin}", pin=req.pin, rol="operario")
-        s.add(operario)
-        s.commit()
-    return OperarioResumen(id=str(operario.id), nombre=operario.nombre)
+        raise HTTPException(404, "PIN no registrado. Pídele a tu líder que te dé de alta.")
+    return OperarioResumen(
+        id=str(operario.id), nombre=operario.nombre, rol=operario.rol or "operario"
+    )

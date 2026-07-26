@@ -14,6 +14,7 @@ from app.api.config import router as config_router
 from app.api.conteos import router as conteos_router
 from app.api.demo import router as demo_router
 from app.api.evidencia import router as evidencia_router
+from app.api.operarios import router as operarios_router
 from app.api.sesiones import router as sesiones_router
 from app.api.tts import router as tts_router
 from app.api.ws import router as ws_router
@@ -70,6 +71,7 @@ app.include_router(reportes_router)  # A9/I3: reporte de diferencias + export Ex
 app.include_router(demo_router)  # C9-C11 reales: cierre del líder, dashboard, seed
 app.include_router(tts_router)  # voz del agente (ElevenLabs + caché en disco)
 app.include_router(config_router)  # E2: umbrales y sinónimos editables por el líder
+app.include_router(operarios_router)  # D5: precisión por operario y su ajuste de confianza
 
 
 @app.get("/health")

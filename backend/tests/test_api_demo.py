@@ -10,6 +10,17 @@ from tests.test_api_conteos import (  # noqa: F401 — fixtures reutilizadas
 )
 
 
+def test_seed_deja_operario_y_lider_para_entrar(client, seed):
+    """El login ya no crea operarios: si el seed no siembra ambos PINs, la demo
+    se queda sin forma de entrar (y sin panel de líder). Corre dos veces para
+    verificar que el alta es idempotente contra el índice único de PIN."""
+    for _ in range(2):
+        client.post(f"/api/v1/demo/seed?bodega_id={seed.bodega_id}").raise_for_status()
+
+    assert client.post("/api/v1/operarios/login", json={"pin": "0000"}).json()["rol"] == "operario"
+    assert client.post("/api/v1/operarios/login", json={"pin": "1111"}).json()["rol"] == "lider"
+
+
 def test_seed_y_cierre_cuadra_sobra_falta(client, seed):
     r = client.post(f"/api/v1/demo/seed?bodega_id={seed.bodega_id}").json()
     assert r == {"ok": True, "total": 2}  # COSTILLA DE RES no está en la BD de prueba

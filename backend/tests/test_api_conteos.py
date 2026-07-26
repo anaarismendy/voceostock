@@ -51,8 +51,10 @@ def seed(_bootstrap_db):
     Base.metadata.create_all(engine)
     with Session(engine) as s:
         bodega = Bodega(nombre="bodega demo", nombre_normalizado="bodega demo")
-        op1 = Operario(nombre="Ana", pin="hash", rol="operario")
-        op2 = Operario(nombre="Luis", pin="hash", rol="operario")
+        # PINs distintos: son únicos en BD (ux_operarios_pin). Compartir uno
+        # hacía que el login devolviera un operario al azar entre los dos.
+        op1 = Operario(nombre="Ana", pin="1001", rol="operario")
+        op2 = Operario(nombre="Luis", pin="1002", rol="operario")
         # Catálogo mínimo para el pipeline real en replay: "cazuela" es ambigua
         # (CAZUELA vs TAPA CAZUELA), "cazuelas"=90 dispara ratio_sd contra el
         # centinela, y el aceite (SD 33 ≈ conteo 30) pasa sin anomalía.

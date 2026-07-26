@@ -200,7 +200,13 @@ export function mockApiPlugin(): Plugin {
               enviarJson(res, 422, { detail: 'PIN inválido' })
               return
             }
-            enviarJson(res, 200, { id: randomUUID(), nombre: `Operario ${pin}` })
+            // El rol lo manda el backend (el líder lo configura). En el mock,
+            // 1111 entra como líder; cualquier otro PIN, como operario.
+            enviarJson(res, 200, {
+              id: randomUUID(),
+              nombre: pin === '1111' ? 'Líder Demo' : `Operario ${pin}`,
+              rol: pin === '1111' ? 'lider' : 'operario',
+            })
             return
           }
 
