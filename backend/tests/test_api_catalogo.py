@@ -23,8 +23,22 @@ def test_bodegas_y_articulos_sin_sd(client, seed):
         assert SD_PROHIBIDO not in a.values()
 
 
-def test_login_por_pin_find_or_create(client, seed):
+def test_login_identifica_no_crea(client, seed):
+    """El login ya NO hace find-or-create: un PIN desconocido es un 404, no un
+    operario nuevo. Antes, un dígito mal tecleado creaba una identidad fantasma
+    y el operario real perdía su historial de precisión (D5)."""
+    assert client.post("/api/v1/operarios/login", json={"pin": "4321"}).status_code == 404
+
+    alta = client.post(
+        "/api/v1/operarios", json={"nombre": "Ana", "pin": "4321", "rol": "operario"}
+    ).json()
     r1 = client.post("/api/v1/operarios/login", json={"pin": "4321"}).json()
     r2 = client.post("/api/v1/operarios/login", json={"pin": "4321"}).json()
-    assert r1["id"] == r2["id"]  # mismo PIN → mismo operario
+    assert r1["id"] == r2["id"] == alta["id"]  # mismo PIN → siempre el mismo operario
     assert client.post("/api/v1/operarios/login", json={"pin": "abc"}).status_code == 422
+
+
+def test_login_devuelve_el_rol_del_backend(client, seed):
+    """El rol ya no lo elige el cliente: lo define el líder al dar de alta."""
+    client.post("/api/v1/operarios", json={"nombre": "Jefa", "pin": "7777", "rol": "lider"})
+    assert client.post("/api/v1/operarios/login", json={"pin": "7777"}).json()["rol"] == "lider"

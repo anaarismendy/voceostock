@@ -75,7 +75,9 @@ guardar— contra el catálogo y el histórico."
 
 ## 2. Operario: contar por voz (90 s)
 
-1. **Login**: elegir **Operario**, teclear cualquier PIN de 4 dígitos.
+1. **Login**: teclear el PIN **0000**. Ya no se elige el rol en pantalla: el PIN
+   identifica al operario y el backend decide a qué panel entra. Un PIN sin dar
+   de alta responde "PIN no registrado" (antes creaba un operario fantasma).
 2. **Bodega**: buscar y tocar una bodega (ej. "almacen general").
 3. Estás en la **pantalla de conteo** (Modo libre). Tocar el **micrófono** y decir:
 
@@ -133,7 +135,7 @@ guardar— contra el catálogo y el histórico."
 
 ## 5. Líder: dashboard en vivo + cierre (60 s)
 
-8. **Cerrar sesión** → entrar de nuevo como **Líder** (cualquier PIN) → elegir bodega.
+8. **Cerrar sesión** → entrar con el PIN del líder **1111** → elegir bodega.
 9. Pestaña **En vivo**: el **dashboard** muestra, en tiempo real, los conteos que
    acaban de entrar (feed "hace X", totales subiendo). Indicador **EN VIVO**.
 10. Pestaña **Cierre**: la **tabla de diferencias** contado vs. teórico, con

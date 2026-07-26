@@ -3,6 +3,7 @@
 REGLA INVIOLABLE: nada de aquí devuelve SD (conteo ciego).
 """
 
+import logging
 from datetime import UTC, datetime
 from typing import Literal
 from uuid import UUID
@@ -15,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.db import Db
 from app.models import Articulo, Bodega, Conteo, Operario, SesionConteo, StockTeorico
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/sesiones", tags=["sesiones"])
 
 
@@ -164,6 +166,16 @@ async def cerrar_sesion(sesion_id: UUID, s: Db) -> dict:
     sesion.estado = "cerrada"
     sesion.cerrada_en = datetime.now(UTC)
     s.commit()
+    # D5: el cierre es el momento natural para refrescar la precisión por
+    # operario (ya no entran correcciones de esta sesión). Si falla, el cierre
+    # NO se cae: las estadísticas son secundarias y hay botón manual en el panel.
+    try:
+        from app.db import engine
+        from app.services.operarios import recalcular_estadisticas
+
+        recalcular_estadisticas(engine)
+    except Exception:  # métrica accesoria: nunca bloquea el cierre
+        logger.exception("no se pudieron recalcular las estadísticas de operario")
     return {
         "sesion_id": str(sesion.id),
         "estado": sesion.estado,

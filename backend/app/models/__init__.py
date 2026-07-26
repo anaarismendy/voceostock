@@ -92,13 +92,19 @@ class Operario(Base):
     __tablename__ = "operarios"
     __table_args__ = (
         CheckConstraint("rol IN ('operario','auditor','lider')", name="ck_operarios_rol"),
+        # El PIN identifica al operario: duplicarlo hace que el login devuelva
+        # una fila al azar y parte en dos su historial de precisión (D5).
+        Index("ux_operarios_pin", "pin", unique=True),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
     )
     nombre: Mapped[str] = mapped_column(Text)
-    pin: Mapped[str] = mapped_column(Text)  # hash, no texto plano
+    # ponytail: PIN en claro. NO es una credencial: 4 dígitos son 10.000 combos,
+    # hashearlos es teatro (una rainbow table completa se arma en milisegundos).
+    # Identifica, no autentica. Auth real = otro factor, no un hash aquí.
+    pin: Mapped[str] = mapped_column(Text)
     rol: Mapped[str | None] = mapped_column(Text)
     telefono: Mapped[str | None] = mapped_column(Text)
 

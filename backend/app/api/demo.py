@@ -22,6 +22,17 @@ from app.db import Db
 router = APIRouter(prefix="/api/v1", tags=["demo"])
 
 PIN_DEMO = "0000"
+PIN_LIDER_DEMO = "1111"
+
+
+def _operario_demo(s, pin: str, nombre: str, rol: str):
+    """Alta idempotente por PIN (el índice único no perdona el segundo seed)."""
+    fila = s.scalar(select(models.Operario).where(models.Operario.pin == pin))
+    if fila is None:
+        fila = models.Operario(nombre=nombre, pin=pin, rol=rol)
+        s.add(fila)
+        s.flush()
+    return fila
 
 
 class FilaCierre(BaseModel):
@@ -176,11 +187,10 @@ def demo_reset(s: Db, bodega_id: int = 3) -> dict:
 def demo_seed(s: Db, bodega_id: int = 3) -> dict:
     _limpiar_bodega(s, bodega_id)
 
-    operario = s.scalar(select(models.Operario).where(models.Operario.pin == PIN_DEMO))
-    if operario is None:
-        operario = models.Operario(nombre="Demo", pin=PIN_DEMO, rol="operario")
-        s.add(operario)
-        s.flush()
+    operario = _operario_demo(s, PIN_DEMO, "Demo", "operario")
+    # El login ya no crea operarios y el rol lo manda el backend: sin este
+    # líder sembrado no habría forma de entrar al panel del líder en la demo.
+    _operario_demo(s, PIN_LIDER_DEMO, "Líder Demo", "lider")
     sesion = models.SesionConteo(bodega_id=bodega_id, operario_id=operario.id, tipo="primario")
     s.add(sesion)
     s.flush()

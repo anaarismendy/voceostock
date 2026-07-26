@@ -1,25 +1,27 @@
 import { useState } from 'react'
 import { useOperario } from '../state/OperarioContext'
-import type { Rol } from '../lib/operario'
 
 const TECLAS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'borrar'] as const
 
 export default function LoginPin() {
   const { iniciarSesion } = useOperario()
   const [pin, setPin] = useState('')
-  const [error, setError] = useState(false)
-  const [rol, setRol] = useState<Rol>('operario')
+  const [error, setError] = useState<string | null>(null)
 
   function agregarDigito(d: string) {
     if (pin.length >= 4) return
     const siguiente = pin + d
     setPin(siguiente)
-    setError(false)
-    // I2: login real contra POST /api/v1/operarios/login (find-or-create),
-    // con el rol elegido arriba (solo del cliente, C9).
+    setError(null)
+    // El PIN identifica a un operario ya dado de alta por el líder; el rol
+    // (operario/líder) viene del backend, no se elige aquí.
     if (siguiente.length === 4) {
-      iniciarSesion(siguiente, rol).catch(() => {
-        setError(true)
+      iniciarSesion(siguiente).catch((e: Error) => {
+        setError(
+          e.message === 'PIN_DESCONOCIDO'
+            ? 'PIN no registrado. Pídele a tu líder que te dé de alta.'
+            : 'No se pudo iniciar sesión. Intenta de nuevo.',
+        )
         setPin('')
       })
     }
@@ -40,27 +42,6 @@ export default function LoginPin() {
         <div className="text-base text-texto-sec">Cuatro dígitos, los mismos del carné</div>
       </div>
 
-      <div
-        className="clay-hundido flex gap-1 rounded-control bg-superficie2 p-1"
-        role="radiogroup"
-        aria-label="Rol"
-      >
-        {(['operario', 'lider'] as const).map((r) => (
-          <button
-            key={r}
-            type="button"
-            role="radio"
-            aria-checked={rol === r}
-            onClick={() => setRol(r)}
-            className={`transicion-estado h-14 w-32 rounded-chip text-base font-semibold capitalize sm:h-16 sm:w-36 ${
-              rol === r ? 'clay-tecla bg-accion text-white' : 'text-texto-tenue'
-            }`}
-          >
-            {r === 'operario' ? 'Operario' : 'Líder'}
-          </button>
-        ))}
-      </div>
-
       <div className="flex gap-5" aria-label={`PIN, ${pin.length} de 4 dígitos ingresados`}>
         {[0, 1, 2, 3].map((i) => (
           <div
@@ -74,10 +55,13 @@ export default function LoginPin() {
         ))}
       </div>
 
-      <div className="flex h-6 items-center gap-2 text-base text-critico" aria-live="polite">
+      <div
+        className="flex min-h-6 items-center gap-2 px-4 text-center text-base text-critico"
+        aria-live="polite"
+      >
         {error && (
           <>
-            <span>✕</span> No se pudo iniciar sesión. Intenta de nuevo.
+            <span>✕</span> {error}
           </>
         )}
       </div>
