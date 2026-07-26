@@ -12,7 +12,16 @@ from sqlalchemy.orm import Session
 
 from app.db import DATABASE_URL, engine
 from app.main import app
-from app.models import Articulo, Base, Bodega, Conteo, Operario, StockTeorico, TokenPendiente
+from app.models import (
+    Articulo,
+    Base,
+    Bodega,
+    Conteo,
+    Inventario,
+    Operario,
+    StockTeorico,
+    TokenPendiente,
+)
 
 # Valor centinela de SD: si aparece en una respuesta o evento se filtró stock
 # teórico y la prueba guardiana revienta. ÚNICA excepción sancionada: el campo
@@ -84,6 +93,9 @@ def seed(_bootstrap_db):
             s.add(
                 StockTeorico(bodega_id=bodega.id, articulo_id=art.id, sd=sd, orden_original=1)
             )
+        # Un ciclo abierto: POST /sesiones exige uno (el líder lo abre en la app).
+        inventario = Inventario(bodega_id=bodega.id, numero=1, estado="abierto")
+        s.add(inventario)
         s.commit()
         return SimpleNamespace(
             bodega_id=bodega.id,
@@ -91,6 +103,7 @@ def seed(_bootstrap_db):
             op2=str(op2.id),
             cazuela_id=cazuela.id,
             aceite_id=aceite.id,
+            inventario_id=inventario.id,
         )
 
 

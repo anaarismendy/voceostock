@@ -27,8 +27,13 @@ export interface ResumenDashboard {
   recientes: ConteoReciente[]
 }
 
-export async function getDashboard(bodegaId: number): Promise<ResumenDashboard> {
-  const r = await fetch(`/api/v1/dashboard?bodega_id=${bodegaId}`)
+export async function getDashboard(
+  bodegaId: number,
+  inventarioId?: number | null,
+): Promise<ResumenDashboard> {
+  const params = new URLSearchParams({ bodega_id: String(bodegaId) })
+  if (inventarioId != null) params.set('inventario_id', String(inventarioId))
+  const r = await fetch(`/api/v1/dashboard?${params}`)
   if (!r.ok) throw new Error(`Error ${r.status} al cargar el dashboard`)
   return r.json()
 }

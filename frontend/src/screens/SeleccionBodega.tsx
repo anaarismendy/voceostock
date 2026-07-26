@@ -8,7 +8,7 @@ export default function SeleccionBodega() {
   const { operario, seleccionarBodega } = useOperario()
   const [bodegas, setBodegas] = useState<Bodega[] | null>(null)
   const [error, setError] = useState(false)
-  const [errorSesion, setErrorSesion] = useState(false)
+  const [errorSesion, setErrorSesion] = useState<string | null>(null)
   const [busqueda, setBusqueda] = useState('')
   const [pagina, setPagina] = useState(0)
 
@@ -55,9 +55,7 @@ export default function SeleccionBodega() {
       </div>
 
       {error && <p className="text-base text-critico">No se pudo cargar la lista de bodegas.</p>}
-      {errorSesion && (
-        <p className="text-base text-critico">No se pudo abrir la sesión de conteo. Toca la bodega de nuevo.</p>
-      )}
+      {errorSesion && <p className="text-base text-critico">{errorSesion}</p>}
       {!error && bodegas === null && <p className="text-base text-texto-sec">Cargando bodegas…</p>}
       {!error && bodegas !== null && filtradas.length === 0 && (
         <p className="text-base text-texto-sec">Sin resultados para "{busqueda}".</p>
@@ -69,9 +67,15 @@ export default function SeleccionBodega() {
             key={bodega.id}
             type="button"
             onClick={() => {
-              setErrorSesion(false)
+              setErrorSesion(null)
               // I2: al elegir bodega se abre la sesión REAL en BD.
-              seleccionarBodega(bodega).catch(() => setErrorSesion(true))
+              seleccionarBodega(bodega).catch((e: Error) =>
+                setErrorSesion(
+                  e.message === 'SIN_INVENTARIO'
+                    ? `«${bodega.nombre}» no tiene un inventario abierto. Pídele al líder que lo abra.`
+                    : 'No se pudo abrir la sesión de conteo. Toca la bodega de nuevo.',
+                ),
+              )
             }}
             className="clay transicion-estado flex min-h-[158px] flex-col justify-between rounded-tarjeta bg-superficie1 p-6 text-left active:bg-superficie2"
           >

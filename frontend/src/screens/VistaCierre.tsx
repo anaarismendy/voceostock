@@ -18,7 +18,9 @@ const ESTILO_ESTADO: Record<EstadoFila, { etiqueta: string; icono: string; clase
 
 // Contenido del reporte de cierre (C9 / pantalla H). Único lugar del frontend
 // que muestra el SD (reporte del líder, sancionado por CLAUDE.md).
-export default function VistaCierre() {
+export default function VistaCierre({
+  inventarioId = null,
+}: { inventarioId?: number | null } = {}) {
   const { bodega } = useOperario()
   const [filas, setFilas] = useState<FilaCierre[] | null>(null)
   const [error, setError] = useState(false)
@@ -48,14 +50,14 @@ export default function VistaCierre() {
         setError(false)
         setFilas(null)
       }
-      getCierre(bodega!.id, esperados)
+      getCierre(bodega!.id, esperados, inventarioId)
         .then((f) => {
           setFilas(f)
           setError(false)
         })
         .catch(() => !silencioso && setError(true))
     },
-    [bodega, esperados],
+    [bodega, esperados, inventarioId],
   )
 
   useEffect(() => {

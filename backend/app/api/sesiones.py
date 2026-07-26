@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.api.inventarios import inventario_abierto
 from app.db import Db
 from app.models import Articulo, Bodega, Conteo, Operario, SesionConteo, StockTeorico
 
@@ -35,6 +36,9 @@ class SesionOut(BaseModel):
     sesion_id: UUID
     bodega: BodegaOut
     total_articulos: int
+    # A qué ciclo quedó enganchada, para que la UI pueda rotularlo.
+    inventario_id: int
+    inventario_numero: int
 
 
 class FamiliaProgreso(BaseModel):
@@ -81,10 +85,19 @@ async def crear_sesion(req: SesionRequest, s: Db) -> SesionOut:
     if s.get(Operario, req.operario_id) is None:
         raise HTTPException(404, "operario desconocido")
 
-    # Idempotencia práctica: si ya hay una sesión abierta igual, se responde esa.
+    # El ciclo lo abre el líder: contar sin inventario abierto dejaría conteos
+    # huérfanos que ningún cierre mostraría.
+    inventario = inventario_abierto(s, req.bodega_id)
+    if inventario is None:
+        raise HTTPException(
+            409, "no hay un inventario abierto en esta bodega; pídele al líder que lo abra"
+        )
+
+    # Idempotencia práctica: si ya hay una sesión abierta igual EN ESTE ciclo,
+    # se responde esa. Entre ciclos distintos siempre se abre una nueva.
     sesion = s.scalar(
         select(SesionConteo).where(
-            SesionConteo.bodega_id == req.bodega_id,
+            SesionConteo.inventario_id == inventario.id,
             SesionConteo.operario_id == req.operario_id,
             SesionConteo.tipo == req.tipo,
             SesionConteo.estado == "abierta",
@@ -92,7 +105,8 @@ async def crear_sesion(req: SesionRequest, s: Db) -> SesionOut:
     )
     if sesion is None:
         sesion = SesionConteo(
-            bodega_id=req.bodega_id, operario_id=req.operario_id, tipo=req.tipo
+            bodega_id=req.bodega_id, inventario_id=inventario.id,
+            operario_id=req.operario_id, tipo=req.tipo,
         )
         s.add(sesion)
         s.commit()
@@ -100,6 +114,8 @@ async def crear_sesion(req: SesionRequest, s: Db) -> SesionOut:
         sesion_id=sesion.id,
         bodega=BodegaOut(id=bodega.id, nombre=bodega.nombre),
         total_articulos=total_articulos(s, bodega.id),
+        inventario_id=inventario.id,
+        inventario_numero=inventario.numero,
     )
 
 

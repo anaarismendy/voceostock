@@ -13,7 +13,7 @@ const INTERVALO_MS = 2500
  * Diseño: métricas a 56px legibles a 3 metros; el amarillo aparece solo en la
  * métrica de anomalías y en las filas del feed que fueron anomalía.
  */
-export default function Dashboard() {
+export default function Dashboard({ inventarioId = null }: { inventarioId?: number | null } = {}) {
   const { bodega } = useOperario()
   const [datos, setDatos] = useState<ResumenDashboard | null>(null)
   const [desconectado, setDesconectado] = useState(false)
@@ -24,7 +24,7 @@ export default function Dashboard() {
     montado.current = true
     const tick = async () => {
       try {
-        const d = await getDashboard(bodega!.id)
+        const d = await getDashboard(bodega!.id, inventarioId)
         if (!montado.current) return
         setDatos(d)
         setDesconectado(false)
@@ -39,7 +39,7 @@ export default function Dashboard() {
       montado.current = false
       clearInterval(id)
     }
-  }, [bodega])
+  }, [bodega, inventarioId])
 
   return (
     <div className="flex flex-col gap-5">

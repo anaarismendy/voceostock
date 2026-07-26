@@ -109,6 +109,41 @@ class Operario(Base):
     telefono: Mapped[str | None] = mapped_column(Text)
 
 
+class Inventario(Base):
+    """Un ciclo de conteo completo de una bodega: "Inventario #2, del 25 al 26
+    de julio". Agrupa las sesiones (una por operario) para que el cierre compare
+    UN ciclo contra el SD, y no la suma histórica de todo lo contado nunca.
+
+    El `numero` es consecutivo POR bodega, para que el líder diga "el 2" y sea
+    el 2 de SU bodega."""
+
+    __tablename__ = "inventarios"
+    __table_args__ = (
+        CheckConstraint("estado IN ('abierto','cerrado')", name="ck_inventarios_estado"),
+        # Dos inventarios abiertos a la vez en una bodega volverían a mezclar los
+        # conteos: es justo lo que esta tabla existe para evitar.
+        Index(
+            "ux_inventarios_bodega_abierto",
+            "bodega_id",
+            unique=True,
+            postgresql_where=text("estado = 'abierto'"),
+        ),
+        Index("ux_inventarios_bodega_numero", "bodega_id", "numero", unique=True),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    bodega_id: Mapped[int] = mapped_column(ForeignKey("bodegas.id"))
+    numero: Mapped[int]
+    estado: Mapped[str] = mapped_column(Text, server_default=text("'abierto'"))
+    # Contra qué corte del ERP se compara este ciclo (stock_teorico.corte_fecha).
+    # NULL = el corte más reciente de la bodega.
+    corte_fecha: Mapped[date | None] = mapped_column(Date)
+    abierto_en: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=text("now()")
+    )
+    cerrado_en: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
+
+
 class SesionConteo(Base):
     __tablename__ = "sesiones_conteo"
     __table_args__ = (
@@ -122,6 +157,9 @@ class SesionConteo(Base):
         UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
     )
     bodega_id: Mapped[int] = mapped_column(ForeignKey("bodegas.id"))
+    # A qué ciclo pertenece esta sesión. Nullable por las sesiones anteriores a
+    # la migración 0010 (el backfill las engancha al Inventario #1).
+    inventario_id: Mapped[int | None] = mapped_column(ForeignKey("inventarios.id"))
     operario_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("operarios.id"))
     tipo: Mapped[str | None] = mapped_column(Text)
     estado: Mapped[str] = mapped_column(Text, server_default=text("'abierta'"))

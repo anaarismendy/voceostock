@@ -13,7 +13,7 @@ from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter
 from pydantic import BaseModel
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app import models
@@ -63,13 +63,38 @@ class ResumenDashboard(BaseModel):
     recientes: list[ConteoReciente]
 
 
-def _sd_bodega(s: Session, bodega_id: int) -> dict[int, float]:
-    filas = s.execute(
-        select(models.StockTeorico.articulo_id, models.StockTeorico.sd).where(
-            models.StockTeorico.bodega_id == bodega_id
+def _sd_bodega(s: Session, bodega_id: int, corte_fecha=None) -> dict[int, float]:
+    """SD por artículo. `corte_fecha` fija contra qué corte del ERP se compara;
+    sin ella se usa el más reciente de la bodega (antes se mezclaban todos y el
+    valor que quedaba dependía del orden de las filas)."""
+    if corte_fecha is None:
+        corte_fecha = s.scalar(
+            select(func.max(models.StockTeorico.corte_fecha)).where(
+                models.StockTeorico.bodega_id == bodega_id
+            )
         )
-    ).all()
-    return {f.articulo_id: float(f.sd) for f in filas}
+    q = select(models.StockTeorico.articulo_id, models.StockTeorico.sd).where(
+        models.StockTeorico.bodega_id == bodega_id
+    )
+    if corte_fecha is not None:
+        q = q.where(models.StockTeorico.corte_fecha == corte_fecha)
+    return {f.articulo_id: float(f.sd) for f in s.execute(q).all()}
+
+
+def _resolver_inventario(
+    s: Session, bodega_id: int, inventario_id: int | None
+) -> models.Inventario | None:
+    """El inventario pedido, o el abierto de la bodega, o el último cerrado.
+    None = la bodega nunca tuvo un ciclo (el líder aún no abrió ninguno)."""
+    if inventario_id is not None:
+        return s.get(models.Inventario, inventario_id)
+    return s.scalar(
+        select(models.Inventario)
+        .where(models.Inventario.bodega_id == bodega_id)
+        # 'abierto' < 'cerrado' alfabéticamente: el abierto gana, y entre
+        # cerrados manda el más reciente.
+        .order_by(models.Inventario.estado.asc(), models.Inventario.numero.desc())
+    )
 
 
 def _resolver_ids(s: Session, crudos: list[int]) -> dict[int, models.Articulo]:
@@ -85,17 +110,27 @@ def _resolver_ids(s: Session, crudos: list[int]) -> dict[int, models.Articulo]:
 
 
 @router.get("/cierre", response_model=list[FilaCierre])
-def cierre(s: Db, bodega_id: int, ids: str = "") -> list[FilaCierre]:
+def cierre(s: Db, bodega_id: int, ids: str = "", inventario_id: int | None = None) -> list[FilaCierre]:
     esperados = [int(x) for x in ids.split(",") if x.strip().isdigit()]
-    sd_por_articulo = _sd_bodega(s, bodega_id)
+    inventario = _resolver_inventario(s, bodega_id, inventario_id)
+    sd_por_articulo = _sd_bodega(s, bodega_id, inventario.corte_fecha if inventario else None)
 
-    activos = s.execute(
-        select(models.Conteo, models.Articulo)
-        .join(models.SesionConteo, models.SesionConteo.id == models.Conteo.sesion_id)
-        .join(models.Articulo, models.Articulo.id == models.Conteo.articulo_id)
-        .where(models.SesionConteo.bodega_id == bodega_id, models.Conteo.activo.is_(True))
-        .order_by(models.Conteo.creado_en)
-    ).all()
+    # Filtrar por ciclo es el punto: sin esto el cierre de agosto sumaba lo
+    # contado en julio. Sin inventario todavía, no hay nada que cerrar.
+    activos = (
+        s.execute(
+            select(models.Conteo, models.Articulo)
+            .join(models.SesionConteo, models.SesionConteo.id == models.Conteo.sesion_id)
+            .join(models.Articulo, models.Articulo.id == models.Conteo.articulo_id)
+            .where(
+                models.SesionConteo.inventario_id == inventario.id,
+                models.Conteo.activo.is_(True),
+            )
+            .order_by(models.Conteo.creado_en)
+        ).all()
+        if inventario is not None
+        else []
+    )
 
     filas: dict[int, FilaCierre] = {}
     for conteo, art in activos:
@@ -129,15 +164,21 @@ def cierre(s: Db, bodega_id: int, ids: str = "") -> list[FilaCierre]:
 
 
 @router.get("/dashboard", response_model=ResumenDashboard)
-def dashboard(s: Db, bodega_id: int) -> ResumenDashboard:
-    # Actividad de captura del líder — sin SD (conteo ciego).
-    conteos = s.execute(
-        select(models.Conteo, models.Articulo.nombre)
-        .join(models.SesionConteo, models.SesionConteo.id == models.Conteo.sesion_id)
-        .outerjoin(models.Articulo, models.Articulo.id == models.Conteo.articulo_id)
-        .where(models.SesionConteo.bodega_id == bodega_id)
-        .order_by(models.Conteo.creado_en.desc())
-    ).all()
+def dashboard(s: Db, bodega_id: int, inventario_id: int | None = None) -> ResumenDashboard:
+    # Actividad de captura del líder — sin SD (conteo ciego). Acotada al ciclo:
+    # el "en vivo" de este inventario, no el histórico de la bodega.
+    inventario = _resolver_inventario(s, bodega_id, inventario_id)
+    conteos = (
+        s.execute(
+            select(models.Conteo, models.Articulo.nombre)
+            .join(models.SesionConteo, models.SesionConteo.id == models.Conteo.sesion_id)
+            .outerjoin(models.Articulo, models.Articulo.id == models.Conteo.articulo_id)
+            .where(models.SesionConteo.inventario_id == inventario.id)
+            .order_by(models.Conteo.creado_en.desc())
+        ).all()
+        if inventario is not None
+        else []
+    )
 
     recientes = [
         ConteoReciente(
@@ -169,12 +210,21 @@ def _limpiar_bodega(s: Session, bodega_id: int) -> None:
     sesiones = s.scalars(
         select(models.SesionConteo.id).where(models.SesionConteo.bodega_id == bodega_id)
     ).all()
-    if not sesiones:
-        return
-    s.execute(delete(models.TokenPendiente).where(models.TokenPendiente.sesion_id.in_(sesiones)))
-    s.execute(delete(models.Conteo).where(models.Conteo.sesion_id.in_(sesiones)))
-    s.execute(delete(models.SesionConteo).where(models.SesionConteo.id.in_(sesiones)))
+    if sesiones:
+        s.execute(delete(models.TokenPendiente).where(models.TokenPendiente.sesion_id.in_(sesiones)))
+        s.execute(delete(models.Conteo).where(models.Conteo.sesion_id.in_(sesiones)))
+        s.execute(delete(models.SesionConteo).where(models.SesionConteo.id.in_(sesiones)))
+    # Los ciclos también: si no, reseed choca con el índice de "un abierto por
+    # bodega" y la numeración crecería sin fin entre ensayos.
+    s.execute(delete(models.Inventario).where(models.Inventario.bodega_id == bodega_id))
     s.commit()
+
+
+def _inventario_demo(s: Session, bodega_id: int) -> models.Inventario:
+    inv = models.Inventario(bodega_id=bodega_id, numero=1, estado="abierto")
+    s.add(inv)
+    s.flush()
+    return inv
 
 
 @router.post("/demo/reset")
@@ -191,7 +241,11 @@ def demo_seed(s: Db, bodega_id: int = 3) -> dict:
     # El login ya no crea operarios y el rol lo manda el backend: sin este
     # líder sembrado no habría forma de entrar al panel del líder en la demo.
     _operario_demo(s, PIN_LIDER_DEMO, "Líder Demo", "lider")
-    sesion = models.SesionConteo(bodega_id=bodega_id, operario_id=operario.id, tipo="primario")
+    inventario = _inventario_demo(s, bodega_id)
+    sesion = models.SesionConteo(
+        bodega_id=bodega_id, inventario_id=inventario.id,
+        operario_id=operario.id, tipo="primario",
+    )
     s.add(sesion)
     s.flush()
 

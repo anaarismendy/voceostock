@@ -13,9 +13,16 @@ export interface FilaCierre {
   evidencia_url?: string | null
 }
 
-export async function getCierre(bodegaId: number, esperados: number[] = []): Promise<FilaCierre[]> {
+export async function getCierre(
+  bodegaId: number,
+  esperados: number[] = [],
+  // Sin inventario el backend resuelve el vigente; con él se puede consultar
+  // un ciclo cerrado tal como quedó.
+  inventarioId?: number | null,
+): Promise<FilaCierre[]> {
   const params = new URLSearchParams({ bodega_id: String(bodegaId) })
   if (esperados.length) params.set('ids', esperados.join(','))
+  if (inventarioId != null) params.set('inventario_id', String(inventarioId))
   const r = await fetch(`/api/v1/cierre?${params}`)
   if (!r.ok) throw new Error(`Error ${r.status} al cargar el cierre`)
   return r.json()

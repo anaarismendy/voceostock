@@ -1,5 +1,7 @@
 import { ArrowLeft, LogOut } from 'lucide-react'
 import { useState } from 'react'
+import BarraInventario from '../components/BarraInventario'
+import type { Inventario } from '../lib/inventarios'
 import { useOperario } from '../state/OperarioContext'
 import Dashboard from './Dashboard'
 import PanelConfig from './PanelConfig'
@@ -15,6 +17,10 @@ const ETIQUETA_TAB: Record<Tab, string> = { vivo: 'En vivo', cierre: 'Cierre', a
 export default function PanelLider() {
   const { bodega, cerrarSesion, volverASeleccionarBodega } = useOperario()
   const [tab, setTab] = useState<Tab>('vivo')
+  // Qué ciclo se está mirando. `version` fuerza el remontaje de las vistas al
+  // abrir/cerrar/cambiar de inventario, para que recarguen contra el nuevo.
+  const [inventario, setInventario] = useState<Inventario | null>(null)
+  const [version, setVersion] = useState(0)
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col bg-pantalla p-4 text-texto sm:p-7">
@@ -60,9 +66,18 @@ export default function PanelLider() {
         ))}
       </div>
 
+      <div className="mt-4">
+        <BarraInventario
+          bodegaId={bodega!.id}
+          seleccionado={inventario}
+          onSeleccionar={setInventario}
+          onCambio={() => setVersion((v) => v + 1)}
+        />
+      </div>
+
       <section className="mt-4 flex-1 overflow-y-auto">
-        {tab === 'vivo' && <Dashboard />}
-        {tab === 'cierre' && <VistaCierre />}
+        {tab === 'vivo' && <Dashboard key={version} inventarioId={inventario?.id ?? null} />}
+        {tab === 'cierre' && <VistaCierre key={version} inventarioId={inventario?.id ?? null} />}
         {tab === 'ajustes' && <PanelConfig />}
       </section>
     </main>

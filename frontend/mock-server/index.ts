@@ -60,6 +60,33 @@ const sinonimosMock = [
   { id: 2, sede_id: null, articulo_id: 3022, texto_sinonimo: 'pollo entero grande', origen: 'manual' },
 ]
 
+interface InventarioMock {
+  id: number
+  bodega_id: number
+  numero: number
+  estado: 'abierto' | 'cerrado'
+  corte_fecha: string | null
+  abierto_en: string
+  cerrado_en: string | null
+  articulos_contados: number
+  operarios: number
+}
+
+// La demo arranca con el Inventario #1 abierto en la bodega sembrada, para que
+// el operario pueda contar sin que nadie tenga que abrirlo primero.
+const BODEGA_SEMILLA = 3
+const inventariosMock: InventarioMock[] = [
+  {
+    id: 1, bodega_id: BODEGA_SEMILLA, numero: 1, estado: 'abierto', corte_fecha: null,
+    abierto_en: new Date().toISOString(), cerrado_en: null,
+    articulos_contados: 0, operarios: 1,
+  },
+]
+
+function inventarioAbiertoMock(bodegaId: number): InventarioMock | undefined {
+  return inventariosMock.find((i) => i.bodega_id === bodegaId && i.estado === 'abierto')
+}
+
 export function mockApiPlugin(): Plugin {
   return {
     name: 'voceostock-mock-api',
@@ -214,11 +241,72 @@ export function mockApiPlugin(): Plugin {
             const body = await leerCuerpoJson(req)
             const bodegas = cargarBodegas()
             const bodega = bodegas.find((b) => b.id === Number(body.bodega_id)) ?? bodegas[0]
+            const inv = inventarioAbiertoMock(bodega.id)
+            if (!inv) {
+              enviarJson(res, 409, { detail: 'no hay un inventario abierto; pídele al líder que lo abra' })
+              return
+            }
             enviarJson(res, 200, {
               sesion_id: randomUUID(),
               bodega: { id: bodega.id, nombre: bodega.nombre },
               total_articulos: catalogo.length,
+              inventario_id: inv.id,
+              inventario_numero: inv.numero,
             })
+            return
+          }
+
+          // Ciclos de conteo (Inventario #N). En el mock viven en memoria: uno
+          // abierto por bodega, y cerrar+abrir arranca el siguiente de cero.
+          if (url.pathname === '/api/v1/inventarios') {
+            if (req.method === 'GET') {
+              const bodegaId = Number(url.searchParams.get('bodega_id'))
+              enviarJson(res, 200, inventariosMock.filter((i) => i.bodega_id === bodegaId))
+              return
+            }
+            if (req.method === 'POST') {
+              const body = await leerCuerpoJson(req)
+              const bodegaId = Number(body.bodega_id)
+              if (inventarioAbiertoMock(bodegaId)) {
+                enviarJson(res, 409, { detail: 'esta bodega ya tiene un inventario abierto' })
+                return
+              }
+              const previos = inventariosMock.filter((i) => i.bodega_id === bodegaId)
+              const inv = {
+                id: inventariosMock.length + 1,
+                bodega_id: bodegaId,
+                numero: previos.length + 1,
+                estado: 'abierto' as const,
+                corte_fecha: null,
+                abierto_en: new Date().toISOString(),
+                cerrado_en: null,
+                articulos_contados: 0,
+                operarios: 0,
+              }
+              inventariosMock.unshift(inv)
+              reiniciarConteos() // ciclo nuevo = feed en blanco
+              enviarJson(res, 201, inv)
+              return
+            }
+          }
+
+          const cerrarInvMatch = req.method === 'POST'
+            ? url.pathname.match(/^\/api\/v1\/inventarios\/(\d+)\/cerrar$/)
+            : null
+          if (cerrarInvMatch) {
+            const inv = inventariosMock.find((i) => i.id === Number(cerrarInvMatch[1]))
+            if (!inv) {
+              enviarJson(res, 404, { detail: 'inventario desconocido' })
+              return
+            }
+            if (inv.estado === 'cerrado') {
+              enviarJson(res, 409, { detail: 'el inventario ya está cerrado' })
+              return
+            }
+            inv.estado = 'cerrado'
+            inv.cerrado_en = new Date().toISOString()
+            inv.articulos_contados = new Set(listarConteos().map((c) => c.articulo_id)).size
+            enviarJson(res, 200, inv)
             return
           }
 
