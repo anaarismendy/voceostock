@@ -1,0 +1,35 @@
+docs/DEMO.md
+  s_fb5c1448f584df::t_44f00f68f559ec 96-98
+docs/contrato/contrato.md
+  s_fb5c1448f584df::t_e04900a5fea766 47
+docs/contrato/ejemplos/requiere_confirmacion_anomalia.json
+  s_fb5c1448f584df::t_c16e2e67119fde 5
+backend/scripts/warm_tts_cache.py
+  s_fb5c1448f584df::t_b6343d0731b32c 31-32
+backend/tests/pipeline/test_anomalias.py
+  s_fb5c1448f584df::t_71cce04ff9e4d3 33-35
+backend/app/pipeline/anomalias/reglas.py
+  s_fb5c1448f584df::t_6bb0fc28ea91fc 50-57
+  s_fb5c1448f584df::t_7006d2ba731f3b 68
+  s_fb5c1448f584df::t_d13760767f98fa 118-119
+docs/COMO_CORRER.md
+  s_fb5c1448f584df::t_8c237a3fb8aef0 113
+backend/tests/test_stub.py
+  s_fb5c1448f584df::t_ae603887be0f93 64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "74da8b29c19ad79900e1cb463d99a8f1555b7242",
+  "prompts": {},
+  "sessions": {
+    "s_fb5c1448f584df": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "22dc3114-2f2d-4d97-b859-2b3cd20a1b64",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
