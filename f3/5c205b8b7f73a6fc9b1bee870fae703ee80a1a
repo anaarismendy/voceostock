@@ -1,0 +1,25 @@
+frontend/src/screens/VistaCierre.tsx
+  s_fb5c1448f584df::t_b1391abe137f12 135
+  s_fb5c1448f584df::t_3e377ec7894cb7 27-41,43-59,63-64
+  s_fb5c1448f584df::t_aecf95528b9b4d 91
+  s_fb5c1448f584df::t_815eef36a2931a 101
+  s_fb5c1448f584df::t_f22ef2f8ee6b4c 75
+  s_fb5c1448f584df::t_1fafd24d5a5acc 3,7-10
+  s_fb5c1448f584df::t_d697fab03e626d 136-137
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "f35c205b8b7f73a6fc9b1bee870fae703ee80a1a",
+  "prompts": {},
+  "sessions": {
+    "s_fb5c1448f584df": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "22dc3114-2f2d-4d97-b859-2b3cd20a1b64",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
