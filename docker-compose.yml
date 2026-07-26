@@ -36,6 +36,9 @@ services:
       - "5173:5173"
     volumes:
       - ./frontend:/app
+      # El mock-server de vite lee data/fixtures/catalogo.csv, que vive fuera
+      # de ./frontend; sin este mount el dev server no arranca en el contenedor.
+      - ./data:/data:ro
     depends_on:
       - api
 
