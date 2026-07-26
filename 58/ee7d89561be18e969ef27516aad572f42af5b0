@@ -1,0 +1,36 @@
+frontend/src/components/ListaInventario.tsx
+  s_fb5c1448f584df::t_44c8e4240678ed 61
+  s_fb5c1448f584df::t_76cf433f0cdd77 1-60,62-100
+frontend/src/screens/PantallaConteo.tsx
+  s_fb5c1448f584df::t_df36cfaa5d7cfd 4
+  s_fb5c1448f584df::t_3f8fcda480c042 415
+  s_fb5c1448f584df::t_4aa930439d576a 60-62,74,80,87-90,92-93
+  s_fb5c1448f584df::t_72d777da000d9e 609
+  s_fb5c1448f584df::t_737361ababd06d 621
+  s_fb5c1448f584df::t_20bc855194fe01 259
+  s_fb5c1448f584df::t_6f3d3dd155ef62 453
+  s_fb5c1448f584df::t_9d2a1f1a49d86f 155-157
+  s_fb5c1448f584df::t_f5e72def065aee 630,632
+  s_fb5c1448f584df::t_eacb9fb6419410 356,365,373-390,392-398
+  s_fb5c1448f584df::t_140bff206d5bf2 464,506,517,536,683,691
+frontend/src/lib/inventario.test.ts
+  s_fb5c1448f584df::t_67b27e684c128d 1-29
+frontend/src/lib/inventario.ts
+  s_fb5c1448f584df::t_7b8d97b771e81d 1-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "58ee7d89561be18e969ef27516aad572f42af5b0",
+  "prompts": {},
+  "sessions": {
+    "s_fb5c1448f584df": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "22dc3114-2f2d-4d97-b859-2b3cd20a1b64",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
