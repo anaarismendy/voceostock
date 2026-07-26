@@ -8,7 +8,6 @@ Revises: 0006
 """
 
 from alembic import op
-
 from app.models import RiesgoArticulo
 
 revision = "0007"

@@ -269,8 +269,13 @@ class SinonimoArticulo(Base):
     __tablename__ = "sinonimos_articulo"
     __table_args__ = (
         CheckConstraint("origen IN ('aprendido','manual')", name="ck_sinonimos_origen"),
-        # Un sinónimo por (sede, texto): re-registrar actualiza (upsert), no duplica.
-        Index("ux_sinonimos_sede_texto", "sede_id", "texto_normalizado", unique=True),
+        # Un sinónimo por (sede, texto). nulls_not_distinct: sin esto Postgres
+        # trata cada NULL como distinto y los sinónimos GLOBALES (sede_id NULL,
+        # el caso por defecto del endpoint) se duplicarían sin dar 409.
+        Index(
+            "ux_sinonimos_sede_texto", "sede_id", "texto_normalizado",
+            unique=True, postgresql_nulls_not_distinct=True,
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

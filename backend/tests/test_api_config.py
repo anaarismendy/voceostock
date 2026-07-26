@@ -56,5 +56,13 @@ def test_crud_sinonimos(client, seed):
     assert all(x["id"] != sid for x in client.get("/api/v1/config/sinonimos").json())
 
 
+def test_sinonimo_global_duplicado_409(client, seed):
+    # sede_id NULL: sin NULLS NOT DISTINCT (migración 0008) el índice único no
+    # aplica y esto crearía un duplicado en vez de dar 409.
+    body = {"articulo_id": seed.cazuela_id, "texto_sinonimo": "cazuelita"}
+    assert client.post("/api/v1/config/sinonimos", json=body).status_code == 201
+    assert client.post("/api/v1/config/sinonimos", json=body).status_code == 409
+
+
 def test_borrar_sinonimo_inexistente_404(client, seed):
     assert client.delete("/api/v1/config/sinonimos/999999").status_code == 404
