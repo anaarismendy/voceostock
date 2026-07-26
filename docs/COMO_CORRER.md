@@ -110,7 +110,7 @@ Abrir **http://localhost:5173** en Chrome (Web Speech funciona mejor ahí).
   **Nunca** `administracion` (tiene 0 artículos).
 - Frases que el modo replay entiende (dictado por texto o voz):
   - `treinta y tres litros de aceite de oliva` → confirmado
-  - `noventa cajas de cazuelas` → anomalía ("¿Confirmas 90? El corte anterior registró 10.")
+  - `noventa cajas de cazuelas` → anomalía ("¿Confirmas 90 unidades de CAZUELA 16 ONZ? El corte anterior registró 10.")
   - `una cazuela` → ambigüedad (2 candidatos)
   - `siete kilos de arroz basmati` → confirmado
   - En modo guiado: cantidades `12` (POLLO ENTERO) y `5` (ABRELATAS) están grabadas.

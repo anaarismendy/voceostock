@@ -30,7 +30,9 @@ def test_ratio_sd_cazuelas_90_vs_10_revela_el_saldo():
     # pregunta ocurre después de que el operario comprometió su número).
     a = regla_ratio_sd(_parse(cantidad=90), _art("CAZUELA 16 ONZ", "Unidad", 10.0))
     assert a.flag and a.tipo == "ratio_sd"
-    assert a.pregunta == "¿Confirmas 90? El corte anterior registró 10."
+    # La pregunta repite el artículo: "¿Confirmas 90?" a secas es ambiguo cuando
+    # el operario viene dictando varios seguidos.
+    assert a.pregunta == "¿Confirmas 90 unidades de CAZUELA 16 ONZ? El corte anterior registró 10."
 
 
 def test_unidad_incoherente_gramos_en_liter():

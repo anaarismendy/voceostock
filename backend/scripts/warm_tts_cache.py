@@ -28,8 +28,8 @@ FRASES_GUION = [
     "12 Kilogram de POLLO ENTERO",
     "5 Unidad de ABRELATAS MARIPOSA",
     # Las 5 preguntas de anomalía con los valores del guion
-    "¿Confirmas 90? El corte anterior registró 10.",
-    "¿Confirmas 12? El corte anterior registró 1596,2.",
+    "¿Confirmas 90 unidades de CAZUELA 16 ONZ? El corte anterior registró 10.",
+    "¿Confirmas 12 kilos de POLLO ENTERO? El corte anterior registró 1596,2.",
     "Contaste ACEITE DE OLIVA en kilos, pero suele medirse en litros. ¿Es correcto?",
     "Registraste 3,5 de CAZUELA 16 ONZ, pero este artículo se cuenta por unidades enteras. ¿Seguro?",
     "Registraste cero de POLLO ENTERO, pero es un artículo del que suele haber bastante. ¿Confirmas que no queda ninguno?",

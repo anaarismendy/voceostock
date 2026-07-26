@@ -61,7 +61,7 @@ async def test_orden_de_magnitud_revela_el_saldo_del_ultimo_corte():
     """Decisión de producto (reto Colsubsidio): la pregunta de una anomalía de
     orden de magnitud SÍ cita el saldo anterior — la cazuela tiene SD 10."""
     r = await _procesar("noventa cajas de cazuelas")
-    assert r.pregunta == "¿Confirmas 90? El corte anterior registró 10."
+    assert r.pregunta == "¿Confirmas 90 unidades de CAZUELA 16 ONZ? El corte anterior registró 10."
 
 
 async def test_ambiguedad():

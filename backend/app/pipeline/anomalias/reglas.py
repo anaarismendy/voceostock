@@ -47,6 +47,14 @@ def _sin_anomalia() -> Anomalia:
     return Anomalia(flag=False)
 
 
+def _cantidad_articulo(parse: ConteoParseado, art: ArticuloCtx) -> str:
+    """'40 unidades de HUEVOS' — la cantidad sola es ambigua cuando el operario
+    dicta seguido, así que toda pregunta de confirmación repite el artículo."""
+    unidad = _UNIDAD_ES.get(parse.unidad_normalizada or art.unidad_base or "", "")
+    cola = f" {unidad}" if unidad else ""
+    return f"{_num(parse.cantidad)}{cola} de {art.nombre}"
+
+
 def regla_ratio_sd(parse: ConteoParseado, art: ArticuloCtx) -> Anomalia:
     """Cantidad muy por encima (>5×) o muy por debajo (<0.2×) de lo habitual."""
     if parse.cantidad is None or parse.cantidad <= 0 or art.sd <= 0:
@@ -57,7 +65,7 @@ def regla_ratio_sd(parse: ConteoParseado, art: ArticuloCtx) -> Anomalia:
         # operario ya comprometió su número (ver regla de conteo ciego).
         return Anomalia(
             flag=True, tipo="ratio_sd",
-            pregunta=f"¿Confirmas {_num(parse.cantidad)}? "
+            pregunta=f"¿Confirmas {_cantidad_articulo(parse, art)}? "
                      f"El corte anterior registró {_num(art.sd)}.",
         )
     return _sin_anomalia()
@@ -105,12 +113,10 @@ def regla_baja_confianza(parse: ConteoParseado, art: ArticuloCtx) -> Anomalia:
     """El parser no quedó seguro de haber entendido. El umbral por debajo del
     cual se pregunta es CONFIGURABLE (D1): `rapida` de `umbrales_actuales()`."""
     if parse.confianza < umbrales_actuales().rapida:
-        unidad = _UNIDAD_ES.get(parse.unidad_normalizada or "", "").strip()
-        cola = f" {unidad}" if unidad else ""
         return Anomalia(
             flag=True, tipo="baja_confianza",
-            pregunta=f"No estoy seguro de haber entendido bien. ¿Contaste "
-                     f"{_num(parse.cantidad)}{cola} de {art.nombre}?",
+            pregunta=f"No estoy seguro de haber entendido bien. "
+                     f"¿Contaste {_cantidad_articulo(parse, art)}?",
         )
     return _sin_anomalia()
 

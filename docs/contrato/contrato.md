@@ -44,7 +44,7 @@ identifica: voz en tablet hoy, WhatsApp hoy, RFID o básculas mañana).
 { "status": "requiere_confirmacion",
   "token_pendiente": "uuid",
   "motivo": "ambiguedad | anomalia | baja_confianza",
-  "pregunta": "¿Confirmas 90? El corte anterior registró 10.",
+  "pregunta": "¿Confirmas 90 unidades de CAZUELA 16 ONZ? El corte anterior registró 10.",
   "candidatos": [ { "articulo_id": 1, "articulo_nombre": "CAZUELA 16 ONZ" } ] }
 ```
 

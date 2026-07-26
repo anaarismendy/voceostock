@@ -93,8 +93,9 @@ guardar— contra el catálogo y el histórico."
 
    > "noventa cazuelas"
 
-   → En vez de guardar a ciegas, **pregunta**: *"¿Confirmas 90? El corte anterior
-   registró 10."* (anomalía). Responder **Sí** (o "otra cantidad").
+   → En vez de guardar a ciegas, **pregunta**: *"¿Confirmas 90 unidades de
+   CAZUELA 16 ONZ? El corte anterior registró 10."* (anomalía). Responder **Sí**
+   (o "otra cantidad").
 
 5. Decir solo:
 
