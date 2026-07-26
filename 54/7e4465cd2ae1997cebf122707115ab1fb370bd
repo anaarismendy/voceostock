@@ -1,0 +1,19 @@
+docker-compose.yml
+  s_fb5c1448f584df::t_cd97d8531be13e 39-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "547e4465cd2ae1997cebf122707115ab1fb370bd",
+  "prompts": {},
+  "sessions": {
+    "s_fb5c1448f584df": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "22dc3114-2f2d-4d97-b859-2b3cd20a1b64",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
