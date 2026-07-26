@@ -1,8 +1,12 @@
 import { Download, RefreshCw } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { getArticulos } from '../lib/articulos'
 import { estadoFila, getCierre, totalesCierre, type EstadoFila, type FilaCierre } from '../lib/cierre'
-import { CHECKLIST_DEMO } from '../lib/listaGuiada'
 import { useOperario } from '../state/OperarioContext'
+
+// El cierre se refresca solo: el líder lo deja abierto mientras el operario
+// sigue contando, y antes solo se actualizaba con el botón ↻.
+const REFRESCO_MS = 5000
 
 // Semáforo con icono + palabra: funciona en blanco y negro (design doc H).
 const ESTILO_ESTADO: Record<EstadoFila, { etiqueta: string; icono: string; clase: string }> = {
@@ -20,18 +24,44 @@ export default function VistaCierre() {
   const [error, setError] = useState(false)
   const [filtro, setFiltro] = useState<EstadoFila | 'todos'>('todos')
 
-  const esperados = useMemo(() => CHECKLIST_DEMO.map((a) => a.articulo_id), [])
+  // "Sin contar" = artículos de ESTA bodega que nadie contó todavía. Antes eran
+  // 8 ids hardcodeados de demo, que ni siquiera pertenecían a la bodega abierta.
+  const [esperados, setEsperados] = useState<number[]>([])
 
-  const cargar = useCallback(() => {
-    setError(false)
-    setFilas(null)
-    getCierre(bodega!.id, esperados)
-      .then(setFilas)
-      .catch(() => setError(true))
-  }, [bodega, esperados])
+  useEffect(() => {
+    let vivo = true
+    getArticulos(bodega!.id)
+      .then((arts) => vivo && setEsperados(arts.map((a) => a.articulo_id)))
+      .catch(() => {
+        /* sin catálogo: el cierre muestra solo lo contado */
+      })
+    return () => {
+      vivo = false
+    }
+  }, [bodega])
+
+  // `silencioso`: el refresco automático no vacía la tabla (sin parpadeo a
+  // "Cargando cierre…" cada 5 s); el botón ↻ y el arranque sí muestran carga.
+  const cargar = useCallback(
+    (silencioso = false) => {
+      if (!silencioso) {
+        setError(false)
+        setFilas(null)
+      }
+      getCierre(bodega!.id, esperados)
+        .then((f) => {
+          setFilas(f)
+          setError(false)
+        })
+        .catch(() => !silencioso && setError(true))
+    },
+    [bodega, esperados],
+  )
 
   useEffect(() => {
     cargar()
+    const id = setInterval(() => cargar(true), REFRESCO_MS)
+    return () => clearInterval(id)
   }, [cargar])
 
   const totales = filas ? totalesCierre(filas) : null
@@ -42,7 +72,7 @@ export default function VistaCierre() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
           <p className="text-sm text-texto-tenue">Contado vs. teórico</p>
           <p className="text-xl font-semibold">Diferencias del conteo</p>
@@ -58,7 +88,7 @@ export default function VistaCierre() {
           </a>
           <button
             type="button"
-            onClick={cargar}
+            onClick={() => cargar()}
             aria-label="Actualizar cierre"
             className="clay-tecla transicion-estado flex h-16 w-16 items-center justify-center rounded-control bg-superficie2 active:bg-grafito"
           >
@@ -68,7 +98,7 @@ export default function VistaCierre() {
       </div>
 
       {totales && (
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <TarjetaTotal valor={totales.cuadran} etiqueta="Cuadran" clase="text-exito-claro" />
           <TarjetaTotal valor={totales.sobrantes} etiqueta="Sobran" clase="text-marca" />
           <TarjetaTotal valor={totales.faltantes} etiqueta="Faltan" clase="text-critico-claro" />
@@ -102,8 +132,9 @@ export default function VistaCierre() {
       )}
 
       {filas && visibles.length > 0 && (
-        <div className="clay rounded-tarjeta bg-superficie1 px-5 pb-5 pt-2">
-          <table className="w-full border-collapse text-left">
+        // overflow-x-auto: la tabla scrollea dentro de su tarjeta, la página no.
+        <div className="clay overflow-x-auto rounded-tarjeta bg-superficie1 px-4 pb-5 pt-2 sm:px-5">
+          <table className="w-full min-w-[520px] border-collapse text-left">
             <thead className="text-xs tracking-widest text-texto-tenue">
               <tr>
                 <th className="py-3.5 pr-2 font-normal">PRODUCTO</th>
