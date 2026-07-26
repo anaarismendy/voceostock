@@ -1,0 +1,21 @@
+README.md
+  s_afae10bfc7eec1::t_caecc039ad5342 4-103,112,123-124,126,128,130-133,135,137-148,154-162,165-169,177-190
+docs/DEMO_2MIN.md
+  s_afae10bfc7eec1::t_9c3bae15b019e2 1-146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "390d3dd87cf2515384273826b49fcf32a83b0d5b",
+  "prompts": {},
+  "sessions": {
+    "s_afae10bfc7eec1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f80fcb-bd50-4ac3-8585-29df59888e49",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ana Arismendy <anaarismendy120805@gmail.com>"
+    }
+  }
+}
