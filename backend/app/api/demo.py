@@ -26,12 +26,19 @@ PIN_LIDER_DEMO = "1111"
 
 
 def _operario_demo(s, pin: str, nombre: str, rol: str):
-    """Alta idempotente por PIN (el índice único no perdona el segundo seed)."""
+    """Alta idempotente por PIN (el índice único no perdona el segundo seed).
+
+    Si la fila ya existe le corrige nombre y rol: en una BD donde el login
+    viejo dio de alta el PIN al vuelo (todos con rol "operario"), sembrar sin
+    reescribir dejaba al líder 1111 entrando como operario para siempre.
+    """
     fila = s.scalar(select(models.Operario).where(models.Operario.pin == pin))
     if fila is None:
         fila = models.Operario(nombre=nombre, pin=pin, rol=rol)
         s.add(fila)
-        s.flush()
+    else:
+        fila.nombre, fila.rol = nombre, rol
+    s.flush()
     return fila
 
 
